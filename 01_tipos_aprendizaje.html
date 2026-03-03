@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo: Tipos de Aprendizaje Automático</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f0f4f8; color: #1a2940; }
+
+  .header { background: #0f1b2d; color: white; padding: 2rem 2rem 1.5rem; }
+  .header h1 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+  .header p { color: #90a4ae; font-size: 0.95rem; }
+
+  .tabs { display: flex; gap: 0; background: #1a2940; padding: 0 2rem; }
+  .tab { padding: 0.8rem 1.5rem; cursor: pointer; color: #90a4ae; border-bottom: 3px solid transparent; transition: all 0.2s; font-weight: 600; font-size: 0.95rem; }
+  .tab:hover { color: #fff; }
+  .tab.active { color: #fff; border-bottom-color: #2196f3; }
+
+  .content { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .card { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .card h2 { font-size: 1.3rem; margin-bottom: 0.8rem; }
+  .card p { line-height: 1.6; color: #37474f; margin-bottom: 1rem; }
+
+  canvas { border: 1px solid #e0e0e0; border-radius: 8px; cursor: crosshair; display: block; margin: 0 auto; }
+
+  .controls { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: center; margin: 1rem 0; }
+  .btn { padding: 0.5rem 1.2rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.15s; }
+  .btn-blue { background: #2196f3; color: white; }
+  .btn-blue:hover { background: #1976d2; }
+  .btn-teal { background: #00897b; color: white; }
+  .btn-teal:hover { background: #00695c; }
+  .btn-orange { background: #ff6f00; color: white; }
+  .btn-orange:hover { background: #e65100; }
+  .btn-red { background: #e53935; color: white; }
+  .btn-red:hover { background: #c62828; }
+  .btn-gray { background: #eceff1; color: #37474f; }
+  .btn-gray:hover { background: #cfd8dc; }
+
+  .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; color: white; margin-right: 0.4rem; }
+  .badge-a { background: #2196f3; }
+  .badge-b { background: #e53935; }
+
+  .info-box { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+  .info-box p { color: #1565c0; margin: 0; }
+
+  .stats { display: flex; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap; }
+  .stat { text-align: center; }
+  .stat .num { font-size: 2rem; font-weight: 700; color: #2196f3; }
+  .stat .label { font-size: 0.8rem; color: #90a4ae; }
+
+  .grid-env { display: grid; grid-template-columns: repeat(8, 50px); gap: 2px; margin: 1rem auto; width: fit-content; }
+  .cell { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; border-radius: 4px; transition: background 0.15s; }
+  .cell-empty { background: #eceff1; }
+  .cell-wall { background: #37474f; }
+  .cell-agent { background: #ff6f00; color: white; font-weight: bold; }
+  .cell-goal { background: #00c853; color: white; }
+  .cell-visited { background: #fff3e0; }
+  .cell-path { background: #ffe0b2; }
+
+  .legend { display: flex; gap: 1rem; margin: 0.8rem 0; flex-wrap: wrap; font-size: 0.85rem; }
+  .legend-item { display: flex; align-items: center; gap: 0.3rem; }
+  .legend-color { width: 16px; height: 16px; border-radius: 3px; }
+
+  .slider-container { display: flex; align-items: center; gap: 0.5rem; }
+  .slider-container input[type=range] { width: 150px; }
+  .slider-label { font-size: 0.85rem; color: #546e7a; min-width: 100px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Tipos de Aprendizaje Automático</h1>
+  <p>Demo interactiva — Tema 1: Introducción al Aprendizaje Automático</p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showSection('supervised')">Supervisado</div>
+  <div class="tab" onclick="showSection('unsupervised')">No Supervisado</div>
+  <div class="tab" onclick="showSection('reinforcement')">Por Refuerzo</div>
+</div>
+
+<!-- ===== SUPERVISED ===== -->
+<div class="content">
+<div id="supervised" class="section active">
+  <div class="card">
+    <h2>Clasificación binaria</h2>
+    <p>Genera datos de dos clases automáticamente y observa cómo el modelo aprende a separarlas. Puedes ajustar la cantidad de puntos y la dificultad (separación entre clases).</p>
+
+    <div class="controls">
+      <button class="btn btn-blue" onclick="generateSupPoints()">Generar datos</button>
+      <button class="btn btn-teal" onclick="trainClassifier()">Entrenar modelo</button>
+      <button class="btn btn-orange" onclick="animateTraining()">Entrenar paso a paso</button>
+      <button class="btn btn-gray" onclick="clearSupervised()">Limpiar</button>
+      <div class="slider-container">
+        <span class="slider-label">Puntos por clase:</span>
+        <input type="range" id="nPointsSlider" min="10" max="80" value="40" oninput="document.getElementById('nPtsVal').textContent=this.value">
+        <span id="nPtsVal">40</span>
+      </div>
+      <div class="slider-container">
+        <span class="slider-label">Separación:</span>
+        <input type="range" id="sepSlider" min="1" max="10" value="5" oninput="document.getElementById('sepVal').textContent=this.value">
+        <span id="sepVal">5</span>
+      </div>
+    </div>
+
+    <canvas id="supCanvas" width="700" height="400"></canvas>
+
+    <div class="info-box">
+      <p><strong>Concepto clave:</strong> En el aprendizaje supervisado, proporcionamos datos etiquetados (con clase conocida) y el modelo aprende a separar las clases para predecir la clase de nuevos datos.</p>
+    </div>
+
+    <div class="stats" id="supStats">
+      <div class="stat"><div class="num" id="statA">0</div><div class="label">Puntos Clase A</div></div>
+      <div class="stat"><div class="num" id="statB">0</div><div class="label">Puntos Clase B</div></div>
+      <div class="stat"><div class="num" id="statEpochs">0</div><div class="label">Épocas</div></div>
+      <div class="stat"><div class="num" id="statAcc">—</div><div class="label">Precisión</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== UNSUPERVISED ===== -->
+<div id="unsupervised" class="section">
+  <div class="card">
+    <h2>K-Means Clustering paso a paso</h2>
+    <p>Genera puntos aleatorios y observa cómo el algoritmo K-Means los agrupa en clusters sin conocer las etiquetas.</p>
+
+    <div class="controls">
+      <button class="btn btn-teal" onclick="generateUnsupPoints()">Generar puntos</button>
+      <button class="btn btn-blue" onclick="stepKMeans()">Siguiente paso</button>
+      <button class="btn btn-orange" onclick="runKMeans()">Ejecutar completo</button>
+      <button class="btn btn-gray" onclick="clearUnsupervised()">Limpiar</button>
+      <div class="slider-container">
+        <span class="slider-label">Clusters (K):</span>
+        <input type="range" id="kSlider" min="2" max="5" value="3" oninput="document.getElementById('kVal').textContent=this.value">
+        <span id="kVal">3</span>
+      </div>
+    </div>
+
+    <canvas id="unsupCanvas" width="700" height="400"></canvas>
+
+    <div class="info-box">
+      <p><strong>Concepto clave:</strong> En el aprendizaje no supervisado, no hay etiquetas. El algoritmo descubre estructuras ocultas agrupando datos similares.</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="num" id="statIter">0</div><div class="label">Iteración</div></div>
+      <div class="stat"><div class="num" id="statPts">0</div><div class="label">Puntos totales</div></div>
+      <div class="stat"><div class="num" id="statConv">No</div><div class="label">Convergido</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REINFORCEMENT ===== -->
+<div id="reinforcement" class="section">
+  <div class="card">
+    <h2>Agente en un laberinto (Aprendizaje por Refuerzo)</h2>
+    <p>Observa cómo un agente aprende a navegar un laberinto mediante prueba y error, recibiendo recompensas al llegar a la meta.</p>
+
+    <div class="controls">
+      <button class="btn btn-orange" onclick="startRL()">Entrenar agente</button>
+      <button class="btn btn-blue" onclick="showBestPath()">Mostrar mejor ruta</button>
+      <button class="btn btn-gray" onclick="resetRL()">Reiniciar</button>
+      <div class="slider-container">
+        <span class="slider-label">Velocidad:</span>
+        <input type="range" id="speedSlider" min="1" max="10" value="5">
+      </div>
+    </div>
+
+    <div class="grid-env" id="mazeGrid"></div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-color" style="background:#ff6f00"></div> Agente</div>
+      <div class="legend-item"><div class="legend-color" style="background:#00c853"></div> Meta</div>
+      <div class="legend-item"><div class="legend-color" style="background:#37474f"></div> Muro</div>
+      <div class="legend-item"><div class="legend-color" style="background:#ffe0b2"></div> Camino recorrido</div>
+    </div>
+
+    <div class="info-box">
+      <p><strong>Concepto clave:</strong> El agente no conoce el camino correcto. Aprende explorando, recibiendo +10 al llegar a la meta y -1 por cada paso. Con el tiempo, descubre la ruta óptima.</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="num" id="statEpisode">0</div><div class="label">Episodios</div></div>
+      <div class="stat"><div class="num" id="statReward">0</div><div class="label">Mejor recompensa</div></div>
+      <div class="stat"><div class="num" id="statSteps">—</div><div class="label">Pasos mejor ruta</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ===== TAB NAVIGATION =====
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelector(`.tab[onclick*="${id}"]`).classList.add('active');
+}
+
+// ===== SUPERVISED LEARNING =====
+let supPoints = [];
+let supTrained = false;
+let supW = null, supB = null;
+let supEpoch = 0;
+let supAnimating = false;
+
+const supCanvas = document.getElementById('supCanvas');
+const supCtx = supCanvas.getContext('2d');
+
+// Gaussian random (Box-Muller)
+function gaussRand() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
+
+function generateSupPoints() {
+  supPoints = [];
+  supTrained = false;
+  supW = null;
+  supEpoch = 0;
+  const n = parseInt(document.getElementById('nPointsSlider').value);
+  const sep = parseInt(document.getElementById('sepSlider').value);
+  const spread = 55;
+  const offset = sep * 18;
+
+  // Clase A: cluster arriba-izquierda
+  const cAx = 250 - offset / 2, cAy = 200 - offset / 2;
+  for (let i = 0; i < n; i++) {
+    supPoints.push({
+      x: Math.max(15, Math.min(685, cAx + gaussRand() * spread)),
+      y: Math.max(15, Math.min(385, cAy + gaussRand() * spread)),
+      cls: 'A'
+    });
+  }
+  // Clase B: cluster abajo-derecha
+  const cBx = 450 + offset / 2, cBy = 200 + offset / 2;
+  for (let i = 0; i < n; i++) {
+    supPoints.push({
+      x: Math.max(15, Math.min(685, cBx + gaussRand() * spread)),
+      y: Math.max(15, Math.min(385, cBy + gaussRand() * spread)),
+      cls: 'B'
+    });
+  }
+
+  document.getElementById('statAcc').textContent = '—';
+  document.getElementById('statEpochs').textContent = '0';
+  drawSupervised();
+}
+
+// ---- Fisher LDA: analytic solution, always converges ----
+
+// Compute mean of an array of {x,y} points
+function mean(pts) {
+  const n = pts.length;
+  return { x: pts.reduce((s,p) => s+p.x, 0)/n, y: pts.reduce((s,p) => s+p.y, 0)/n };
+}
+
+// Fisher's Linear Discriminant: returns {w0, w1, b} for w0*x + w1*y + b = 0
+function fisherLDA(pointsA, pointsB) {
+  const mA = mean(pointsA), mB = mean(pointsB);
+
+  // Within-class scatter (pooled covariance direction)
+  let sw00=0, sw01=0, sw11=0;
+  pointsA.forEach(p => {
+    const dx = p.x - mA.x, dy = p.y - mA.y;
+    sw00 += dx*dx; sw01 += dx*dy; sw11 += dy*dy;
+  });
+  pointsB.forEach(p => {
+    const dx = p.x - mB.x, dy = p.y - mB.y;
+    sw00 += dx*dx; sw01 += dx*dy; sw11 += dy*dy;
+  });
+
+  // Sw^{-1} * (mA - mB) gives the optimal projection direction w
+  const dm = { x: mA.x - mB.x, y: mA.y - mB.y };
+  const det = sw00*sw11 - sw01*sw01;
+  if (Math.abs(det) < 1e-10) {
+    // Fallback: use mean difference as direction
+    return { w0: dm.x, w1: dm.y, b: -(dm.x*(mA.x+mB.x)/2 + dm.y*(mA.y+mB.y)/2) };
+  }
+  const w0 = ( sw11*dm.x - sw01*dm.y) / det;
+  const w1 = (-sw01*dm.x + sw00*dm.y) / det;
+
+  // Threshold at midpoint of projected means
+  const projA = w0*mA.x + w1*mA.y;
+  const projB = w0*mB.x + w1*mB.y;
+  const b = -(projA + projB) / 2;
+
+  // Ensure class A is on the positive side
+  if (projA + b < 0) return { w0: -w0, w1: -w1, b: -b };
+  return { w0, w1, b };
+}
+
+function supPredict(px, py) { return supW[0]*px + supW[1]*py + supB; }
+
+function drawSupervised() {
+  supCtx.clearRect(0, 0, 700, 400);
+  supCtx.fillStyle = '#fafafa';
+  supCtx.fillRect(0, 0, 700, 400);
+
+  // Draw decision boundary regions + line
+  if (supTrained && supW) {
+    for (let px = 0; px < 700; px += 4) {
+      for (let py = 0; py < 400; py += 4) {
+        const v = supPredict(px, py);
+        supCtx.fillStyle = v > 0 ? 'rgba(33,150,243,0.08)' : 'rgba(229,57,53,0.08)';
+        supCtx.fillRect(px, py, 4, 4);
+      }
+    }
+    // Draw line: w0*x + w1*y + b = 0
+    supCtx.beginPath();
+    supCtx.strokeStyle = '#263238';
+    supCtx.lineWidth = 2.5;
+    supCtx.setLineDash([8, 5]);
+    if (Math.abs(supW[1]) > 1e-10) {
+      const yAt0   = (-supB - supW[0]*0)   / supW[1];
+      const yAt700 = (-supB - supW[0]*700) / supW[1];
+      supCtx.moveTo(0, yAt0);
+      supCtx.lineTo(700, yAt700);
+    } else if (Math.abs(supW[0]) > 1e-10) {
+      const xLine = -supB / supW[0];
+      supCtx.moveTo(xLine, 0);
+      supCtx.lineTo(xLine, 400);
+    }
+    supCtx.stroke();
+    supCtx.setLineDash([]);
+  }
+
+  // Draw points
+  supPoints.forEach(p => {
+    supCtx.beginPath();
+    supCtx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+    supCtx.fillStyle = p.cls === 'A' ? '#2196f3' : '#e53935';
+    supCtx.fill();
+    supCtx.strokeStyle = '#fff';
+    supCtx.lineWidth = 1.5;
+    supCtx.stroke();
+  });
+
+  // Stats
+  const a = supPoints.filter(p => p.cls === 'A').length;
+  const b = supPoints.filter(p => p.cls === 'B').length;
+  document.getElementById('statA').textContent = a;
+  document.getElementById('statB').textContent = b;
+}
+
+function computeAccuracy() {
+  if (!supW) return 0;
+  let correct = 0;
+  supPoints.forEach(p => {
+    const v = supPredict(p.x, p.y);
+    if ((v > 0 && p.cls === 'A') || (v <= 0 && p.cls === 'B')) correct++;
+  });
+  return Math.round(correct / supPoints.length * 100);
+}
+
+// Instant train: Fisher LDA (analytic, always works)
+function trainClassifier() {
+  if (supPoints.length < 4) generateSupPoints();
+  const pA = supPoints.filter(p => p.cls === 'A');
+  const pB = supPoints.filter(p => p.cls === 'B');
+  if (pA.length === 0 || pB.length === 0) return;
+
+  const result = fisherLDA(pA, pB);
+  supW = [result.w0, result.w1];
+  supB = result.b;
+  supTrained = true;
+  supEpoch = 1;
+
+  document.getElementById('statAcc').textContent = computeAccuracy() + '%';
+  document.getElementById('statEpochs').textContent = '1';
+  drawSupervised();
+}
+
+// Animated train: line rotates from random angle to the optimal Fisher solution
+async function animateTraining() {
+  if (supAnimating) return;
+  if (supPoints.length < 4) generateSupPoints();
+  supAnimating = true;
+
+  const pA = supPoints.filter(p => p.cls === 'A');
+  const pB = supPoints.filter(p => p.cls === 'B');
+  if (pA.length === 0 || pB.length === 0) { supAnimating = false; return; }
+
+  // Target: Fisher solution
+  const target = fisherLDA(pA, pB);
+  const targetAngle = Math.atan2(target.w1, target.w0);
+  const targetB = target.b;
+
+  // Start from a random angle, with b=0
+  let currentAngle = Math.random() * Math.PI * 2;
+  let currentB = 0;
+  const totalSteps = 40;
+
+  for (let step = 1; step <= totalSteps; step++) {
+    const t = step / totalSteps;
+    // Ease-in-out
+    const ease = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
+
+    // Interpolate angle (shortest path)
+    let dAngle = targetAngle - currentAngle;
+    // Normalize to [-PI, PI] for shortest rotation only on first step
+    if (step === 1) {
+      while (dAngle > Math.PI) dAngle -= 2*Math.PI;
+      while (dAngle < -Math.PI) dAngle += 2*Math.PI;
+      currentAngle = targetAngle - dAngle; // store corrected start
+    }
+    const angle = currentAngle + (targetAngle - currentAngle) * ease;
+    const bInterp = currentB + (targetB - currentB) * ease;
+
+    supW = [Math.cos(angle), Math.sin(angle)];
+    // Scale w so that the boundary b is correct
+    const wLen = Math.sqrt(target.w0*target.w0 + target.w1*target.w1);
+    supW = [Math.cos(angle)*wLen, Math.sin(angle)*wLen];
+    supB = bInterp;
+    supTrained = true;
+    supEpoch = step;
+
+    document.getElementById('statAcc').textContent = computeAccuracy() + '%';
+    document.getElementById('statEpochs').textContent = step;
+    drawSupervised();
+    await new Promise(r => setTimeout(r, 50));
+  }
+
+  // Final: set exact Fisher solution
+  supW = [target.w0, target.w1];
+  supB = target.b;
+  document.getElementById('statAcc').textContent = computeAccuracy() + '%';
+  document.getElementById('statEpochs').textContent = totalSteps;
+  drawSupervised();
+  supAnimating = false;
+}
+
+function clearSupervised() {
+  supAnimating = false;
+  supPoints = [];
+  supTrained = false;
+  supW = null;
+  supEpoch = 0;
+  document.getElementById('statAcc').textContent = '—';
+  document.getElementById('statEpochs').textContent = '0';
+  drawSupervised();
+}
+
+drawSupervised();
+
+// ===== UNSUPERVISED LEARNING (K-Means) =====
+const unsupCanvas = document.getElementById('unsupCanvas');
+const unsupCtx = unsupCanvas.getContext('2d');
+let unsupPoints = [];
+let centroids = [];
+let assignments = [];
+let kIter = 0;
+let kConverged = false;
+const clusterColors = ['#2196f3', '#e53935', '#00c853', '#ff6f00', '#9c27b0'];
+
+function generateUnsupPoints() {
+  unsupPoints = [];
+  const k = parseInt(document.getElementById('kSlider').value);
+  const centers = [];
+  for (let i = 0; i < k; i++) {
+    centers.push({ x: 100 + Math.random() * 500, y: 60 + Math.random() * 280 });
+  }
+  for (let i = 0; i < 120; i++) {
+    const c = centers[Math.floor(Math.random() * k)];
+    unsupPoints.push({
+      x: Math.max(15, Math.min(685, c.x + (Math.random() - 0.5) * 160)),
+      y: Math.max(15, Math.min(385, c.y + (Math.random() - 0.5) * 140))
+    });
+  }
+  centroids = [];
+  assignments = [];
+  kIter = 0;
+  kConverged = false;
+  document.getElementById('statIter').textContent = '0';
+  document.getElementById('statPts').textContent = unsupPoints.length;
+  document.getElementById('statConv').textContent = 'No';
+  drawUnsupervised();
+}
+
+function initCentroids() {
+  const k = parseInt(document.getElementById('kSlider').value);
+  centroids = [];
+  for (let i = 0; i < k; i++) {
+    const idx = Math.floor(Math.random() * unsupPoints.length);
+    centroids.push({ ...unsupPoints[idx] });
+  }
+}
+
+function stepKMeans() {
+  if (unsupPoints.length === 0) return;
+  if (centroids.length === 0) initCentroids();
+  if (kConverged) return;
+
+  // Assign
+  const oldAssign = [...assignments];
+  assignments = unsupPoints.map(p => {
+    let minD = Infinity, minI = 0;
+    centroids.forEach((c, i) => {
+      const d = (p.x - c.x) ** 2 + (p.y - c.y) ** 2;
+      if (d < minD) { minD = d; minI = i; }
+    });
+    return minI;
+  });
+
+  // Update centroids
+  centroids.forEach((c, i) => {
+    const pts = unsupPoints.filter((_, j) => assignments[j] === i);
+    if (pts.length > 0) {
+      c.x = pts.reduce((s, p) => s + p.x, 0) / pts.length;
+      c.y = pts.reduce((s, p) => s + p.y, 0) / pts.length;
+    }
+  });
+
+  kIter++;
+  document.getElementById('statIter').textContent = kIter;
+
+  // Check convergence
+  if (JSON.stringify(oldAssign) === JSON.stringify(assignments) && kIter > 1) {
+    kConverged = true;
+    document.getElementById('statConv').textContent = 'Sí';
+  }
+
+  drawUnsupervised();
+}
+
+function runKMeans() {
+  if (unsupPoints.length === 0) return;
+  if (centroids.length === 0) initCentroids();
+  for (let i = 0; i < 50 && !kConverged; i++) stepKMeans();
+}
+
+function clearUnsupervised() {
+  unsupPoints = [];
+  centroids = [];
+  assignments = [];
+  kIter = 0;
+  kConverged = false;
+  document.getElementById('statIter').textContent = '0';
+  document.getElementById('statPts').textContent = '0';
+  document.getElementById('statConv').textContent = 'No';
+  drawUnsupervised();
+}
+
+function drawUnsupervised() {
+  unsupCtx.clearRect(0, 0, 700, 400);
+  unsupCtx.fillStyle = '#fafafa';
+  unsupCtx.fillRect(0, 0, 700, 400);
+
+  unsupPoints.forEach((p, i) => {
+    unsupCtx.beginPath();
+    unsupCtx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+    unsupCtx.fillStyle = assignments.length > 0 ? clusterColors[assignments[i] % clusterColors.length] : '#546e7a';
+    unsupCtx.fill();
+    unsupCtx.strokeStyle = '#fff';
+    unsupCtx.lineWidth = 1.5;
+    unsupCtx.stroke();
+  });
+
+  centroids.forEach((c, i) => {
+    unsupCtx.beginPath();
+    unsupCtx.arc(c.x, c.y, 12, 0, Math.PI * 2);
+    unsupCtx.fillStyle = clusterColors[i % clusterColors.length];
+    unsupCtx.fill();
+    unsupCtx.strokeStyle = '#fff';
+    unsupCtx.lineWidth = 3;
+    unsupCtx.stroke();
+    unsupCtx.fillStyle = '#fff';
+    unsupCtx.font = 'bold 11px sans-serif';
+    unsupCtx.textAlign = 'center';
+    unsupCtx.textBaseline = 'middle';
+    unsupCtx.fillText('C', c.x, c.y);
+  });
+}
+
+drawUnsupervised();
+
+// ===== REINFORCEMENT LEARNING =====
+const ROWS = 6, COLS = 8;
+const maze = [
+  [0,0,0,1,0,0,0,0],
+  [0,1,0,1,0,1,1,0],
+  [0,1,0,0,0,0,0,0],
+  [0,0,0,1,1,1,0,1],
+  [0,1,0,0,0,0,0,0],
+  [0,0,0,0,1,0,0,2],
+];
+const START = [0, 0], GOAL = [5, 7];
+let qTable = {};
+let agentPos = [...START];
+let rlEpisode = 0;
+let bestReward = -Infinity;
+let bestPath = [];
+let rlRunning = false;
+let visitedCells = new Set();
+
+function stateKey(r, c) { return `${r},${c}`; }
+
+function getQ(s, a) {
+  const k = `${s}|${a}`;
+  if (!(k in qTable)) qTable[k] = 0;
+  return qTable[k];
+}
+function setQ(s, a, v) { qTable[`${s}|${a}`] = v; }
+
+const ACTIONS = [[0,1],[0,-1],[1,0],[-1,0]]; // right, left, down, up
+
+function isValid(r, c) {
+  return r >= 0 && r < ROWS && c >= 0 && c < COLS && maze[r][c] !== 1;
+}
+
+function renderMaze(path) {
+  const grid = document.getElementById('mazeGrid');
+  grid.innerHTML = '';
+  const pathSet = new Set((path || []).map(p => stateKey(p[0], p[1])));
+
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      if (r === agentPos[0] && c === agentPos[1]) {
+        cell.className += ' cell-agent';
+        cell.textContent = 'A';
+      } else if (r === GOAL[0] && c === GOAL[1]) {
+        cell.className += ' cell-goal';
+        cell.textContent = '\u2605';
+      } else if (maze[r][c] === 1) {
+        cell.className += ' cell-wall';
+      } else if (pathSet.has(stateKey(r, c))) {
+        cell.className += ' cell-path';
+      } else if (visitedCells.has(stateKey(r, c))) {
+        cell.className += ' cell-visited';
+      } else {
+        cell.className += ' cell-empty';
+      }
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function runEpisode() {
+  let pos = [...START];
+  let totalReward = 0;
+  let path = [pos.slice()];
+  const eps = Math.max(0.1, 1 - rlEpisode * 0.01);
+  const alpha = 0.1, gamma = 0.9;
+
+  for (let step = 0; step < 200; step++) {
+    const s = stateKey(pos[0], pos[1]);
+
+    // Epsilon-greedy
+    let aIdx;
+    if (Math.random() < eps) {
+      aIdx = Math.floor(Math.random() * 4);
+    } else {
+      let bestQ = -Infinity;
+      aIdx = 0;
+      for (let i = 0; i < 4; i++) {
+        const q = getQ(s, i);
+        if (q > bestQ) { bestQ = q; aIdx = i; }
+      }
+    }
+
+    const nr = pos[0] + ACTIONS[aIdx][0];
+    const nc = pos[1] + ACTIONS[aIdx][1];
+
+    let reward = -1;
+    let newPos;
+    if (isValid(nr, nc)) {
+      newPos = [nr, nc];
+      if (nr === GOAL[0] && nc === GOAL[1]) reward = 10;
+    } else {
+      newPos = [...pos];
+      reward = -2;
+    }
+
+    const ns = stateKey(newPos[0], newPos[1]);
+    let maxNextQ = -Infinity;
+    for (let i = 0; i < 4; i++) maxNextQ = Math.max(maxNextQ, getQ(ns, i));
+
+    setQ(s, aIdx, getQ(s, aIdx) + alpha * (reward + gamma * maxNextQ - getQ(s, aIdx)));
+
+    pos = newPos;
+    totalReward += reward;
+    path.push(pos.slice());
+    visitedCells.add(stateKey(pos[0], pos[1]));
+
+    if (pos[0] === GOAL[0] && pos[1] === GOAL[1]) break;
+  }
+
+  if (totalReward > bestReward) {
+    bestReward = totalReward;
+    bestPath = path;
+  }
+
+  rlEpisode++;
+  return { path, totalReward };
+}
+
+async function startRL() {
+  if (rlRunning) return;
+  rlRunning = true;
+  const speed = parseInt(document.getElementById('speedSlider').value);
+  const delay = Math.max(10, 200 - speed * 20);
+
+  for (let ep = 0; ep < 100; ep++) {
+    const result = runEpisode();
+
+    // Animate last few steps
+    if (ep % Math.max(1, Math.floor(10 / speed)) === 0) {
+      for (let i = 0; i < result.path.length; i++) {
+        agentPos = result.path[i];
+        renderMaze();
+        await new Promise(r => setTimeout(r, delay / result.path.length * 5));
+      }
+    }
+
+    document.getElementById('statEpisode').textContent = rlEpisode;
+    document.getElementById('statReward').textContent = Math.round(bestReward);
+    if (bestPath.length > 0) {
+      document.getElementById('statSteps').textContent = bestPath.length - 1;
+    }
+
+    await new Promise(r => setTimeout(r, 5));
+  }
+
+  agentPos = [...START];
+  renderMaze();
+  rlRunning = false;
+}
+
+function showBestPath() {
+  if (bestPath.length === 0) return;
+  agentPos = [...START];
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i >= bestPath.length) { clearInterval(interval); return; }
+    agentPos = bestPath[i];
+    renderMaze(bestPath.slice(0, i + 1));
+    i++;
+  }, 120);
+}
+
+function resetRL() {
+  rlRunning = false;
+  qTable = {};
+  rlEpisode = 0;
+  bestReward = -Infinity;
+  bestPath = [];
+  agentPos = [...START];
+  visitedCells = new Set();
+  document.getElementById('statEpisode').textContent = '0';
+  document.getElementById('statReward').textContent = '0';
+  document.getElementById('statSteps').textContent = '—';
+  renderMaze();
+}
+
+renderMaze();
+</script>
+</body>
+</html>
