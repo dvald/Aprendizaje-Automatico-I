@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo: Tratamiento de Datos para el Aprendizaje Automático</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f0f4f8; color: #1a2940; }
+
+  .header { background: #0f1b2d; color: white; padding: 2rem 2rem 1.5rem; }
+  .header h1 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+  .header p { color: #90a4ae; font-size: 0.95rem; }
+
+  .tabs { display: flex; gap: 0; background: #1a2940; padding: 0 2rem; overflow-x: auto; }
+  .tab { padding: 0.8rem 1.5rem; cursor: pointer; color: #90a4ae; border-bottom: 3px solid transparent; transition: all 0.2s; font-weight: 600; font-size: 0.95rem; white-space: nowrap; }
+  .tab:hover { color: #fff; }
+  .tab.active { color: #fff; border-bottom-color: #2196f3; }
+
+  .content { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .card { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .card h2 { font-size: 1.3rem; margin-bottom: 0.8rem; }
+  .card p { line-height: 1.6; color: #37474f; margin-bottom: 1rem; }
+
+  canvas { border: 1px solid #e0e0e0; border-radius: 8px; display: block; margin: 0 auto; max-width: 100%; height: auto; }
+
+  .controls { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: center; margin: 1rem 0; }
+  .btn { padding: 0.5rem 1.2rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.15s; }
+  .btn-blue { background: #2196f3; color: white; }
+  .btn-blue:hover { background: #1976d2; }
+  .btn-teal { background: #00897b; color: white; }
+  .btn-teal:hover { background: #00695c; }
+  .btn-orange { background: #ff6f00; color: white; }
+  .btn-orange:hover { background: #e65100; }
+  .btn-red { background: #e53935; color: white; }
+  .btn-red:hover { background: #c62828; }
+  .btn-gray { background: #eceff1; color: #37474f; }
+  .btn-gray:hover { background: #cfd8dc; }
+  .btn-purple { background: #7b1fa2; color: white; font-size: 0.8rem; }
+  .btn-purple:hover { background: #6a1b9a; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .info-box { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+  .info-box p { color: #1565c0; margin: 0; }
+
+  .stats { display: flex; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap; }
+  .stat { text-align: center; }
+  .stat .num { font-size: 2rem; font-weight: 700; color: #2196f3; }
+  .stat .label { font-size: 0.8rem; color: #90a4ae; }
+
+  .legend { display: flex; gap: 1rem; margin: 0.8rem 0; flex-wrap: wrap; font-size: 0.85rem; }
+  .legend-item { display: flex; align-items: center; gap: 0.3rem; }
+  .legend-color { width: 16px; height: 16px; border-radius: 3px; }
+
+  .slider-container { display: flex; align-items: center; gap: 0.5rem; }
+  .slider-container input[type=range] { width: 150px; }
+  .slider-label { font-size: 0.85rem; color: #546e7a; min-width: 100px; }
+
+  /* ===== Step info (boxplot) ===== */
+  .step-info { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 0.8rem 1.2rem; border-radius: 0 8px 8px 0; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; }
+  .step-number { color: #2196f3; font-weight: 700; }
+
+  /* ===== Tables (encoding) ===== */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .data-table th { background: #1a2940; color: white; padding: 0.6rem 0.8rem; text-align: left; font-weight: 600; }
+  .data-table td { padding: 0.6rem 0.8rem; border-bottom: 1px solid #e0e0e0; }
+  .data-table tr:hover { background: #f5f5f5; }
+  .data-table .highlight { background: #fff3e0; font-weight: 600; color: #e65100; }
+
+  /* ===== Encoding comparison ===== */
+  .enc-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1rem 0; }
+  .enc-column h3 { font-size: 0.95rem; margin-bottom: 0.8rem; font-weight: 700; }
+  @media (max-width: 768px) { .enc-comparison { grid-template-columns: 1fr; } }
+
+  /* ===== Bar charts (encoding) ===== */
+  .bar-chart { display: flex; align-items: flex-end; justify-content: space-around; height: 200px; gap: 1rem; padding: 1rem; background: #f5f7fa; border-radius: 8px; border: 1px solid #e0e0e0; }
+  .bar-wrapper { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 0.5rem; }
+  .bar { width: 80%; background: linear-gradient(180deg, #2196f3, #1565c0); border-radius: 4px 4px 0 0; transition: height 0.8s ease; min-height: 5px; position: relative; box-shadow: 0 2px 8px rgba(33,150,243,0.3); }
+  .bar-value { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); color: #2196f3; font-weight: 600; font-size: 0.8rem; white-space: nowrap; }
+  .bar-label { text-align: center; font-size: 0.8rem; color: #546e7a; font-weight: 600; }
+
+  /* ===== Formula box (encoding) ===== */
+  .formula-box { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0; font-family: 'Courier New', monospace; font-size: 0.85rem; color: #1a2940; line-height: 1.6; }
+  .formula-box strong { color: #1565c0; }
+
+  .enc-info { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 0.8rem 1rem; border-radius: 0 8px 8px 0; margin: 0.8rem 0; font-size: 0.85rem; color: #2e7d32; line-height: 1.5; }
+
+  /* ===== Kurtosis types (asimetria) ===== */
+  .kurtosis-types { display: flex; gap: 0.8rem; margin: 1rem 0; font-size: 0.85rem; text-align: center; flex-wrap: wrap; }
+  .kurtosis-type { flex: 1; min-width: 100px; padding: 0.6rem; border-radius: 6px; background: #eceff1; border: 2px solid #e0e0e0; color: #546e7a; transition: all 0.2s; cursor: pointer; font-weight: 500; }
+  .kurtosis-type.active { background: #2196f3; color: white; border-color: #2196f3; transform: scale(1.05); }
+
+  /* ===== Partition layout ===== */
+  .part-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 850px) { .part-grid { grid-template-columns: 1fr; } }
+  .part-card { background: #f5f7fa; border-left: 4px solid #2196f3; padding: 1rem; border-radius: 0 8px 8px 0; margin-bottom: 1rem; }
+  .part-card h3 { font-size: 0.9rem; color: #1a2940; margin-bottom: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .slider-group { margin-bottom: 0.8rem; }
+  .slider-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: #546e7a; margin-bottom: 4px; }
+  .slider-row .pct-val { color: #2196f3; font-weight: 700; }
+  .slider-group input[type=range] { width: 100%; height: 6px; border-radius: 3px; background: #ddd; outline: none; -webkit-appearance: none; appearance: none; }
+  .slider-group input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #2196f3; cursor: pointer; box-shadow: 0 2px 4px rgba(33,150,243,0.4); }
+  .slider-group input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #2196f3; cursor: pointer; border: none; }
+
+  .partition-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 0.5rem; }
+  .partition-bar-train { background: #4caf50; flex: var(--train-width); }
+  .partition-bar-val { background: #ff9800; flex: var(--val-width); }
+  .partition-bar-test { background: #f44336; flex: var(--test-width); }
+
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem; margin-top: 1rem; }
+  .metric-card { background: #f5f7fa; border: 2px solid #e0e0e0; border-radius: 8px; padding: 1rem; text-align: center; }
+  .metric-card.train { border-color: #4caf50; }
+  .metric-card.val { border-color: #ff9800; }
+  .metric-card.test { border-color: #f44336; }
+  .metric-label { font-size: 0.75rem; color: #90a4ae; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem; }
+  .metric-value { font-size: 1.8rem; font-weight: 700; color: #1a2940; }
+  .metric-value.train { color: #4caf50; }
+  .metric-value.val { color: #ff9800; }
+  .metric-value.test { color: #f44336; }
+
+  .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 0.8rem 1rem; border-radius: 0 8px 8px 0; font-size: 0.85rem; color: #856404; margin-top: 0.8rem; display: none; }
+  .warning.show { display: block; }
+  .warning.error { background: #ffebee; border-left-color: #e53935; color: #c62828; }
+
+  .canvas-legend { display: flex; gap: 1rem; font-size: 0.8rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .legend-dot.c0t { background: #3f51b5; border: 2px solid #333; }
+  .legend-dot.c1t { background: #ff6f00; border: 2px solid #333; }
+  .legend-dot.vdot { background: #90a4ae; border: 2px dashed #888; }
+  .legend-dot.tdot { background: #90a4ae; border: 2px dotted #aaa; }
+
+  .status-text { font-size: 0.8rem; color: #90a4ae; margin-top: 0.5rem; font-style: italic; }
+
+  .scenarios-grid { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+
+  .hidden { display: none !important; }
+  .fade-in { animation: fadeIn 0.6s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Tratamiento de Datos para el Aprendizaje Automático</h1>
+  <p>Demo interactiva — Tema 2: Tratamiento de datos</p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showSection('outliers')">Outliers</div>
+  <div class="tab" onclick="showSection('asimetria')">Asimetría</div>
+  <div class="tab" onclick="showSection('boxplot')">Boxplot</div>
+  <div class="tab" onclick="showSection('encoding')">Encoding</div>
+  <div class="tab" onclick="showSection('particion')">Partición</div>
+</div>
+
+<div class="content">
+
+<!-- ===== OUTLIERS ===== -->
+<div id="outliers" class="section active">
+  <div class="card">
+    <h2>Efecto de los outliers en media y mediana</h2>
+    <p>Observa cómo un valor extremo (outlier) afecta drásticamente a la media, pero apenas afecta a la mediana. Mueve el deslizador para explorar el impacto.</p>
+
+    <div class="controls">
+      <button class="btn btn-gray" onclick="resetOutlierData()">Restablecer</button>
+      <button class="btn btn-blue" onclick="randomizeOutlierData()">Aleatorio</button>
+      <div class="slider-container">
+        <span class="slider-label">Valor del outlier:</span>
+        <input type="range" id="outlierSlider" min="0" max="200" value="40" step="1">
+        <span id="outlierDisplay">40</span>
+      </div>
+    </div>
+
+    <canvas id="outlierChart" width="700" height="400"></canvas>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-color" style="background:#e53935"></div> Media (μ)</div>
+      <div class="legend-item"><div class="legend-color" style="background:#00c853"></div> Mediana (M)</div>
+    </div>
+
+    <div class="info-box">
+      <p><strong>Concepto clave:</strong> La media es sensible a valores extremos, mientras que la mediana es robusta y resistente a outliers.</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="num" id="meanValue" style="color:#e53935">—</div><div class="label">Media (μ)</div></div>
+      <div class="stat"><div class="num" id="medianValue" style="color:#00c853">—</div><div class="label">Mediana (M)</div></div>
+      <div class="stat"><div class="num" id="rangeValue" style="color:#ff6f00">—</div><div class="label">Rango</div></div>
+      <div class="stat"><div class="num" id="diffValue" style="color:#9c27b0">—</div><div class="label">Diferencia (μ−M)</div></div>
+    </div>
+
+    <div id="outlierInterpretation" class="info-box">
+      <p>Mueve el deslizador para ver el efecto del outlier.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ASIMETRIA Y CURTOSIS ===== -->
+<div id="asimetria" class="section">
+  <div class="card">
+    <h2>Asimetría (Skewness)</h2>
+    <p>Ajusta el deslizador para ver cómo cambia la forma de la distribución y la posición relativa de media, mediana y moda.</p>
+
+    <div class="controls">
+      <div class="slider-container" style="flex:1">
+        <span class="slider-label">Asimetría:</span>
+        <input type="range" id="skewnessSlider" min="-3" max="3" step="0.1" value="0" style="width:200px">
+        <span id="skewnessValue">0.00</span>
+      </div>
+    </div>
+
+    <canvas id="skewnessCanvas" width="500" height="280"></canvas>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-color" style="background:#e53935"></div> Media (μ)</div>
+      <div class="legend-item"><div class="legend-color" style="background:#ff6f00"></div> Mediana</div>
+      <div class="legend-item"><div class="legend-color" style="background:#2196f3"></div> Moda</div>
+    </div>
+
+    <div class="info-box">
+      <p><strong>Concepto clave:</strong> La asimetría mide la simetría de la distribución. Valores negativos → cola a la izquierda; positivos → cola a la derecha; cero → simetría perfecta.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Curtosis (Kurtosis)</h2>
+    <p>Compara las tres formas de distribución según su curtosis: platicúrtica (achatada), mesocúrtica (normal) y leptocúrtica (puntiaguda).</p>
+
+    <div class="controls">
+      <div class="slider-container" style="flex:1">
+        <span class="slider-label">Curtosis:</span>
+        <input type="range" id="kurtosisSlider" min="1" max="3" step="0.1" value="2" style="width:200px">
+        <span id="kurtosisValue">3.00</span>
+      </div>
+    </div>
+
+    <canvas id="kurtosisCanvas" width="500" height="280"></canvas>
+
+    <div class="kurtosis-types">
+      <div class="kurtosis-type" data-type="1"><strong>Platicúrtica</strong><br><small>(Achatada)</small></div>
+      <div class="kurtosis-type active" data-type="2"><strong>Mesocúrtica</strong><br><small>(Normal)</small></div>
+      <div class="kurtosis-type" data-type="3"><strong>Leptocúrtica</strong><br><small>(Puntiaguda)</small></div>
+    </div>
+
+    <div class="info-box">
+      <p><strong>Concepto clave:</strong> La curtosis mide la concentración de datos en las colas. La distribución normal tiene curtosis = 3 (exceso de curtosis = 0).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BOXPLOT ===== -->
+<div id="boxplot" class="section">
+  <div class="card">
+    <h2>Construcción de un Boxplot paso a paso</h2>
+    <p>Visualiza paso a paso cómo se construye un diagrama de caja a partir de un conjunto de datos.</p>
+
+    <div class="step-info">
+      <span class="step-number" id="step-counter">Paso 1/8:</span>
+      <span id="step-description">Datos sin procesar en una recta numérica</span>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-blue" id="btnSiguiente">Siguiente paso</button>
+      <button class="btn btn-gray" id="btnReiniciar">Reiniciar</button>
+      <button class="btn btn-teal" id="btnNuevo">Nuevo dataset</button>
+    </div>
+
+    <canvas id="boxplotCanvas" width="900" height="300"></canvas>
+
+    <div class="stats" style="justify-content:center">
+      <div class="stat"><div class="num" id="stat-min">—</div><div class="label">Mínimo</div></div>
+      <div class="stat"><div class="num" id="stat-q1">—</div><div class="label">Q1</div></div>
+      <div class="stat"><div class="num" id="stat-q2">—</div><div class="label">Mediana (Q2)</div></div>
+      <div class="stat"><div class="num" id="stat-q3">—</div><div class="label">Q3</div></div>
+      <div class="stat"><div class="num" id="stat-max">—</div><div class="label">Máximo</div></div>
+      <div class="stat"><div class="num" id="stat-iqr">—</div><div class="label">RIQ (IQR)</div></div>
+    </div>
+
+    <div class="info-box">
+      <p><strong>Nota pedagógica:</strong> El boxplot resume la distribución en cinco valores clave: mínimo, Q1, mediana, Q3 y máximo. Es útil para identificar simetría, dispersión y outliers.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ENCODING Y ESCALADO ===== -->
+<div id="encoding" class="section">
+  <div class="card">
+    <h2>Codificación de variables categóricas</h2>
+    <p>Los algoritmos de ML necesitan números, no texto. Compara Label Encoding vs One-Hot Encoding.</p>
+
+    <div class="controls">
+      <button class="btn btn-blue" onclick="applyLabelEncoding()">Label Encoding</button>
+      <button class="btn btn-teal" onclick="applyOneHotEncoding()">One-Hot Encoding</button>
+      <button class="btn btn-gray" onclick="resetEncoding()">Reiniciar</button>
+    </div>
+
+    <div class="enc-comparison">
+      <div class="enc-column">
+        <h3 style="color:#e53935">Antes (datos originales)</h3>
+        <table class="data-table">
+          <thead><tr><th>Nombre</th><th>Color favorito</th><th>Puntuación</th></tr></thead>
+          <tbody>
+            <tr><td>Ana</td><td>Rojo</td><td>85</td></tr>
+            <tr><td>Luis</td><td>Azul</td><td>92</td></tr>
+            <tr><td>María</td><td>Verde</td><td>78</td></tr>
+            <tr><td>Carlos</td><td>Rojo</td><td>88</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="enc-column hidden" id="encoding-after">
+        <h3 style="color:#00c853">Después (codificado)</h3>
+        <div id="encoding-result"></div>
+      </div>
+    </div>
+
+    <div id="encoding-formula" class="hidden">
+      <div id="encoding-formula-box"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Escalado de características numéricas</h2>
+    <p>Las escalas muy diferentes pueden sesgar los algoritmos. Compara MinMaxScaler vs StandardScaler.</p>
+
+    <div class="controls">
+      <button class="btn btn-blue" onclick="applyMinMaxScaler()">MinMaxScaler [0,1]</button>
+      <button class="btn btn-teal" onclick="applyStandardScaler()">StandardScaler (z-score)</button>
+      <button class="btn btn-gray" onclick="resetScaling()">Reiniciar</button>
+    </div>
+
+    <div class="enc-comparison">
+      <div class="enc-column">
+        <h3 style="color:#e53935">Antes (escalas diferentes)</h3>
+        <div id="before-chart" class="bar-chart"></div>
+      </div>
+      <div class="enc-column hidden" id="scaling-after">
+        <h3 style="color:#00c853">Después (normalizado)</h3>
+        <div id="after-chart" class="bar-chart"></div>
+      </div>
+    </div>
+
+    <div id="scaling-formula" class="hidden">
+      <div id="scaling-formula-box"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PARTICION DE DATOS ===== -->
+<div id="particion" class="section">
+  <div class="card">
+    <h2>El Laboratorio de Partición</h2>
+    <p>Explora cómo las decisiones de partición (train/val/test) afectan el rendimiento del modelo.</p>
+
+    <div class="part-grid">
+      <div>
+        <div class="part-card">
+          <h3>Distribuir datos</h3>
+          <div class="slider-group">
+            <div class="slider-row"><span>Entrenamiento (Train)</span><span class="pct-val"><span id="train-percent">60</span>%</span></div>
+            <input type="range" id="train-slider" min="5" max="90" value="60" step="5">
+          </div>
+          <div class="slider-group">
+            <div class="slider-row"><span>Validación (Val)</span><span class="pct-val"><span id="val-percent">20</span>%</span></div>
+            <input type="range" id="val-slider" min="0" max="90" value="20" step="5">
+          </div>
+          <div class="slider-group">
+            <div class="slider-row"><span>Prueba (Test)</span><span class="pct-val"><span id="test-percent">20</span>%</span></div>
+            <input type="range" id="test-slider" min="5" max="90" value="20" step="5">
+          </div>
+          <div class="partition-bar">
+            <div class="partition-bar-train" style="--train-width:60%"></div>
+            <div class="partition-bar-val" style="--val-width:20%"></div>
+            <div class="partition-bar-test" style="--test-width:20%"></div>
+          </div>
+        </div>
+
+        <div class="part-card">
+          <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.9rem">
+            <input type="checkbox" id="shuffle-checkbox" checked style="width:18px;height:18px;accent-color:#2196f3">
+            Mezclar datos (shuffle)
+          </label>
+        </div>
+
+        <div class="controls">
+          <button class="btn btn-blue" onclick="trainAndEvaluate()">Particionar y Entrenar</button>
+          <button class="btn btn-gray" onclick="resetPartitionDemo()">Reiniciar</button>
+        </div>
+        <div class="status-text" id="status-text"></div>
+      </div>
+
+      <div>
+        <div class="canvas-legend">
+          <div class="legend-item"><div class="legend-dot c0t"></div> Clase 0 (Train)</div>
+          <div class="legend-item"><div class="legend-dot c1t"></div> Clase 1 (Train)</div>
+          <div class="legend-item"><div class="legend-dot vdot"></div> Validación</div>
+          <div class="legend-item"><div class="legend-dot tdot"></div> Prueba</div>
+        </div>
+        <canvas id="partitionCanvas" width="450" height="350"></canvas>
+
+        <div class="metrics-grid">
+          <div class="metric-card train">
+            <div class="metric-label">Entrenamiento</div>
+            <div class="metric-value train" id="train-acc">—</div>
+          </div>
+          <div class="metric-card val">
+            <div class="metric-label">Validación</div>
+            <div class="metric-value val" id="val-acc">—</div>
+          </div>
+          <div class="metric-card test">
+            <div class="metric-label">Prueba</div>
+            <div class="metric-value test" id="test-acc">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="warning" id="warning-small-train"><strong>Conjunto de entrenamiento muy pequeño:</strong> Con tan pocos datos de entrenamiento, el modelo no puede aprender patrones.</div>
+    <div class="warning" id="warning-small-test"><strong>Conjunto de prueba muy pequeño:</strong> La estimación de rendimiento no es confiable.</div>
+    <div class="warning" id="warning-no-val"><strong>Sin conjunto de validación:</strong> No puedes ajustar hiperparámetros ni detectar sobreajuste.</div>
+    <div class="warning error" id="warning-overfitting"><strong>SOBREAJUSTE DETECTADO:</strong> La precisión en entrenamiento es mucho mayor que en prueba.</div>
+    <div class="warning error" id="warning-data-leakage"><strong>FUGA DE DATOS SIMULADA:</strong> La precisión en prueba es artificialmente alta.</div>
+
+    <div class="info-box" style="margin-top:1rem">
+      <p><strong>Escenarios predefinidos:</strong> Haz clic para cargar un ejemplo ilustrativo.</p>
+    </div>
+    <div class="scenarios-grid">
+      <button class="btn btn-purple" onclick="loadScenario('good')">Ideal (60/20/20)</button>
+      <button class="btn btn-purple" onclick="loadScenario('little-train')">Poco entrenamiento (20%)</button>
+      <button class="btn btn-purple" onclick="loadScenario('little-test')">Poca prueba (5%)</button>
+      <button class="btn btn-purple" onclick="loadScenario('no-val')">Sin validación (70/0/30)</button>
+      <button class="btn btn-purple" onclick="loadScenario('no-shuffle')">Sin mezcla</button>
+      <button class="btn btn-purple" onclick="loadScenario('leakage')">Fuga de datos</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ===== TAB NAVIGATION =====
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelector('.tab[onclick*="' + id + '"]').classList.add('active');
+}
+
+
+// =============================================================================
+// OUTLIERS — Efecto en media y mediana
+// =============================================================================
+
+const outlierInitialData = [18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 31, 32, 34, 36];
+let outlierData = [...outlierInitialData];
+let outlierVal = 40;
+
+const outlierCanvas = document.getElementById('outlierChart');
+const outlierCtx = outlierCanvas.getContext('2d');
+
+function calcMean(arr) {
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+
+function calcMedian(arr) {
+  const sorted = [...arr].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 !== 0) return sorted[mid];
+  return (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function getOutlierDataWithOutlier() {
+  const withOutlier = [...outlierData];
+  withOutlier[withOutlier.length - 1] = outlierVal;
+  return withOutlier.sort((a, b) => a - b);
+}
+
+function drawOutlierChart() {
+  const dataWithOutlier = getOutlierDataWithOutlier();
+  const mean = calcMean(dataWithOutlier);
+  const median = calcMedian(dataWithOutlier);
+
+  const W = 700, H = 400;
+  outlierCtx.clearRect(0, 0, W, H);
+  outlierCtx.fillStyle = '#fafafa';
+  outlierCtx.fillRect(0, 0, W, H);
+
+  const margin = { top: 30, right: 30, bottom: 60, left: 60 };
+  const cw = W - margin.left - margin.right;
+  const ch = H - margin.top - margin.bottom;
+  const maxValue = Math.max(...dataWithOutlier, 100);
+  const scaleY = v => margin.top + ch - (v / maxValue) * ch;
+  const scaleX = i => margin.left + (i / (dataWithOutlier.length - 1)) * cw;
+
+  // Grid
+  outlierCtx.strokeStyle = 'rgba(0,0,0,0.05)';
+  outlierCtx.lineWidth = 1;
+  for (let i = 0; i <= 10; i++) {
+    const y = margin.top + (i / 10) * ch;
+    outlierCtx.beginPath();
+    outlierCtx.moveTo(margin.left, y);
+    outlierCtx.lineTo(margin.left + cw, y);
+    outlierCtx.stroke();
+  }
+
+  // Axes
+  outlierCtx.strokeStyle = '#333';
+  outlierCtx.lineWidth = 2;
+  outlierCtx.beginPath();
+  outlierCtx.moveTo(margin.left, margin.top);
+  outlierCtx.lineTo(margin.left, margin.top + ch);
+  outlierCtx.lineTo(margin.left + cw, margin.top + ch);
+  outlierCtx.stroke();
+
+  // Y labels
+  outlierCtx.fillStyle = '#666';
+  outlierCtx.font = '12px sans-serif';
+  outlierCtx.textAlign = 'right';
+  outlierCtx.textBaseline = 'middle';
+  for (let i = 0; i <= 10; i++) {
+    const v = (i / 10) * maxValue;
+    outlierCtx.fillText(v.toFixed(0), margin.left - 10, margin.top + ch - (i / 10) * ch);
+  }
+
+  // X labels
+  outlierCtx.textAlign = 'center';
+  outlierCtx.textBaseline = 'top';
+  for (let i = 0; i < dataWithOutlier.length; i += 2) {
+    outlierCtx.fillText((i + 1).toString(), scaleX(i), margin.top + ch + 10);
+  }
+
+  // Axis titles
+  outlierCtx.fillStyle = '#333';
+  outlierCtx.font = 'bold 13px sans-serif';
+  outlierCtx.textAlign = 'center';
+  outlierCtx.fillText('Persona (ordenada por salario)', margin.left + cw / 2, H - 10);
+  outlierCtx.save();
+  outlierCtx.translate(15, margin.top + ch / 2);
+  outlierCtx.rotate(-Math.PI / 2);
+  outlierCtx.fillText('Salario (cientos de euros)', 0, 0);
+  outlierCtx.restore();
+
+  // Median line
+  outlierCtx.strokeStyle = '#00c853';
+  outlierCtx.lineWidth = 3;
+  outlierCtx.setLineDash([10, 5]);
+  outlierCtx.beginPath();
+  outlierCtx.moveTo(margin.left, scaleY(median));
+  outlierCtx.lineTo(margin.left + cw, scaleY(median));
+  outlierCtx.stroke();
+
+  // Mean line
+  outlierCtx.strokeStyle = '#e53935';
+  outlierCtx.lineWidth = 3;
+  outlierCtx.setLineDash([5, 5]);
+  outlierCtx.beginPath();
+  outlierCtx.moveTo(margin.left, scaleY(mean));
+  outlierCtx.lineTo(margin.left + cw, scaleY(mean));
+  outlierCtx.stroke();
+  outlierCtx.setLineDash([]);
+
+  // Bars
+  const barW = (cw / dataWithOutlier.length) * 0.7;
+  for (let i = 0; i < dataWithOutlier.length; i++) {
+    const x = scaleX(i) - barW / 2;
+    const y = scaleY(dataWithOutlier[i]);
+    const bh = (dataWithOutlier[i] / maxValue) * ch;
+    outlierCtx.fillStyle = '#2196f3';
+    outlierCtx.fillRect(x, y, barW, bh);
+    outlierCtx.strokeStyle = '#1976d2';
+    outlierCtx.lineWidth = 1;
+    outlierCtx.strokeRect(x, y, barW, bh);
+  }
+}
+
+function updateOutlierChart() {
+  const dataWithOutlier = getOutlierDataWithOutlier();
+  const mean = calcMean(dataWithOutlier);
+  const median = calcMedian(dataWithOutlier);
+  const range = Math.max(...dataWithOutlier) - Math.min(...dataWithOutlier);
+  const diff = Math.abs(mean - median);
+
+  document.getElementById('outlierDisplay').textContent = outlierVal;
+  document.getElementById('meanValue').textContent = mean.toFixed(1);
+  document.getElementById('medianValue').textContent = median.toFixed(1);
+  document.getElementById('rangeValue').textContent = range.toFixed(1);
+  document.getElementById('diffValue').textContent = diff.toFixed(1);
+
+  const interp = document.getElementById('outlierInterpretation');
+  if (outlierVal > 60) {
+    interp.innerHTML = '<p><strong>Outlier extremo:</strong> El valor ' + outlierVal + ' es mucho mayor que el resto. La <span style="color:#e53935;font-weight:bold">media sube</span> a ' + mean.toFixed(1) + ', pero la <span style="color:#00c853;font-weight:bold">mediana permanece estable</span> en ' + median.toFixed(1) + '. Diferencia: ' + diff.toFixed(1) + '</p>';
+  } else if (outlierVal > 40) {
+    interp.innerHTML = '<p><strong>Outlier notable:</strong> El valor ' + outlierVal + ' es más alto que el resto. Media: ' + mean.toFixed(1) + ', Mediana: ' + median.toFixed(1) + '.</p>';
+  } else if (outlierVal < 10) {
+    interp.innerHTML = '<p><strong>Outlier bajo:</strong> El valor ' + outlierVal + ' es muy bajo. La media desciende a ' + mean.toFixed(1) + ', pero la mediana se mantiene en ' + median.toFixed(1) + '.</p>';
+  } else {
+    interp.innerHTML = '<p>El outlier (' + outlierVal + ') está dentro de un rango razonable. Media: ' + mean.toFixed(1) + ', Mediana: ' + median.toFixed(1) + '.</p>';
+  }
+
+  drawOutlierChart();
+}
+
+function resetOutlierData() {
+  outlierVal = 40;
+  outlierData = [...outlierInitialData];
+  document.getElementById('outlierSlider').value = 40;
+  updateOutlierChart();
+}
+
+function randomizeOutlierData() {
+  outlierVal = Math.floor(Math.random() * 150) + 5;
+  document.getElementById('outlierSlider').value = outlierVal;
+  updateOutlierChart();
+}
+
+document.getElementById('outlierSlider').addEventListener('input', function(e) {
+  outlierVal = parseFloat(e.target.value);
+  updateOutlierChart();
+});
+
+updateOutlierChart();
+
+
+// =============================================================================
+// ASIMETRIA Y CURTOSIS
+// =============================================================================
+
+function normalPDF(x, mean, std) {
+  mean = mean || 0; std = std || 1;
+  return (1 / (std * Math.sqrt(2 * Math.PI))) * Math.exp(-Math.pow(x - mean, 2) / (2 * std * std));
+}
+
+function skewNormalPDF(x, location, scale, shape) {
+  const delta = shape / Math.sqrt(1 + shape * shape);
+  const z = (x - location) / scale;
+  const pdf = (1 / scale) * normalPDF(z);
+  const cdf = 0.5 * (1 + erf(z / Math.sqrt(2)));
+  return 2 * pdf * cdf * delta;
+}
+
+function erf(x) {
+  const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+  const sign = x < 0 ? -1 : 1;
+  x = Math.abs(x);
+  const t = 1 / (1 + p * x);
+  return sign * (1 - (((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t) * Math.exp(-x * x));
+}
+
+function generalizedNormalPDF(x, beta, location, scale) {
+  location = location || 0; scale = scale || 1;
+  return (beta / (2 * scale * gammaBeta(1 / beta))) * Math.exp(-Math.pow(Math.abs((x - location) / scale), beta));
+}
+
+function gammaBeta(z) {
+  if (z === 1) return 1;
+  if (z === 0.5) return Math.sqrt(Math.PI);
+  return Math.sqrt(Math.PI) / (2 * Math.sqrt(z));
+}
+
+function drawDistCurve(ctx, pdfFunc, color, width) {
+  width = width || 2;
+  const cw = ctx.canvas.width, ch = ctx.canvas.height, pad = 40;
+  const pw = cw - 2 * pad, ph = ch - 2 * pad;
+  const xMin = -4, xMax = 4;
+
+  let maxY = 0;
+  for (let i = 0; i < pw; i++) {
+    const y = pdfFunc(xMin + (i / pw) * (xMax - xMin));
+    if (y > maxY) maxY = y;
+  }
+  maxY *= 1.15;
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.beginPath();
+  for (let i = 0; i <= pw; i++) {
+    const x = xMin + (i / pw) * (xMax - xMin);
+    const y = pdfFunc(x);
+    const cx = pad + i;
+    const cy = ch - pad - (y / maxY) * ph;
+    i === 0 ? ctx.moveTo(cx, cy) : ctx.lineTo(cx, cy);
+  }
+  ctx.stroke();
+
+  return { padding: pad, plotWidth: pw, plotHeight: ph, canvasHeight: ch, xMin, xMax, maxY };
+}
+
+function drawDistVertLine(ctx, xVal, label, color, info) {
+  const norm = (xVal - info.xMin) / (info.xMax - info.xMin);
+  if (norm < 0 || norm > 1) return;
+  const cx = info.padding + norm * info.plotWidth;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.moveTo(cx, info.padding);
+  ctx.lineTo(cx, info.canvasHeight - info.padding);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = color;
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, cx, info.padding - 12);
+}
+
+function drawDistAxes(ctx) {
+  const pad = 40, w = ctx.canvas.width, h = ctx.canvas.height;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.strokeStyle = '#f0f0f0';
+  ctx.lineWidth = 1;
+  const gs = (w - 2 * pad) / 8;
+  for (let i = 0; i <= 8; i++) {
+    const x = pad + i * gs;
+    ctx.beginPath(); ctx.moveTo(x, pad); ctx.lineTo(x, h - pad); ctx.stroke();
+  }
+
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(pad, h - pad);
+  ctx.lineTo(w - pad, h - pad);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(pad, pad);
+  ctx.lineTo(pad, h - pad);
+  ctx.stroke();
+
+  ctx.fillStyle = '#333';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('x', w - 20, h - pad + 20);
+  ctx.save();
+  ctx.translate(16, pad);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Densidad', 0, 0);
+  ctx.restore();
+}
+
+const skewnessCanvasEl = document.getElementById('skewnessCanvas');
+const skewnessCtx = skewnessCanvasEl.getContext('2d');
+const skewnessSlider = document.getElementById('skewnessSlider');
+const skewnessValueEl = document.getElementById('skewnessValue');
+
+function renderSkewness(skewness) {
+  drawDistAxes(skewnessCtx);
+  const pdfFunc = x => skewNormalPDF(x, 0, 1, skewness * 2.5);
+  const info = drawDistCurve(skewnessCtx, pdfFunc, '#2196f3', 3);
+
+  const meanX = skewness * 0.4;
+  const medianX = skewness * 0.15;
+  const modeX = -skewness * 0.15;
+
+  if (Math.abs(meanX - modeX) > 0.1) {
+    drawDistVertLine(skewnessCtx, meanX, 'Media', '#e53935', info);
+    drawDistVertLine(skewnessCtx, medianX, 'Mediana', '#ff6f00', info);
+    drawDistVertLine(skewnessCtx, modeX, 'Moda', '#2196f3', info);
+  } else {
+    drawDistVertLine(skewnessCtx, 0, 'Media=Mediana=Moda', '#00c853', info);
+  }
+
+  skewnessValueEl.textContent = skewness.toFixed(2);
+}
+
+skewnessSlider.addEventListener('input', e => renderSkewness(parseFloat(e.target.value)));
+renderSkewness(0);
+
+const kurtosisCanvasEl = document.getElementById('kurtosisCanvas');
+const kurtosisCtx = kurtosisCanvasEl.getContext('2d');
+const kurtosisSlider = document.getElementById('kurtosisSlider');
+const kurtosisValueEl = document.getElementById('kurtosisValue');
+const kurtosisTypeEls = document.querySelectorAll('.kurtosis-type');
+
+function renderKurtosis(level) {
+  drawDistAxes(kurtosisCtx);
+
+  kurtosisCtx.globalAlpha = level === 1 ? 1.0 : 0.3;
+  drawDistCurve(kurtosisCtx, x => generalizedNormalPDF(x, 0.7, 0, 1.1), '#90a4ae', 2);
+
+  kurtosisCtx.globalAlpha = level === 2 ? 1.0 : 0.3;
+  drawDistCurve(kurtosisCtx, x => normalPDF(x, 0, 1), '#2196f3', 2);
+
+  kurtosisCtx.globalAlpha = level === 3 ? 1.0 : 0.3;
+  drawDistCurve(kurtosisCtx, x => generalizedNormalPDF(x, 3, 0, 0.75), '#e53935', 2);
+
+  kurtosisCtx.globalAlpha = 1.0;
+
+  kurtosisTypeEls.forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.type) === Math.round(level));
+  });
+
+  const displayK = level === 1 ? 2.0 : level === 2 ? 3.0 : 4.5;
+  kurtosisValueEl.textContent = displayK.toFixed(2);
+}
+
+kurtosisSlider.addEventListener('input', e => renderKurtosis(Math.round(parseFloat(e.target.value))));
+kurtosisTypeEls.forEach(el => el.addEventListener('click', () => {
+  const t = parseInt(el.dataset.type);
+  kurtosisSlider.value = t;
+  renderKurtosis(t);
+}));
+renderKurtosis(2);
+
+window.addEventListener('resize', () => {
+  renderSkewness(parseFloat(skewnessSlider.value));
+  renderKurtosis(Math.round(parseFloat(kurtosisSlider.value)));
+});
+
+
+// =============================================================================
+// BOXPLOT — Construcción paso a paso
+// =============================================================================
+
+class BoxplotBuilder {
+  constructor(canvasId) {
+    this.canvas = document.getElementById(canvasId);
+    this.ctx = this.canvas.getContext('2d');
+    this.currentStep = 0;
+    this.totalSteps = 8;
+    this.data = [];
+    this.sortedData = [];
+    this.stats = {};
+    this.generateData();
+    this.updateStats();
+  }
+
+  generateData() {
+    this.data = Array.from({ length: 20 }, () => Math.floor(Math.random() * 91) + 10);
+    this.sortedData = [...this.data].sort((a, b) => a - b);
+    this.updateStats();
+  }
+
+  updateStats() {
+    const d = this.sortedData, n = d.length;
+    this.stats = {
+      min: d[0],
+      q1: d[Math.floor((n - 1) / 4)],
+      q2: d[Math.floor((n - 1) / 2)],
+      q3: d[Math.floor(3 * (n - 1) / 4)],
+      max: d[n - 1]
+    };
+    this.stats.iqr = this.stats.q3 - this.stats.q1;
+    document.getElementById('stat-min').textContent = this.stats.min;
+    document.getElementById('stat-q1').textContent = this.stats.q1;
+    document.getElementById('stat-q2').textContent = this.stats.q2;
+    document.getElementById('stat-q3').textContent = this.stats.q3;
+    document.getElementById('stat-max').textContent = this.stats.max;
+    document.getElementById('stat-iqr').textContent = this.stats.iqr;
+  }
+
+  reset() {
+    this.currentStep = 0;
+    this.draw();
+    this.updateDescription();
+    document.getElementById('btnSiguiente').disabled = false;
+  }
+
+  nextStep() {
+    if (this.currentStep < this.totalSteps) {
+      this.currentStep++;
+      this.draw();
+      this.updateDescription();
+      if (this.currentStep === this.totalSteps) document.getElementById('btnSiguiente').disabled = true;
+    }
+  }
+
+  updateDescription() {
+    const desc = [
+      "Datos sin procesar en una recta numérica",
+      "Datos ordenados de menor a mayor",
+      "Identificar el mínimo y el máximo",
+      "Identificar la mediana (Q2)",
+      "Identificar el primer cuartil (Q1)",
+      "Identificar el tercer cuartil (Q3)",
+      "Dibujar la caja desde Q1 hasta Q3",
+      "Dibujar los bigotes (whiskers) y completar el boxplot"
+    ];
+    document.getElementById('step-counter').textContent = 'Paso ' + (this.currentStep + 1) + '/' + this.totalSteps + ':';
+    document.getElementById('step-description').textContent = desc[this.currentStep];
+  }
+
+  draw() {
+    const ctx = this.ctx;
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    const padding = 60;
+    const availW = this.canvas.width - 2 * padding;
+    const cy = this.canvas.height / 2;
+    const minV = Math.min(...this.sortedData) - 5;
+    const maxV = Math.max(...this.sortedData) + 5;
+    const scale = availW / (maxV - minV);
+    const toX = v => padding + (v - minV) * scale;
+
+    this.drawAxis(ctx, padding, cy, availW, minV, maxV, scale);
+    if (this.currentStep >= 0) this.drawRaw(ctx, toX, cy);
+    if (this.currentStep >= 1) this.drawSorted(ctx, toX, cy);
+    if (this.currentStep >= 2) this.drawMinMax(ctx, toX, cy);
+    if (this.currentStep >= 3) this.drawMed(ctx, toX, cy);
+    if (this.currentStep >= 4) this.drawQ1(ctx, toX, cy);
+    if (this.currentStep >= 5) this.drawQ3(ctx, toX, cy);
+    if (this.currentStep >= 6) this.drawBox(ctx, toX, cy);
+    if (this.currentStep >= 7) this.drawWhiskers(ctx, toX, cy);
+  }
+
+  drawAxis(ctx, x, y, w, minV, maxV, scale) {
+    ctx.strokeStyle = '#ccc'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y); ctx.stroke();
+    ctx.fillStyle = '#666'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+    const step = Math.ceil((maxV - minV) / 5 / 10) * 10;
+    for (let v = Math.ceil(minV / 10) * 10; v <= maxV; v += step) {
+      const xp = x + (v - minV) * scale;
+      ctx.beginPath(); ctx.moveTo(xp, y); ctx.lineTo(xp, y + 5); ctx.stroke();
+      ctx.fillText(v, xp, y + 20);
+    }
+  }
+
+  drawRaw(ctx, toX, cy) {
+    ctx.fillStyle = '#2196f3'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Datos originales:', 70, cy - 80);
+    this.data.forEach(v => { ctx.beginPath(); ctx.arc(toX(v), cy - 40, 4, 0, 2 * Math.PI); ctx.fill(); });
+  }
+
+  drawSorted(ctx, toX, cy) {
+    ctx.fillStyle = '#333'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Datos ordenados:', 70, cy + 40);
+    this.sortedData.forEach(v => { ctx.fillStyle = '#666'; ctx.beginPath(); ctx.arc(toX(v), cy, 5, 0, 2 * Math.PI); ctx.fill(); });
+  }
+
+  drawMinMax(ctx, toX, cy) {
+    [{ val: this.stats.min, label: 'Min: ', yOff: -25 }, { val: this.stats.max, label: 'Max: ', yOff: 35 }].forEach(({ val, label, yOff }) => {
+      const x = toX(val);
+      ctx.fillStyle = '#e53935'; ctx.beginPath(); ctx.arc(x, cy, 7, 0, 2 * Math.PI); ctx.fill();
+      ctx.strokeStyle = '#c62828'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#c62828'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(label + val, x, cy + yOff);
+    });
+  }
+
+  drawMed(ctx, toX, cy) {
+    const x = toX(this.stats.q2);
+    ctx.strokeStyle = '#00c853'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x, cy - 60); ctx.lineTo(x, cy + 60); ctx.stroke();
+    ctx.fillStyle = '#00c853'; ctx.beginPath(); ctx.arc(x, cy, 8, 0, 2 * Math.PI); ctx.fill();
+    ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Q2 (Mediana): ' + this.stats.q2, x, cy - 75);
+  }
+
+  drawQ1(ctx, toX, cy) {
+    const x = toX(this.stats.q1);
+    ctx.strokeStyle = '#ff6f00'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
+    ctx.beginPath(); ctx.moveTo(x, cy - 60); ctx.lineTo(x, cy + 60); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#ff6f00'; ctx.beginPath(); ctx.arc(x, cy, 6, 0, 2 * Math.PI); ctx.fill();
+    ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Q1: ' + this.stats.q1, x, cy - 80);
+  }
+
+  drawQ3(ctx, toX, cy) {
+    const x = toX(this.stats.q3);
+    ctx.strokeStyle = '#ff6f00'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
+    ctx.beginPath(); ctx.moveTo(x, cy - 60); ctx.lineTo(x, cy + 60); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#ff6f00'; ctx.beginPath(); ctx.arc(x, cy, 6, 0, 2 * Math.PI); ctx.fill();
+    ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Q3: ' + this.stats.q3, x, cy + 80);
+  }
+
+  drawBox(ctx, toX, cy) {
+    const x1 = toX(this.stats.q1), x3 = toX(this.stats.q3), bh = 40;
+    ctx.fillStyle = 'rgba(33,150,243,0.2)'; ctx.strokeStyle = '#2196f3'; ctx.lineWidth = 2.5;
+    ctx.fillRect(x1, cy - bh / 2, x3 - x1, bh);
+    ctx.strokeRect(x1, cy - bh / 2, x3 - x1, bh);
+    ctx.fillStyle = '#2196f3'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('RIQ: ' + this.stats.iqr, (x1 + x3) / 2, cy + 65);
+  }
+
+  drawWhiskers(ctx, toX, cy) {
+    const xMin = toX(this.stats.min), xMax = toX(this.stats.max);
+    const x1 = toX(this.stats.q1), x3 = toX(this.stats.q3), bh = 40;
+    ctx.strokeStyle = '#263238'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(xMin, cy); ctx.lineTo(x1, cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(xMin, cy - bh / 2); ctx.lineTo(xMin, cy + bh / 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x3, cy); ctx.lineTo(xMax, cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(xMax, cy - bh / 2); ctx.lineTo(xMax, cy + bh / 2); ctx.stroke();
+    ctx.fillStyle = '#263238'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('BOXPLOT COMPLETO', this.canvas.width / 2, 30);
+  }
+}
+
+const boxplotBuilder = new BoxplotBuilder('boxplotCanvas');
+boxplotBuilder.updateDescription();
+boxplotBuilder.draw();
+
+document.getElementById('btnSiguiente').addEventListener('click', () => boxplotBuilder.nextStep());
+document.getElementById('btnReiniciar').addEventListener('click', () => boxplotBuilder.reset());
+document.getElementById('btnNuevo').addEventListener('click', () => { boxplotBuilder.generateData(); boxplotBuilder.reset(); });
+
+
+// =============================================================================
+// ENCODING Y ESCALADO
+// =============================================================================
+
+const encodingData = [
+  { nombre: 'Ana', color: 'Rojo', puntuacion: 85 },
+  { nombre: 'Luis', color: 'Azul', puntuacion: 92 },
+  { nombre: 'María', color: 'Verde', puntuacion: 78 },
+  { nombre: 'Carlos', color: 'Rojo', puntuacion: 88 }
+];
+
+const scalingData = {
+  features: [
+    { name: 'Edad', value: 35, min: 20, max: 65 },
+    { name: 'Salario (÷1000)', value: 45, min: 20, max: 80 },
+    { name: 'Experiencia (años)', value: 10, min: 1, max: 30 }
+  ]
+};
+
+function resetEncoding() {
+  document.getElementById('encoding-after').classList.add('hidden');
+  document.getElementById('encoding-formula').classList.add('hidden');
+  document.getElementById('encoding-result').innerHTML = '';
+}
+
+function applyLabelEncoding() {
+  const map = { 'Rojo': 0, 'Azul': 1, 'Verde': 2 };
+  let html = '<table class="data-table"><thead><tr><th>Nombre</th><th>Color (etiquetado)</th><th>Puntuación</th></tr></thead><tbody>';
+  encodingData.forEach(r => { html += '<tr><td>' + r.nombre + '</td><td class="highlight">' + map[r.color] + '</td><td>' + r.puntuacion + '</td></tr>'; });
+  html += '</tbody></table>';
+  document.getElementById('encoding-result').innerHTML = html;
+  document.getElementById('encoding-after').classList.remove('hidden');
+
+  document.getElementById('encoding-formula-box').innerHTML =
+    '<div class="formula-box"><strong>Label Encoding:</strong><br>Rojo → 0, Azul → 1, Verde → 2<br>Asigna un número único a cada categoría.</div>' +
+    '<div class="enc-info"><strong>Ventaja:</strong> Simple y requiere menos columnas.<br><strong>Desventaja:</strong> Puede implicar orden no existente (0 &lt; 1 &lt; 2).</div>';
+  document.getElementById('encoding-formula').classList.remove('hidden');
+  animateFadeIn('encoding-after');
+  animateFadeIn('encoding-formula');
+}
+
+function applyOneHotEncoding() {
+  let html = '<table class="data-table"><thead><tr><th>Nombre</th><th>Color_Rojo</th><th>Color_Azul</th><th>Color_Verde</th><th>Punt.</th></tr></thead><tbody>';
+  encodingData.forEach(r => {
+    html += '<tr><td>' + r.nombre + '</td><td class="highlight">' + (r.color === 'Rojo' ? 1 : 0) + '</td><td class="highlight">' + (r.color === 'Azul' ? 1 : 0) + '</td><td class="highlight">' + (r.color === 'Verde' ? 1 : 0) + '</td><td>' + r.puntuacion + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('encoding-result').innerHTML = html;
+  document.getElementById('encoding-after').classList.remove('hidden');
+
+  document.getElementById('encoding-formula-box').innerHTML =
+    '<div class="formula-box"><strong>One-Hot Encoding:</strong><br>Crea una columna binaria (0 o 1) para cada categoría.<br>Si Color = Rojo → Color_Rojo=1, Color_Azul=0, Color_Verde=0</div>' +
+    '<div class="enc-info"><strong>Ventaja:</strong> Sin orden implícito, más interpretable.<br><strong>Desventaja:</strong> Más columnas (maldición de la dimensionalidad).</div>';
+  document.getElementById('encoding-formula').classList.remove('hidden');
+  animateFadeIn('encoding-after');
+  animateFadeIn('encoding-formula');
+}
+
+function resetScaling() {
+  document.getElementById('scaling-after').classList.add('hidden');
+  document.getElementById('scaling-formula').classList.add('hidden');
+  document.getElementById('after-chart').innerHTML = '';
+  drawBeforeChart();
+}
+
+function drawBeforeChart() {
+  let html = '';
+  const maxV = Math.max(...scalingData.features.map(f => f.max));
+  scalingData.features.forEach(f => {
+    const h = (f.value / maxV) * 100;
+    html += '<div class="bar-wrapper"><div class="bar" style="height:' + h + '%"><div class="bar-value">' + f.value.toFixed(1) + '</div></div><div class="bar-label">' + f.name + '</div></div>';
+  });
+  document.getElementById('before-chart').innerHTML = html;
+}
+
+function applyMinMaxScaler() {
+  const scaled = scalingData.features.map(f => ({ ...f, sv: (f.value - f.min) / (f.max - f.min) }));
+  let html = '';
+  scaled.forEach(f => {
+    html += '<div class="bar-wrapper"><div class="bar" style="height:' + (f.sv * 100) + '%"><div class="bar-value">' + f.sv.toFixed(3) + '</div></div><div class="bar-label">' + f.name + '</div></div>';
+  });
+  document.getElementById('after-chart').innerHTML = html;
+  document.getElementById('scaling-after').classList.remove('hidden');
+
+  document.getElementById('scaling-formula-box').innerHTML =
+    '<div class="formula-box"><strong>MinMaxScaler [0, 1]:</strong><br>X\' = (X − X<sub>min</sub>) / (X<sub>max</sub> − X<sub>min</sub>)<br><br><strong>Ejemplo (Edad = 35, rango 20-65):</strong><br>X\' = (35 − 20) / (65 − 20) = 15 / 45 = 0.333</div>' +
+    '<div class="enc-info"><strong>Resultado:</strong> Todos los valores en rango [0, 1].<br><strong>Uso:</strong> Redes neuronales, algoritmos sensibles a escala.</div>';
+  document.getElementById('scaling-formula').classList.remove('hidden');
+  animateFadeIn('scaling-after');
+  animateFadeIn('scaling-formula');
+}
+
+function applyStandardScaler() {
+  const vals = scalingData.features.map(f => f.value);
+  const mu = vals.reduce((a, b) => a + b, 0) / vals.length;
+  const sigma = Math.sqrt(vals.reduce((a, b) => a + (b - mu) ** 2, 0) / vals.length);
+  const scaled = scalingData.features.map(f => ({ ...f, sv: (f.value - mu) / sigma }));
+  const maxAbs = Math.max(...scaled.map(f => Math.abs(f.sv)));
+
+  let html = '';
+  scaled.forEach(f => {
+    const h = Math.abs((f.sv / maxAbs) * 50);
+    const neg = f.sv < 0;
+    html += '<div class="bar-wrapper"><div class="bar" style="height:' + h + '%;' + (neg ? 'background:linear-gradient(180deg,#e53935,#c62828);' : '') + '"><div class="bar-value">' + f.sv.toFixed(3) + '</div></div><div class="bar-label">' + f.name + '</div></div>';
+  });
+  document.getElementById('after-chart').innerHTML = html;
+  document.getElementById('scaling-after').classList.remove('hidden');
+
+  document.getElementById('scaling-formula-box').innerHTML =
+    '<div class="formula-box"><strong>StandardScaler (z-score):</strong><br>X\' = (X − μ) / σ<br><br>Media = ' + mu.toFixed(2) + ', Desv. Est. = ' + sigma.toFixed(2) + '<br>Edad (35): (35 − ' + mu.toFixed(2) + ') / ' + sigma.toFixed(2) + ' = ' + ((35 - mu) / sigma).toFixed(3) + '</div>' +
+    '<div class="enc-info"><strong>Resultado:</strong> Media = 0, Desv. Est. = 1.<br><strong>Uso:</strong> Regresión lineal, clustering.</div>';
+  document.getElementById('scaling-formula').classList.remove('hidden');
+  animateFadeIn('scaling-after');
+  animateFadeIn('scaling-formula');
+}
+
+function animateFadeIn(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('fade-in');
+  void el.offsetWidth;
+  el.classList.add('fade-in');
+}
+
+drawBeforeChart();
+
+
+// =============================================================================
+// PARTICION DE DATOS
+// =============================================================================
+
+class PartPoint {
+  constructor(x, y, label) {
+    this.x = x; this.y = y; this.label = label; this.partition = null;
+  }
+}
+
+let trainPct = 60, valPct = 20, testPct = 20;
+const PART_MINS = { train: 5, val: 0, test: 5 };
+
+function roundTo5(n) { return Math.round(n / 5) * 5; }
+
+function generatePartDataset(shuffle) {
+  const pts = [];
+  for (let i = 0; i < 100; i++) {
+    const a = Math.random() * Math.PI * 2, r = Math.random() * 80 + 30;
+    pts.push(new PartPoint(Math.max(20, Math.min(430, 250 + r * Math.cos(a))), Math.max(20, Math.min(330, 150 + r * Math.sin(a))), 0));
+  }
+  for (let i = 0; i < 100; i++) {
+    const a = Math.random() * Math.PI * 2, r = Math.random() * 80 + 30;
+    pts.push(new PartPoint(Math.max(20, Math.min(430, 150 + r * Math.cos(a))), Math.max(20, Math.min(330, 250 + r * Math.sin(a))), 1));
+  }
+  if (shuffle) {
+    for (let i = pts.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pts[i], pts[j]] = [pts[j], pts[i]];
+    }
+  }
+  return pts;
+}
+
+function onPartSliderInput(changed) {
+  const newVal = parseInt(document.getElementById(changed + '-slider').value);
+  const others = ['train', 'val', 'test'].filter(n => n !== changed);
+  let remaining = 100 - newVal;
+
+  const pctMap = { train: trainPct, val: valPct, test: testPct };
+  const otherVals = { [others[0]]: pctMap[others[0]], [others[1]]: pctMap[others[1]] };
+  const otherSum = otherVals[others[0]] + otherVals[others[1]];
+
+  let n0, n1;
+  if (otherSum > 0) {
+    n0 = roundTo5(remaining * otherVals[others[0]] / otherSum);
+    n0 = Math.max(PART_MINS[others[0]], Math.min(remaining - PART_MINS[others[1]], n0));
+    n1 = remaining - n0;
+    if (n1 < PART_MINS[others[1]]) { n1 = PART_MINS[others[1]]; n0 = remaining - n1; }
+  } else {
+    n0 = roundTo5(remaining / 2);
+    n0 = Math.max(PART_MINS[others[0]], n0);
+    n1 = remaining - n0;
+    if (n1 < PART_MINS[others[1]]) { n1 = PART_MINS[others[1]]; n0 = remaining - n1; }
+  }
+  n0 = roundTo5(n0); n1 = remaining - n0;
+  if (n1 < PART_MINS[others[1]]) { n1 = PART_MINS[others[1]]; n0 = remaining - n1; }
+
+  if (changed === 'train') trainPct = newVal;
+  else if (changed === 'val') valPct = newVal;
+  else testPct = newVal;
+
+  if (others[0] === 'train') trainPct = n0; else if (others[0] === 'val') valPct = n0; else testPct = n0;
+  if (others[1] === 'train') trainPct = n1; else if (others[1] === 'val') valPct = n1; else testPct = n1;
+
+  syncPartSliders();
+}
+
+function syncPartSliders() {
+  document.getElementById('train-slider').value = trainPct;
+  document.getElementById('val-slider').value = valPct;
+  document.getElementById('test-slider').value = testPct;
+  document.getElementById('train-percent').textContent = trainPct;
+  document.getElementById('val-percent').textContent = valPct;
+  document.getElementById('test-percent').textContent = testPct;
+  document.querySelector('.partition-bar-train').style.setProperty('--train-width', trainPct + '%');
+  document.querySelector('.partition-bar-val').style.setProperty('--val-width', valPct + '%');
+  document.querySelector('.partition-bar-test').style.setProperty('--test-width', testPct + '%');
+}
+
+function setPartition(t, v, te) {
+  trainPct = t; valPct = v; testPct = te;
+  syncPartSliders();
+}
+
+function partitionPoints(pts, tP, vP) {
+  const n = pts.length;
+  const tSize = Math.floor(n * tP / 100);
+  const vSize = Math.floor(n * vP / 100);
+  for (let i = 0; i < tSize; i++) pts[i].partition = 'train';
+  for (let i = tSize; i < tSize + vSize; i++) pts[i].partition = 'val';
+  for (let i = tSize + vSize; i < n; i++) pts[i].partition = 'test';
+  return pts;
+}
+
+function partEucDist(p1, p2) { return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2); }
+
+function partKNN(point, trainPts, k) {
+  k = k || 5;
+  const dists = trainPts.map(tp => ({ pt: tp, d: partEucDist(point, tp) }));
+  dists.sort((a, b) => a.d - b.d);
+  const votes = [0, 0];
+  dists.slice(0, k).forEach(n => votes[n.pt.label]++);
+  return votes[1] > votes[0] ? 1 : 0;
+}
+
+let partGlobalPoints = [];
+let partGlobalPredictions = {};
+
+function partPredictAll(pts, trainPts) {
+  const preds = {};
+  pts.forEach((p, i) => {
+    preds[i] = p.partition === 'train' ? p.label : partKNN(p, trainPts, 5);
+  });
+  return preds;
+}
+
+function partCalcAccuracy(pts, preds) {
+  if (pts.length === 0) return 0;
+  let correct = 0;
+  pts.forEach(p => { if (preds[partGlobalPoints.indexOf(p)] === p.label) correct++; });
+  return correct / pts.length;
+}
+
+function drawPartBoundary(ctx, canvas, trainPts) {
+  const cellSize = 10;
+  const imgData = ctx.createImageData(canvas.width, canvas.height);
+  const d = imgData.data;
+  for (let y = 0; y < canvas.height; y += cellSize) {
+    for (let x = 0; x < canvas.width; x += cellSize) {
+      const pred = partKNN({ x: x + cellSize / 2, y: y + cellSize / 2 }, trainPts, 5);
+      const c = pred === 0 ? { r: 63, g: 81, b: 181, a: 40 } : { r: 255, g: 111, b: 0, a: 40 };
+      for (let dy = 0; dy < cellSize && y + dy < canvas.height; dy++) {
+        for (let dx = 0; dx < cellSize && x + dx < canvas.width; dx++) {
+          const idx = ((y + dy) * canvas.width + (x + dx)) * 4;
+          d[idx] = c.r; d[idx + 1] = c.g; d[idx + 2] = c.b; d[idx + 3] = c.a;
+        }
+      }
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function drawPartPoints(ctx, pts) {
+  ['train', 'val', 'test'].forEach(part => {
+    pts.filter(p => p.partition === part).forEach(p => {
+      ctx.fillStyle = p.label === 0 ? '#3f51b5' : '#ff6f00';
+      ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI * 2); ctx.fill();
+      if (part === 'train') { ctx.strokeStyle = '#333'; ctx.lineWidth = 2; ctx.stroke(); }
+      else if (part === 'val') { ctx.strokeStyle = '#888'; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.stroke(); ctx.setLineDash([]); }
+      else { ctx.strokeStyle = '#aaa'; ctx.lineWidth = 2; ctx.setLineDash([2, 2]); ctx.stroke(); ctx.setLineDash([]); }
+    });
+  });
+}
+
+function drawPartViz(pts, trainPts) {
+  const c = document.getElementById('partitionCanvas');
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = 'white'; ctx.fillRect(0, 0, c.width, c.height);
+  if (trainPts && trainPts.length > 0) drawPartBoundary(ctx, c, trainPts);
+  drawPartPoints(ctx, pts);
+}
+
+function hideAllPartWarnings() {
+  ['warning-small-train', 'warning-small-test', 'warning-no-val', 'warning-overfitting', 'warning-data-leakage'].forEach(id => {
+    document.getElementById(id).classList.remove('show');
+  });
+}
+
+function trainAndEvaluate() {
+  hideAllPartWarnings();
+  if (trainPct < 10) document.getElementById('warning-small-train').classList.add('show');
+  if (testPct < 10) document.getElementById('warning-small-test').classList.add('show');
+  if (valPct < 5) document.getElementById('warning-no-val').classList.add('show');
+
+  const shuffle = document.getElementById('shuffle-checkbox').checked;
+  partGlobalPoints = generatePartDataset(shuffle);
+  partitionPoints(partGlobalPoints, trainPct, valPct);
+
+  const trainPts = partGlobalPoints.filter(p => p.partition === 'train');
+  partGlobalPredictions = partPredictAll(partGlobalPoints, trainPts);
+
+  const tAcc = partCalcAccuracy(partGlobalPoints.filter(p => p.partition === 'train'), partGlobalPredictions);
+  const vPts = partGlobalPoints.filter(p => p.partition === 'val');
+  const vAcc = vPts.length > 0 ? partCalcAccuracy(vPts, partGlobalPredictions) : 0;
+  const teAcc = partCalcAccuracy(partGlobalPoints.filter(p => p.partition === 'test'), partGlobalPredictions);
+
+  document.getElementById('train-acc').textContent = (tAcc * 100).toFixed(1) + '%';
+  document.getElementById('val-acc').textContent = vAcc > 0 ? (vAcc * 100).toFixed(1) + '%' : '—';
+  document.getElementById('test-acc').textContent = (teAcc * 100).toFixed(1) + '%';
+
+  if (tAcc - teAcc > 0.25) document.getElementById('warning-overfitting').classList.add('show');
+
+  drawPartViz(partGlobalPoints, trainPts);
+
+  document.getElementById('status-text').textContent =
+    'Dataset: ' + partGlobalPoints.length + ' puntos | Train: ' + trainPts.length + ' | Val: ' + vPts.length + ' | Test: ' + partGlobalPoints.filter(p => p.partition === 'test').length;
+}
+
+function resetPartitionDemo() {
+  setPartition(60, 20, 20);
+  document.getElementById('shuffle-checkbox').checked = true;
+  document.getElementById('train-acc').textContent = '—';
+  document.getElementById('val-acc').textContent = '—';
+  document.getElementById('test-acc').textContent = '—';
+  document.getElementById('status-text').textContent = '';
+  hideAllPartWarnings();
+  const c = document.getElementById('partitionCanvas');
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = 'white'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = '#ccc'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Haz clic en "Particionar y Entrenar"', c.width / 2, c.height / 2);
+  partGlobalPoints = [];
+  partGlobalPredictions = {};
+}
+
+function loadScenario(scenario) {
+  hideAllPartWarnings();
+  switch (scenario) {
+    case 'good': setPartition(60, 20, 20); document.getElementById('shuffle-checkbox').checked = true; break;
+    case 'little-train': setPartition(20, 30, 50); document.getElementById('shuffle-checkbox').checked = true; break;
+    case 'little-test': setPartition(90, 5, 5); document.getElementById('shuffle-checkbox').checked = true; break;
+    case 'no-val': setPartition(70, 0, 30); document.getElementById('shuffle-checkbox').checked = true; break;
+    case 'no-shuffle': setPartition(60, 20, 20); document.getElementById('shuffle-checkbox').checked = false; break;
+    case 'leakage': setPartition(85, 0, 15); document.getElementById('shuffle-checkbox').checked = true; document.getElementById('warning-data-leakage').classList.add('show'); break;
+  }
+  setTimeout(trainAndEvaluate, 200);
+}
+
+document.getElementById('train-slider').addEventListener('input', () => onPartSliderInput('train'));
+document.getElementById('val-slider').addEventListener('input', () => onPartSliderInput('val'));
+document.getElementById('test-slider').addEventListener('input', () => onPartSliderInput('test'));
+
+syncPartSliders();
+{
+  const c = document.getElementById('partitionCanvas');
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = 'white'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = '#ccc'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Haz clic en "Particionar y Entrenar"', c.width / 2, c.height / 2);
+}
+</script>
+</body>
+</html>

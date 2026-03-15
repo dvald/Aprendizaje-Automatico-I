@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NumPy Visual Explorer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f0f4f8;
+    color: #1a202c;
+    min-height: 100vh;
+  }
+  .header {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    padding: 24px 40px;
+    color: white;
+  }
+  .header h1 { font-size: 28px; font-weight: 700; }
+  .header p { color: #94a3b8; margin-top: 4px; font-size: 14px; }
+  .content { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
+  .tabs {
+    display: flex; gap: 0; background: #1a2940; padding: 0 2rem; overflow-x: auto;
+  }
+  .tab {
+    padding: 0.8rem 1.5rem; cursor: pointer; color: #90a4ae;
+    border-bottom: 3px solid transparent; font-size: 0.95rem; font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .tab:hover { color: #fff; }
+  .tab.active { color: #fff; border-bottom-color: #2196f3; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  @media (max-width: 768px) {
+    .tabs { padding: 0 1rem; }
+    .tab { padding: 0.8rem 1rem; font-size: 0.9rem; }
+  }
+  .card {
+    background: white; border-radius: 12px; padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px;
+  }
+  .card h3 { font-size: 18px; margin-bottom: 12px; color: #0f1b2d; }
+  .card p { color: #64748b; font-size: 14px; margin-bottom: 16px; line-height: 1.6; }
+  .grid-container {
+    display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;
+  }
+  .array-viz {
+    display: inline-flex; gap: 2px; flex-wrap: wrap; margin: 8px 0;
+  }
+  .array-viz.matrix { flex-direction: column; gap: 2px; }
+  .array-row { display: flex; gap: 2px; }
+  .cell {
+    width: 52px; height: 40px; display: flex; align-items: center; justify-content: center;
+    border-radius: 6px; font-size: 14px; font-weight: 600; font-family: 'Consolas', monospace;
+    transition: all 0.3s;
+  }
+  .cell.blue { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+  .cell.orange { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+  .cell.green { background: #e0f2f1; color: #00695c; border: 1px solid #80cbc4; }
+  .cell.pink { background: #fce4ec; color: #c62828; border: 1px solid #ef9a9a; }
+  .cell.gray { background: #f5f5f5; color: #616161; border: 1px solid #e0e0e0; }
+  .cell.highlight { transform: scale(1.1); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  .op-symbol {
+    display: flex; align-items: center; font-size: 24px; font-weight: 700;
+    color: #64748b; padding: 0 12px;
+  }
+  .code-block {
+    background: #1e293b; color: #e2e8f0; padding: 16px 20px; border-radius: 8px;
+    font-family: 'Consolas', monospace; font-size: 13px; margin: 12px 0;
+    line-height: 1.6; overflow-x: auto; white-space: pre-wrap;
+  }
+  .code-block .kw { color: #c084fc; }
+  .code-block .fn { color: #60a5fa; }
+  .code-block .num { color: #fbbf24; }
+  .code-block .str { color: #34d399; }
+  .code-block .comment { color: #64748b; }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+  .btn {
+    padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer;
+    font-size: 13px; font-weight: 600; transition: all 0.2s;
+  }
+  .btn-primary { background: #2196F3; color: white; }
+  .btn-primary:hover { background: #1976D2; }
+  .btn-secondary { background: #e2e8f0; color: #475569; }
+  .btn-secondary:hover { background: #cbd5e1; }
+  .btn.active { background: #0f172a; color: white; }
+  .result-label {
+    display: inline-block; padding: 4px 10px; border-radius: 4px;
+    font-size: 12px; font-weight: 600; margin: 4px 0;
+  }
+  .label-blue { background: #e3f2fd; color: #1565c0; }
+  .label-green { background: #e0f2f1; color: #00695c; }
+  .label-orange { background: #fff3e0; color: #e65100; }
+  .speed-bar {
+    height: 24px; border-radius: 12px; transition: width 1s ease-out;
+    display: flex; align-items: center; padding: 0 12px;
+    font-size: 12px; font-weight: 700; color: white;
+  }
+  .slider-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+  .slider-row label { min-width: 80px; font-weight: 600; font-size: 14px; }
+  .slider-row input[type="range"] { flex: 1; }
+  .slider-row .val { min-width: 50px; font-family: monospace; font-weight: 700; text-align: right; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 12px 0; }
+  .stat-box {
+    background: #f8fafc; border-radius: 8px; padding: 12px; text-align: center;
+    border: 1px solid #e2e8f0;
+  }
+  .stat-box .stat-val { font-size: 22px; font-weight: 700; color: #0f172a; }
+  .stat-box .stat-label { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+  .mask-row { display: flex; gap: 2px; margin-top: 4px; }
+  .mask-cell {
+    width: 52px; height: 28px; display: flex; align-items: center; justify-content: center;
+    border-radius: 4px; font-size: 11px; font-weight: 700;
+  }
+  .mask-true { background: #dcfce7; color: #16a34a; }
+  .mask-false { background: #fef2f2; color: #dc2626; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>NumPy Visual Explorer</h1>
+  <p>Aprendizaje Automático I — Clase 02: Visualiza cómo funciona NumPy</p>
+</div>
+<div class="tabs">
+  <div class="tab active" onclick="showPanel('ops')">Operaciones Vectorizadas</div>
+  <div class="tab" onclick="showPanel('speed')">Lista vs NumPy</div>
+  <div class="tab" onclick="showPanel('stats')">Estadísticas</div>
+  <div class="tab" onclick="showPanel('mask')">Máscaras Booleanas</div>
+  <div class="tab" onclick="showPanel('reshape')">Reshape</div>
+</div>
+<div class="content">
+
+  <!-- Panel 1: Operaciones vectorizadas -->
+  <div id="panel-ops" class="panel active">
+    <div class="card">
+      <h3>Operaciones element-wise (sin bucles)</h3>
+      <p>NumPy opera sobre cada elemento simultáneamente. Elige una operación y observa cómo se aplica a cada par de elementos.</p>
+      <div class="controls">
+        <button class="btn btn-primary" onclick="setOp('+')">a + b</button>
+        <button class="btn btn-secondary" onclick="setOp('*')">a * b</button>
+        <button class="btn btn-secondary" onclick="setOp('-')">a - b</button>
+        <button class="btn btn-secondary" onclick="setOp('/')">a / b</button>
+        <button class="btn btn-secondary" onclick="setOp('**')">a ** 2</button>
+        <button class="btn btn-secondary" onclick="setOp('sqrt')">sqrt(a)</button>
+      </div>
+      <div class="grid-container" style="margin-top:20px;">
+        <div>
+          <span class="result-label label-blue">a</span>
+          <div class="array-viz" id="arr-a"></div>
+        </div>
+        <div class="op-symbol" id="op-sym">+</div>
+        <div id="arr-b-wrap">
+          <span class="result-label label-orange">b</span>
+          <div class="array-viz" id="arr-b"></div>
+        </div>
+        <div class="op-symbol">=</div>
+        <div>
+          <span class="result-label label-green">resultado</span>
+          <div class="array-viz" id="arr-result"></div>
+        </div>
+      </div>
+      <div class="code-block" id="ops-code"></div>
+    </div>
+  </div>
+
+  <!-- Panel 2: Speed comparison -->
+  <div id="panel-speed" class="panel">
+    <div class="card">
+      <h3>Rendimiento: Lista Python vs NumPy Array</h3>
+      <p>NumPy es mucho más rápido que las listas de Python para operaciones numéricas. Ajusta el tamaño del array y observa la diferencia.</p>
+      <div class="slider-row">
+        <label>Tamaño:</label>
+        <input type="range" min="3" max="7" step="1" value="5" id="size-slider" oninput="updateSpeed()">
+        <span class="val" id="size-val">100,000</span>
+      </div>
+      <div class="controls">
+        <button class="btn btn-primary" onclick="runBenchmark()">Ejecutar comparación</button>
+      </div>
+      <div style="margin-top:20px;">
+        <div style="margin-bottom:12px;">
+          <span style="font-weight:600;">Lista Python</span>
+          <div style="background:#f1f5f9;border-radius:12px;overflow:hidden;margin-top:4px;">
+            <div class="speed-bar" id="bar-list" style="width:0;background:#ef4444;">0ms</div>
+          </div>
+        </div>
+        <div>
+          <span style="font-weight:600;">NumPy Array</span>
+          <div style="background:#f1f5f9;border-radius:12px;overflow:hidden;margin-top:4px;">
+            <div class="speed-bar" id="bar-numpy" style="width:0;background:#22c55e;">0ms</div>
+          </div>
+        </div>
+        <p id="speed-result" style="margin-top:16px;font-weight:700;font-size:18px;color:#0f172a;"></p>
+      </div>
+      <div class="code-block">
+<span class="comment"># Operación: multiplicar cada elemento por 2 y sumar 1</span>
+<br><span class="comment"># Lista Python</span>
+<br>result = [x * <span class="num">2</span> + <span class="num">1</span> <span class="kw">for</span> x <span class="kw">in</span> lista]
+<br>
+<br><span class="comment"># NumPy (¡sin bucle!)</span>
+<br>result = arr * <span class="num">2</span> + <span class="num">1</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel 3: Estadísticas -->
+  <div id="panel-stats" class="panel">
+    <div class="card">
+      <h3>Estadísticas descriptivas con NumPy</h3>
+      <p>Modifica los datos moviendo los sliders y observa cómo cambian las estadísticas en tiempo real.</p>
+      <div id="stats-sliders"></div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div style="margin-top:16px;">
+        <canvas id="stats-canvas" width="900" height="200"></canvas>
+      </div>
+      <div class="code-block">
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<br>datos = np.<span class="fn">array</span>([...])
+<br><span class="fn">print</span>(datos.<span class="fn">mean</span>())   <span class="comment"># Media</span>
+<br><span class="fn">print</span>(np.<span class="fn">median</span>(datos)) <span class="comment"># Mediana</span>
+<br><span class="fn">print</span>(datos.<span class="fn">std</span>())    <span class="comment"># Desviación estándar</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel 4: Máscaras -->
+  <div id="panel-mask" class="panel">
+    <div class="card">
+      <h3>Filtrado con máscaras booleanas</h3>
+      <p>Las máscaras permiten filtrar arrays con condiciones. Ajusta el umbral y observa qué elementos pasan el filtro.</p>
+      <div class="slider-row">
+        <label>Umbral:</label>
+        <input type="range" min="1" max="99" value="50" id="mask-threshold" oninput="updateMask()">
+        <span class="val" id="mask-val">50</span>
+      </div>
+      <div class="controls">
+        <button class="btn btn-primary active" id="btn-gt" onclick="setMaskOp('>')">datos &gt; umbral</button>
+        <button class="btn btn-secondary" id="btn-lt" onclick="setMaskOp('<')">datos &lt; umbral</button>
+        <button class="btn btn-secondary" id="btn-eq" onclick="setMaskOp('==')">datos == umbral</button>
+      </div>
+      <div style="margin-top:16px;">
+        <span class="result-label label-blue">datos</span>
+        <div class="array-viz" id="mask-data"></div>
+        <span class="result-label label-orange" id="mask-label">datos &gt; 50</span>
+        <div class="mask-row" id="mask-bool"></div>
+        <span class="result-label label-green">resultado</span>
+        <div class="array-viz" id="mask-result"></div>
+      </div>
+      <div class="code-block" id="mask-code"></div>
+    </div>
+  </div>
+
+  <!-- Panel 5: Reshape -->
+  <div id="panel-reshape" class="panel">
+    <div class="card">
+      <h3>Reshape: cambiar la forma de un array</h3>
+      <p>Un array de 12 elementos puede tener muchas formas diferentes sin cambiar los datos. Elige una forma:</p>
+      <div class="controls">
+        <button class="btn btn-primary" onclick="setReshape(12,1)">(12,)</button>
+        <button class="btn btn-secondary" onclick="setReshape(2,6)">(2, 6)</button>
+        <button class="btn btn-secondary" onclick="setReshape(3,4)">(3, 4)</button>
+        <button class="btn btn-secondary" onclick="setReshape(4,3)">(4, 3)</button>
+        <button class="btn btn-secondary" onclick="setReshape(6,2)">(6, 2)</button>
+      </div>
+      <div style="margin-top:20px;">
+        <span class="result-label label-blue" id="reshape-label">shape: (12,)</span>
+        <div id="reshape-viz" style="margin:12px 0;"></div>
+      </div>
+      <div class="code-block" id="reshape-code"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const arrA = [2, 5, 8, 3, 7, 1, 9, 4];
+const arrB = [10, 3, 6, 2, 5, 8, 1, 7];
+let currentOp = '+';
+let maskData = [12, 45, 78, 23, 56, 89, 34, 67, 91, 15, 42, 73];
+let maskOp = '>';
+let statsData = [30, 55, 70, 45, 85, 60, 40, 75, 50, 65];
+
+function showPanel(id) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    document.querySelector('.tab[onclick*="' + id + '"]').classList.add('active');
+}
+
+// ========= PANEL 1: Ops =========
+function renderArray(containerId, arr, colorClass) {
+    const c = document.getElementById(containerId);
+    c.innerHTML = '';
+    arr.forEach(v => {
+        const cell = document.createElement('div');
+        cell.className = 'cell ' + colorClass;
+        cell.textContent = typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(1)) : v;
+        c.appendChild(cell);
+    });
+}
+
+function setOp(op) {
+    currentOp = op;
+    document.querySelectorAll('#panel-ops .btn').forEach(b => b.className = 'btn btn-secondary');
+    event.target.className = 'btn btn-primary';
+    updateOps();
+}
+
+function updateOps() {
+    renderArray('arr-a', arrA, 'blue');
+    let result, codeText;
+    const bWrap = document.getElementById('arr-b-wrap');
+    const opSym = document.getElementById('op-sym');
+    if (currentOp === '**') {
+        bWrap.style.display = 'none';
+        opSym.textContent = '** 2';
+        result = arrA.map(v => v * v);
+        codeText = `a = np.array([${arrA.join(', ')}])\nresult = a ** 2\n# result = [${result.join(', ')}]`;
+    } else if (currentOp === 'sqrt') {
+        bWrap.style.display = 'none';
+        opSym.textContent = 'sqrt()';
+        result = arrA.map(v => Math.sqrt(v));
+        codeText = `a = np.array([${arrA.join(', ')}])\nresult = np.sqrt(a)\n# result = [${result.map(v=>v.toFixed(2)).join(', ')}]`;
+    } else {
+        bWrap.style.display = '';
+        opSym.textContent = currentOp;
+        renderArray('arr-b', arrB, 'orange');
+        switch(currentOp) {
+            case '+': result = arrA.map((v,i) => v + arrB[i]); break;
+            case '-': result = arrA.map((v,i) => v - arrB[i]); break;
+            case '*': result = arrA.map((v,i) => v * arrB[i]); break;
+            case '/': result = arrA.map((v,i) => +(v / arrB[i]).toFixed(2)); break;
+        }
+        codeText = `a = np.array([${arrA.join(', ')}])\nb = np.array([${arrB.join(', ')}])\nresult = a ${currentOp} b\n# result = [${result.join(', ')}]`;
+    }
+    renderArray('arr-result', result, 'green');
+    document.getElementById('ops-code').textContent = codeText;
+}
+
+// ========= PANEL 2: Speed =========
+function updateSpeed() {
+    const v = parseInt(document.getElementById('size-slider').value);
+    const sizes = {3:'1,000', 4:'10,000', 5:'100,000', 6:'1,000,000', 7:'10,000,000'};
+    document.getElementById('size-val').textContent = sizes[v];
+}
+
+function runBenchmark() {
+    const exp = parseInt(document.getElementById('size-slider').value);
+    const n = Math.pow(10, exp);
+    // Simulate realistic times
+    const listTime = n * 0.0001;  // ~0.1μs per element
+    const numpyTime = n * 0.000003; // ~3ns per element
+    const maxBar = Math.max(listTime, numpyTime);
+    const barList = document.getElementById('bar-list');
+    const barNumpy = document.getElementById('bar-numpy');
+    barList.style.width = '0';
+    barNumpy.style.width = '0';
+    setTimeout(() => {
+        barList.style.width = (listTime / maxBar * 100) + '%';
+        barList.textContent = listTime >= 1000 ? (listTime/1000).toFixed(1) + 's' : listTime.toFixed(1) + 'ms';
+        barNumpy.style.width = Math.max(3, numpyTime / maxBar * 100) + '%';
+        barNumpy.textContent = numpyTime >= 1 ? numpyTime.toFixed(1) + 'ms' : (numpyTime * 1000).toFixed(0) + 'μs';
+        const ratio = Math.round(listTime / numpyTime);
+        document.getElementById('speed-result').textContent = `NumPy es ~${ratio}x más rápido con ${n.toLocaleString()} elementos`;
+    }, 100);
+}
+
+// ========= PANEL 3: Stats =========
+function initStats() {
+    const container = document.getElementById('stats-sliders');
+    container.innerHTML = '';
+    for (let i = 0; i < statsData.length; i++) {
+        const row = document.createElement('div');
+        row.className = 'slider-row';
+        row.innerHTML = `<label>dato[${i}]:</label><input type="range" min="0" max="100" value="${statsData[i]}" oninput="statsData[${i}]=parseInt(this.value);updateStats()"><span class="val">${statsData[i]}</span>`;
+        container.appendChild(row);
+    }
+    updateStats();
+}
+
+function updateStats() {
+    // Update slider value displays
+    document.querySelectorAll('#stats-sliders .slider-row').forEach((row, i) => {
+        row.querySelector('.val').textContent = statsData[i];
+    });
+    const arr = statsData.slice();
+    const mean = arr.reduce((a,b) => a+b, 0) / arr.length;
+    const sorted = arr.slice().sort((a,b) => a-b);
+    const median = sorted.length % 2 === 0
+        ? (sorted[sorted.length/2-1] + sorted[sorted.length/2]) / 2
+        : sorted[Math.floor(sorted.length/2)];
+    const variance = arr.reduce((s,v) => s + (v-mean)**2, 0) / arr.length;
+    const std = Math.sqrt(variance);
+    const min = Math.min(...arr);
+    const max = Math.max(...arr);
+
+    const grid = document.getElementById('stats-grid');
+    grid.innerHTML = [
+        {label: 'Media', val: mean.toFixed(1)},
+        {label: 'Mediana', val: median.toFixed(1)},
+        {label: 'Std', val: std.toFixed(1)},
+        {label: 'Mín', val: min},
+        {label: 'Máx', val: max},
+        {label: 'Rango', val: max - min},
+    ].map(s => `<div class="stat-box"><div class="stat-val">${s.val}</div><div class="stat-label">${s.label}</div></div>`).join('');
+
+    // Draw bar chart
+    const canvas = document.getElementById('stats-canvas');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    const barW = (w - 40) / arr.length - 4;
+    const maxVal = 100;
+    arr.forEach((v, i) => {
+        const x = 30 + i * (barW + 4);
+        const barH = (v / maxVal) * (h - 40);
+        ctx.fillStyle = '#e3f2fd';
+        ctx.fillRect(x, h - 20 - barH, barW, barH);
+        ctx.fillStyle = '#2196F3';
+        ctx.strokeStyle = '#2196F3';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, h - 20 - barH, barW, barH);
+        ctx.fillStyle = '#475569';
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(v, x + barW/2, h - 5);
+    });
+    // Mean line
+    const meanY = h - 20 - (mean / maxVal) * (h - 40);
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(25, meanY); ctx.lineTo(w - 10, meanY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ef4444';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Media: ' + mean.toFixed(1), w - 100, meanY - 5);
+    // Median line
+    const medY = h - 20 - (median / maxVal) * (h - 40);
+    ctx.strokeStyle = '#22c55e';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(25, medY); ctx.lineTo(w - 10, medY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#22c55e';
+    ctx.fillText('Mediana: ' + median.toFixed(1), w - 100, medY + 15);
+}
+
+// ========= PANEL 4: Mask =========
+function setMaskOp(op) {
+    maskOp = op;
+    document.querySelectorAll('#panel-mask .btn').forEach(b => b.className = 'btn btn-secondary');
+    event.target.className = 'btn btn-primary active';
+    updateMask();
+}
+
+function updateMask() {
+    const threshold = parseInt(document.getElementById('mask-threshold').value);
+    document.getElementById('mask-val').textContent = threshold;
+    const dataCont = document.getElementById('mask-data');
+    const boolCont = document.getElementById('mask-bool');
+    const resCont = document.getElementById('mask-result');
+    dataCont.innerHTML = '';
+    boolCont.innerHTML = '';
+    resCont.innerHTML = '';
+    const results = [];
+    maskData.forEach(v => {
+        let passes;
+        if (maskOp === '>') passes = v > threshold;
+        else if (maskOp === '<') passes = v < threshold;
+        else passes = v === threshold;
+        const cell = document.createElement('div');
+        cell.className = 'cell ' + (passes ? 'blue highlight' : 'gray');
+        cell.textContent = v;
+        dataCont.appendChild(cell);
+        const mc = document.createElement('div');
+        mc.className = 'mask-cell ' + (passes ? 'mask-true' : 'mask-false');
+        mc.textContent = passes ? 'T' : 'F';
+        boolCont.appendChild(mc);
+        if (passes) results.push(v);
+    });
+    results.forEach(v => {
+        const cell = document.createElement('div');
+        cell.className = 'cell green';
+        cell.textContent = v;
+        resCont.appendChild(cell);
+    });
+    document.getElementById('mask-label').textContent = `datos ${maskOp} ${threshold}`;
+    document.getElementById('mask-code').textContent =
+        `datos = np.array([${maskData.join(', ')}])\nmask = datos ${maskOp} ${threshold}\nresultado = datos[mask]\n# resultado = [${results.join(', ')}]  (${results.length} elementos)`;
+}
+
+// ========= PANEL 5: Reshape =========
+const reshapeData = [1,2,3,4,5,6,7,8,9,10,11,12];
+const reshapeColors = ['#e3f2fd','#bbdefb','#90caf9','#64b5f6','#42a5f5','#2196f3',
+                       '#fff3e0','#ffe0b2','#ffcc80','#ffb74d','#ffa726','#ff9800'];
+
+function setReshape(rows, cols) {
+    document.querySelectorAll('#panel-reshape .btn').forEach(b => b.className = 'btn btn-secondary');
+    event.target.className = 'btn btn-primary';
+    const viz = document.getElementById('reshape-viz');
+    viz.innerHTML = '';
+    if (rows === 12) {
+        // 1D
+        document.getElementById('reshape-label').textContent = 'shape: (12,)';
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.gap = '3px';
+        reshapeData.forEach((v, i) => {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.style.background = reshapeColors[i];
+            cell.style.color = '#0f172a';
+            cell.style.border = '1px solid #90caf9';
+            cell.textContent = v;
+            row.appendChild(cell);
+        });
+        viz.appendChild(row);
+        document.getElementById('reshape-code').textContent =
+            `a = np.arange(1, 13)\n# array([ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12])\n# shape: (12,)`;
+    } else {
+        document.getElementById('reshape-label').textContent = `shape: (${rows}, ${cols})`;
+        let idx = 0;
+        for (let r = 0; r < rows; r++) {
+            const rowDiv = document.createElement('div');
+            rowDiv.style.display = 'flex';
+            rowDiv.style.gap = '3px';
+            rowDiv.style.marginBottom = '3px';
+            for (let c = 0; c < cols; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.style.background = reshapeColors[idx];
+                cell.style.color = '#0f172a';
+                cell.style.border = '1px solid #90caf9';
+                cell.textContent = reshapeData[idx];
+                rowDiv.appendChild(cell);
+                idx++;
+            }
+            viz.appendChild(rowDiv);
+        }
+        document.getElementById('reshape-code').textContent =
+            `a = np.arange(1, 13)\nb = a.reshape(${rows}, ${cols})\n# shape: (${rows}, ${cols})`;
+    }
+}
+
+// Init
+updateOps();
+initStats();
+updateMask();
+setReshape(12, 1);
+document.querySelectorAll('#panel-reshape .btn')[0].className = 'btn btn-primary';
+</script>
+</body>
+</html>
