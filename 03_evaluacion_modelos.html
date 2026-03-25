@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo: Evaluación de Modelos</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f0f4f8; color: #1a2940; }
+
+  .header { background: #0f1b2d; color: white; padding: 2rem 2rem 1.5rem; }
+  .header h1 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+  .header p { color: #90a4ae; font-size: 0.95rem; }
+
+  .tabs { display: flex; gap: 0; background: #1a2940; padding: 0 2rem; overflow-x: auto; }
+  .tab { padding: 0.8rem 1.5rem; cursor: pointer; color: #90a4ae; border-bottom: 3px solid transparent; transition: all 0.2s; font-weight: 600; font-size: 0.95rem; white-space: nowrap; }
+  .tab:hover { color: #fff; }
+  .tab.active { color: #fff; border-bottom-color: #2196f3; }
+
+  .content { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .card { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .card h2 { font-size: 1.3rem; margin-bottom: 0.8rem; color: #1a2940; }
+  .card p { line-height: 1.6; color: #37474f; margin-bottom: 1rem; }
+
+  .info-box { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+  .info-box p { color: #1565c0; margin: 0; line-height: 1.5; }
+
+  .back-link { display: inline-block; margin-bottom: 1.5rem; color: #2196f3; text-decoration: none; font-weight: 600; }
+  .back-link:hover { text-decoration: underline; }
+
+  /* ===== Demo layout ===== */
+  .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 1rem; }
+  .demo-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; margin-top: 1rem; }
+  @media (max-width: 1100px) { .demo-grid, .demo-grid-3 { grid-template-columns: 1fr; gap: 20px; } }
+
+  /* ===== Control groups ===== */
+  .ctrl-group { background: #f8f9fa; border-left: 4px solid #667eea; padding: 20px; border-radius: 8px; margin-bottom: 15px; }
+  .ctrl-group label { display: block; font-weight: 600; color: #333; margin-bottom: 10px; font-size: 0.95em; }
+  .ctrl-group h3 { font-size: 0.95em; font-weight: 600; margin-bottom: 12px; color: #333; text-transform: uppercase; letter-spacing: 0.5px; }
+  .ctrl-row { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
+  .ctrl-row input[type="range"] { flex: 1; }
+  .ctrl-val { font-weight: 700; color: #667eea; min-width: 60px; text-align: right; font-size: 1.1em; }
+
+  input[type="range"] { height: 6px; border-radius: 3px; background: #ddd; outline: none; -webkit-appearance: none; width: 100%; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #667eea; cursor: pointer; box-shadow: 0 2px 5px rgba(102,126,234,0.4); }
+  input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #667eea; cursor: pointer; border: none; box-shadow: 0 2px 5px rgba(102,126,234,0.4); }
+  .slider-labels { display: flex; justify-content: space-between; font-size: 0.85em; color: #666; }
+  .slider-labels .sv { font-weight: 600; color: #667eea; }
+
+  /* ===== Buttons ===== */
+  .dbtn { padding: 10px 15px; font-size: 0.9em; font-weight: 600; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+  .dbtn-primary { background: #667eea; color: white; }
+  .dbtn-primary:hover { background: #5568d3; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102,126,234,0.4); }
+  .dbtn-purple { background: #764ba2; color: white; }
+  .dbtn-purple:hover { background: #693a8a; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(118,75,162,0.4); }
+  .dbtn-secondary { background: #e0e0e0; color: #333; }
+  .dbtn-secondary:hover { background: #d0d0d0; transform: translateY(-2px); }
+  .dbtn-green { background: #4caf50; color: white; }
+  .dbtn-green:hover { background: #45a049; box-shadow: 0 4px 12px rgba(76,175,80,0.4); }
+  .dbtn-orange { background: #ff9800; color: white; }
+  .dbtn-orange:hover { background: #e68900; box-shadow: 0 4px 12px rgba(255,152,0,0.4); }
+  .dbtn-full { width: 100%; }
+  .dbtn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+  .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn-group-col { display: flex; flex-direction: column; gap: 8px; }
+
+  /* ===== Metric displays ===== */
+  .metric-display { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 8px; text-align: center; }
+  .metric-display .md-lbl { font-size: 0.9em; opacity: 0.9; margin-bottom: 8px; }
+  .metric-display .md-val { font-size: 2.5em; font-weight: bold; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+  .metric-display .md-interp { font-size: 0.85em; background: rgba(255,255,255,0.15); padding: 12px; border-radius: 6px; }
+
+  /* ===== Canvas wrapper ===== */
+  .canvas-wrap { border: 2px solid #e0e0e0; border-radius: 8px; overflow: hidden; background: #fafafa; }
+  .canvas-wrap canvas { display: block; width: 100%; height: auto; }
+
+  /* ===== Guide sections ===== */
+  .guide-section { background: #f8f9fa; border-left: 4px solid #667eea; padding: 20px; border-radius: 8px; }
+  .guide-section h3 { font-size: 0.95em; font-weight: 600; margin-bottom: 15px; color: #333; text-transform: uppercase; letter-spacing: 0.5px; }
+  .guide-item { margin-bottom: 12px; font-size: 0.9em; display: flex; gap: 12px; align-items: flex-start; }
+  .guide-item:last-child { margin-bottom: 0; }
+  .guide-color { display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; margin-top: 3px; }
+  .guide-text { color: #555; }
+  .guide-text strong { color: #333; }
+
+  /* ===== ROC specific ===== */
+  .roc-threshold-info { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 12px; border-radius: 6px; font-size: 0.85em; color: #1565c0; line-height: 1.4; }
+  .roc-threshold-info strong { color: #0d47a1; font-family: 'Courier New', monospace; }
+
+  /* ===== F1 specific ===== */
+  .f1-bar-chart { background: #f8f9fa; padding: 20px; border-radius: 8px; height: 280px; position: relative; }
+  .f1-bar-comparison { display: flex; align-items: flex-end; justify-content: space-around; height: 100%; gap: 15px; }
+  .f1-bar-item { display: flex; flex-direction: column; align-items: center; flex: 1; }
+  .f1-bar-fill { width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 6px 6px 0 0; transition: height 0.3s ease; min-height: 20px; position: relative; }
+  .f1-bar-label { margin-top: 10px; font-size: 0.85em; font-weight: 600; color: #333; text-align: center; }
+  .f1-bar-top-val { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-weight: 700; color: #667eea; font-size: 0.95em; white-space: nowrap; }
+  .f1-heatmap-wrap { background: #f8f9fa; padding: 20px; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
+  .f1-zones { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 10px; }
+  .f1-zone { padding: 12px; border-radius: 6px; font-size: 0.85em; text-align: center; font-weight: 600; color: white; }
+  .f1-zone-excellent { background: #4caf50; }
+  .f1-zone-good { background: #2196f3; }
+  .f1-zone-fair { background: #ff9800; }
+  .f1-zone-poor { background: #f44336; }
+  .formula-box { background: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.9em; line-height: 1.8; margin: 15px 0; }
+  .formula-box code { color: #e65100; font-weight: 600; }
+
+  /* ===== Confusion Matrix specific ===== */
+  .cm-container { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+  .cm-grid { display: grid; grid-template-columns: 80px 150px 150px; grid-template-rows: 50px 150px 150px; gap: 8px; }
+  .cm-lbl { display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9em; color: #666; text-align: center; }
+  .cm-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600; color: white; padding: 10px; }
+  .cm-cell-lbl { font-size: 0.8em; opacity: 0.9; margin-bottom: 8px; }
+  .cm-cell-val { font-size: 1.8em; font-weight: 700; }
+  .cm-cell-pct { font-size: 0.75em; opacity: 0.85; margin-top: 5px; }
+  .cm-tp, .cm-tn { background: linear-gradient(135deg, #4caf50 0%, #45a049 100%); }
+  .cm-fp, .cm-fn { background: linear-gradient(135deg, #f44336 0%, #da190b 100%); }
+  .cm-metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+  .cm-metric-box { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 20px; border-radius: 8px; text-align: center; }
+  .cm-metric-name { font-size: 0.95em; color: #666; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .cm-metric-val { font-size: 2em; color: #2196f3; font-weight: 700; font-family: 'Courier New', monospace; }
+  .cm-metric-desc { font-size: 0.8em; color: #666; margin-top: 8px; line-height: 1.4; font-style: italic; }
+  .cm-info-box { background: #f0f4ff; border-left: 4px solid #667eea; padding: 15px; border-radius: 8px; font-size: 0.95em; color: #333; line-height: 1.6; }
+  .cm-info-box strong { color: #667eea; }
+  .cm-legend { display: flex; justify-content: center; gap: 25px; margin-top: 20px; flex-wrap: wrap; font-size: 0.9em; }
+  .cm-legend-item { display: flex; align-items: center; gap: 8px; }
+  .cm-legend-box { width: 25px; height: 25px; border-radius: 4px; }
+  .cm-legend-pos { background: linear-gradient(135deg, #4caf50 0%, #45a049 100%); }
+  .cm-legend-neg { background: linear-gradient(135deg, #f44336 0%, #da190b 100%); }
+  @media (max-width: 700px) {
+    .cm-grid { grid-template-columns: 60px 120px 120px; grid-template-rows: 40px 120px 120px; }
+    .cm-cell-val { font-size: 1.4em; }
+    .cm-metrics-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ===== MCC specific ===== */
+  .mcc-matrix-wrap { background: #f8f9fa; border-left: 4px solid #2196f3; padding: 20px; border-radius: 8px; }
+  .mcc-matrix-grid { display: grid; grid-template-columns: 80px 1fr 1fr; grid-template-rows: 80px 1fr 1fr; gap: 10px; margin-top: 15px; }
+  .mcc-mheader { display: flex; align-items: center; justify-content: center; font-weight: 600; color: #667eea; font-size: 0.85em; text-align: center; }
+  .mcc-mcell { display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid #ddd; border-radius: 6px; padding: 10px; font-weight: 600; font-size: 0.9em; min-height: 80px; }
+  .mcc-mcell.positive { background: #c8e6c9; border-color: #4caf50; color: #2e7d32; }
+  .mcc-mcell.negative { background: #ffccbc; border-color: #ff7043; color: #bf360c; }
+  .mcc-mcell.neutral { background: #fff9c4; border-color: #fbc02d; color: #f57f17; }
+  .mcc-cell-lbl { font-size: 0.8em; opacity: 0.7; }
+  .mcc-cell-val { font-size: 1.4em; font-weight: 700; }
+  .mcc-metric-box { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 20px; border-radius: 8px; margin-bottom: 15px; }
+  .mcc-metric-box.purple { background: #f3e5f5; border-left-color: #9c27b0; }
+  .mcc-metric-box.teal { background: #e0f2f1; border-left-color: #009688; }
+  .mcc-mname { font-weight: 600; color: #1565c0; font-size: 0.95em; margin-bottom: 8px; }
+  .mcc-metric-box.purple .mcc-mname { color: #6a1b9a; }
+  .mcc-metric-box.teal .mcc-mname { color: #00695c; }
+  .mcc-mval { font-size: 2.5em; font-weight: 700; color: #0d47a1; margin-bottom: 10px; }
+  .mcc-metric-box.purple .mcc-mval { color: #4a148c; }
+  .mcc-metric-box.teal .mcc-mval { color: #004d40; }
+  .mcc-bar { width: 100%; height: 12px; background: #e0e0e0; border-radius: 6px; overflow: hidden; margin-top: 10px; }
+  .mcc-bar-fill { height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); border-radius: 6px; transition: width 0.3s ease; }
+  .mcc-bar-fill.purple { background: linear-gradient(90deg, #9c27b0 0%, #c2185b 100%); }
+  .mcc-bar-fill.teal { background: linear-gradient(90deg, #009688 0%, #00897b 100%); }
+  .mcc-chart-bars { display: flex; gap: 15px; align-items: flex-end; margin-top: 20px; height: 200px; }
+  .mcc-chart-bar { flex: 1; border-radius: 6px 6px 0 0; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 10px 5px; min-height: 50px; transition: all 0.3s ease; background: linear-gradient(180deg, #667eea 0%, #764ba2 100%); }
+  .mcc-chart-bar.purple { background: linear-gradient(180deg, #9c27b0 0%, #c2185b 100%); }
+  .mcc-chart-bar.teal { background: linear-gradient(180deg, #009688 0%, #00897b 100%); }
+  .mcc-chart-val { color: white; font-weight: 700; font-size: 1.3em; text-align: center; margin-bottom: 5px; }
+  .mcc-chart-lbl { color: white; font-size: 0.75em; font-weight: 600; text-align: center; }
+  .mcc-formula { background: #f5f5f5; padding: 15px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 0.82em; margin-top: 10px; overflow-x: auto; line-height: 1.8; }
+  .mcc-highlight { background: #fff9c4; padding: 2px 4px; border-radius: 3px; font-weight: 600; }
+
+  /* ===== Precision/Recall specific ===== */
+  .pr-canvas-wrap { background: #f9f9f9; border-radius: 8px; padding: 15px; border: 1px solid #e0e0e0; }
+  .pr-canvas-wrap canvas { display: block; width: 100%; height: 400px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: crosshair; }
+  .pr-legend { display: flex; gap: 20px; margin-top: 15px; flex-wrap: wrap; justify-content: center; }
+  .pr-legend-item { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.95em; }
+  .pr-legend-color { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.3); }
+  .pr-legend-color.positive { background: #4CAF50; }
+  .pr-legend-color.negative { background: #FF6B6B; }
+  .pr-metrics-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 20px; }
+  .pr-metric-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+  .pr-metric-card h3 { font-size: 0.85em; margin-bottom: 10px; opacity: 0.9; font-weight: 600; }
+  .pr-metric-card .mv { font-size: 2em; font-weight: 700; margin-bottom: 8px; }
+  .pr-mbar { background: rgba(255,255,255,0.3); border-radius: 4px; height: 8px; overflow: hidden; }
+  .pr-mbar-fill { background: rgba(255,255,255,0.9); height: 100%; transition: width 0.3s ease; }
+  .pr-confmat { display: grid; grid-template-columns: auto 1fr 1fr; gap: 10px; margin-top: 20px; font-size: 0.95em; }
+  .pr-confmat-cell { padding: 12px; text-align: center; border-radius: 6px; font-weight: 600; }
+  .pr-cheader { background: #f0f0f0; color: #333; }
+  .pr-clabel { background: #f0f0f0; color: #333; text-align: right; }
+  .pr-ctp { background: #c8e6c9; color: #1b5e20; }
+  .pr-cfp { background: #ffcccc; color: #b71c1c; }
+  .pr-cfn { background: #ffe0b2; color: #e65100; }
+  .pr-ctn { background: #bbdefb; color: #0d47a1; }
+  @media (max-width: 700px) { .pr-metrics-grid { grid-template-columns: 1fr; } }
+
+  /* ===== Regression specific ===== */
+  .reg-metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+  .reg-metric-box { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 20px; border-radius: 8px; text-align: center; border: 2px solid #e0e0e0; }
+  .reg-metric-box.mae { border-top: 4px solid #2196f3; }
+  .reg-metric-box.mse { border-top: 4px solid #ff9800; }
+  .reg-metric-box.rmse { border-top: 4px solid #f44336; }
+  .reg-metric-box.r2 { border-top: 4px solid #4caf50; }
+  .reg-metric-lbl { font-size: 0.9em; font-weight: 600; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .reg-metric-val { font-size: 2.2em; font-weight: 700; color: #333; margin-bottom: 8px; font-family: 'Courier New', monospace; }
+  .reg-metric-desc { font-size: 0.85em; color: #555; line-height: 1.5; }
+  .reg-legend { background: #f8f9fa; border-left: 4px solid #667eea; padding: 15px; border-radius: 8px; margin-top: 15px; }
+  .reg-legend-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 0.95em; }
+  .reg-legend-item:last-child { margin-bottom: 0; }
+  .reg-legend-color { width: 20px; height: 3px; border-radius: 2px; }
+  .reg-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-top: 20px; }
+  .reg-info-box { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; border-radius: 8px; }
+  .reg-info-box h3 { color: #1976d2; margin-bottom: 8px; font-size: 1.1em; }
+  .reg-info-box p { color: #555; font-size: 0.95em; line-height: 1.6; }
+
+  .section-title { font-size: 1.3em; color: #333; margin-bottom: 15px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Evaluación de Modelos</h1>
+  <p>Demo interactiva — Tema 3: Métricas y herramientas de evaluación</p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showSection('matriz', this)">Matriz Confusión</div>
+  <div class="tab" onclick="showSection('precision', this)">Precisión &amp; Recall</div>
+  <div class="tab" onclick="showSection('f1', this)">F1 Score</div>
+  <div class="tab" onclick="showSection('roc', this)">Curva ROC</div>
+  <div class="tab" onclick="showSection('accuracy', this)">MCC &amp; Accuracy</div>
+  <div class="tab" onclick="showSection('metricas', this)">Métricas Regresión</div>
+</div>
+
+<div class="content">
+
+  <!-- ===== CURVA ROC ===== -->
+  <div id="roc" class="section">
+    <a href="index.html" class="back-link">← Volver al inicio</a>
+    <div class="card">
+      <h2>Curva ROC (Receiver Operating Characteristic)</h2>
+      <p>La curva ROC muestra la relación entre la tasa de verdaderos positivos (TPR) y la tasa de falsos positivos (FPR) a diferentes umbrales de clasificación. El área bajo la curva (AUC) es una métrica de desempeño clave.</p>
+      <div class="info-box"><p><strong>💡 Tip:</strong> Una curva más cercana a la esquina superior izquierda indica un mejor clasificador. Un AUC de 1.0 es un clasificador perfecto.</p></div>
+    </div>
+
+    <div class="demo-grid">
+      <div>
+        <div class="canvas-wrap">
+          <canvas id="rocCanvas" width="500" height="500"></canvas>
+        </div>
+        <div class="info-box" style="margin-top:15px;">
+          <p><strong>💡 Interpretación:</strong> La curva ROC muestra cómo varía la Tasa de Verdaderos Positivos (TPR) frente a la Tasa de Falsos Positivos (FPR) a diferentes umbrales. Un modelo perfecto alcanza la esquina superior izquierda (TPR=1, FPR=0).</p>
+        </div>
+      </div>
+      <div>
+        <div class="metric-display" style="margin-bottom:15px;">
+          <div class="md-lbl">Área Bajo la Curva</div>
+          <div class="md-val" id="rocAucValue">0.50</div>
+          <div class="md-interp" id="rocAucInterp">Modelo aleatorio</div>
+        </div>
+        <div class="ctrl-group">
+          <h3>🎛️ AUC objetivo</h3>
+          <input type="range" id="rocQuality" min="50" max="99" value="50" step="1">
+          <div class="slider-labels">
+            <span>Aleatorio (0.50)</span>
+            <span class="sv" id="rocQualityVal">0.50</span>
+            <span>Perfecto (0.99)</span>
+          </div>
+        </div>
+        <div class="roc-threshold-info" id="rocThresholdInfo">
+          <strong>Umbral:</strong> Mueve el cursor sobre la curva para ver TPR y FPR
+        </div>
+        <div class="ctrl-group" style="margin-top:15px;">
+          <h3>⚡ Modelos Predefinidos</h3>
+          <div class="btn-group">
+            <button class="dbtn dbtn-primary" onclick="rocSetQuality(99)">Perfecto (0.99)</button>
+            <button class="dbtn dbtn-primary" onclick="rocSetQuality(90)">Excelente (0.90)</button>
+            <button class="dbtn dbtn-primary" onclick="rocSetQuality(75)">Bueno (0.75)</button>
+            <button class="dbtn dbtn-primary" onclick="rocSetQuality(50)">Aleatorio (0.50)</button>
+          </div>
+        </div>
+        <button class="dbtn dbtn-secondary dbtn-full" style="margin-top:10px;" onclick="rocReset()">↻ Reiniciar Demo</button>
+        <div class="guide-section" style="margin-top:15px;">
+          <h3>📖 Interpretación de AUC</h3>
+          <div class="guide-item"><div class="guide-color" style="background:#d32f2f;"></div><div class="guide-text"><strong>AUC &lt; 0.60:</strong> Muy pobre, peor que aleatorio</div></div>
+          <div class="guide-item"><div class="guide-color" style="background:#f57c00;"></div><div class="guide-text"><strong>0.60 – 0.80:</strong> Aceptable, el modelo es útil</div></div>
+          <div class="guide-item"><div class="guide-color" style="background:#388e3c;"></div><div class="guide-text"><strong>0.80 – 0.90:</strong> Excelente, muy buen rendimiento</div></div>
+          <div class="guide-item"><div class="guide-color" style="background:#1b5e20;"></div><div class="guide-text"><strong>AUC &gt; 0.90:</strong> Sobresaliente, casi perfecto</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== F1 SCORE ===== -->
+  <div id="f1" class="section">
+    <a href="index.html" class="back-link">← Volver al inicio</a>
+    <div class="card">
+      <h2>F1 Score</h2>
+      <p>El F1 Score es la media armónica entre precisión y recall. Es útil cuando buscas un balance entre ambas métricas, especialmente en datasets desbalanceados.</p>
+      <div class="info-box"><p><strong>📊 Fórmula:</strong> F1 = 2 × (Precisión × Recall) / (Precisión + Recall)</p></div>
+    </div>
+
+    <div class="demo-grid">
+      <div>
+        <div class="ctrl-group">
+          <label for="f1PrecSlider">📍 Precisión</label>
+          <div class="ctrl-row">
+            <input type="range" id="f1PrecSlider" min="0" max="100" value="75">
+            <span class="ctrl-val" id="f1PrecVal">0.75</span>
+          </div>
+          <div class="info-box" style="margin-top:10px;font-size:0.85em;"><p><strong>¿Qué es?</strong> De las predicciones positivas del modelo, ¿cuántas eran correctas?</p></div>
+        </div>
+        <div class="ctrl-group">
+          <label for="f1RecallSlider">🎯 Recall (Sensibilidad)</label>
+          <div class="ctrl-row">
+            <input type="range" id="f1RecallSlider" min="0" max="100" value="75">
+            <span class="ctrl-val" id="f1RecallVal">0.75</span>
+          </div>
+          <div class="info-box" style="margin-top:10px;font-size:0.85em;"><p><strong>¿Qué es?</strong> De todos los casos positivos reales, ¿cuántos detectó el modelo?</p></div>
+        </div>
+        <div class="metric-display" style="margin:15px 0;">
+          <div class="md-lbl">Puntuación F1</div>
+          <div class="md-val" id="f1ScoreVal">0.750</div>
+          <div class="md-interp" id="f1Interp">Bueno (0.7 – 0.9)</div>
+        </div>
+        <div class="formula-box">
+          <div style="margin-bottom:10px;font-weight:600;color:#e65100;">Media Armónica (F1):</div>
+          <code>F1 = 2 × (P × R) / (P + R)</code>
+          <div style="margin-top:10px;font-size:0.85em;color:#666;">La media armónica penaliza valores bajos más que la media aritmética. Si uno es muy bajo, el F1 es bajo.</div>
+        </div>
+        <div class="btn-group" style="flex-wrap:wrap;">
+          <button class="dbtn dbtn-primary" onclick="f1SetScenario(1)">⚖️ Equilibrado</button>
+          <button class="dbtn dbtn-primary" onclick="f1SetScenario(2)">🎯 Alta Precisión</button>
+          <button class="dbtn dbtn-primary" onclick="f1SetScenario(3)">📢 Alto Recall</button>
+          <button class="dbtn dbtn-secondary" onclick="f1Reset()">🔄 Reiniciar</button>
+        </div>
+        <div class="info-box" style="margin-top:15px;"><p><strong>💡 Insight clave:</strong> El F1 Score sólo es alto cuando AMBOS Precisión y Recall son altos. Un valor bajo arrastra toda la puntuación hacia abajo, mucho más que lo haría la media aritmética.</p></div>
+      </div>
+      <div>
+        <div>
+          <div class="section-title">📈 Comparación de Medias</div>
+          <p style="margin-bottom:15px;color:#666;font-size:0.9em;">Observa cómo la Media Armónica (F1) penaliza el desequilibrio más que la Media Aritmética</p>
+          <div class="f1-bar-chart">
+            <div class="f1-bar-comparison">
+              <div class="f1-bar-item">
+                <div class="f1-bar-fill" id="f1ArithBar" style="height:50%;">
+                  <div class="f1-bar-top-val" id="f1ArithVal">0.750</div>
+                </div>
+                <div class="f1-bar-label">Media<br>Aritmética</div>
+              </div>
+              <div class="f1-bar-item">
+                <div class="f1-bar-fill" id="f1HarmBar" style="height:50%;">
+                  <div class="f1-bar-top-val" id="f1HarmVal">0.750</div>
+                </div>
+                <div class="f1-bar-label">Media<br>Armónica (F1)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:20px;">
+          <div class="section-title">🗺️ Mapa de Calor: F1 Score</div>
+          <p style="margin-bottom:15px;color:#666;font-size:0.9em;">Cada punto representa un F1 Score para cada combinación de Precisión (X) y Recall (Y)</p>
+          <div class="f1-heatmap-wrap">
+            <canvas id="f1HeatmapCanvas"></canvas>
+          </div>
+        </div>
+        <div style="margin-top:15px;">
+          <div class="section-title">🎨 Zonas de Interpretación</div>
+          <div class="f1-zones">
+            <div class="f1-zone f1-zone-excellent"><div>✨ Excelente</div><div style="font-size:0.8em;margin-top:5px;">F1 &gt; 0.9</div></div>
+            <div class="f1-zone f1-zone-good"><div>👍 Bueno</div><div style="font-size:0.8em;margin-top:5px;">0.7 – 0.9</div></div>
+            <div class="f1-zone f1-zone-fair"><div>⚠️ Regular</div><div style="font-size:0.8em;margin-top:5px;">0.5 – 0.7</div></div>
+            <div class="f1-zone f1-zone-poor"><div>❌ Malo</div><div style="font-size:0.8em;margin-top:5px;">F1 &lt; 0.5</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MATRIZ CONFUSIÓN ===== -->
+  <div id="matriz" class="section active">
+    <a href="index.html" class="back-link">← Volver al inicio</a>
+    <div class="card">
+      <h2>Matriz de Confusión</h2>
+      <p>La matriz de confusión muestra el número de predicciones correctas e incorrectas desglosadas por clase. Es fundamental para calcular otras métricas como precisión, recall y F1 score.</p>
+      <div class="info-box"><p><strong>🔍 Componentes:</strong> Verdaderos Positivos (TP), Falsos Positivos (FP), Verdaderos Negativos (TN), Falsos Negativos (FN)</p></div>
+    </div>
+
+    <div class="demo-grid">
+      <div>
+        <div class="section-title">🎛️ Controles</div>
+        <div class="ctrl-group">
+          <label>Verdaderos Positivos (TP)</label>
+          <div class="ctrl-row"><input type="range" id="cmTpSlider" min="0" max="100" value="70"><span class="ctrl-val" id="cmTpVal">70</span></div>
+          <div class="cm-info-box">Predicciones <strong>positivas correctas</strong>. El modelo predijo "sí" y era correcto.</div>
+        </div>
+        <div class="ctrl-group">
+          <label>Verdaderos Negativos (TN)</label>
+          <div class="ctrl-row"><input type="range" id="cmTnSlider" min="0" max="100" value="75"><span class="ctrl-val" id="cmTnVal">75</span></div>
+          <div class="cm-info-box">Predicciones <strong>negativas correctas</strong>. El modelo predijo "no" y era correcto.</div>
+        </div>
+        <div class="ctrl-group">
+          <label>Falsos Positivos (FP)</label>
+          <div class="ctrl-row"><input type="range" id="cmFpSlider" min="0" max="100" value="10"><span class="ctrl-val" id="cmFpVal">10</span></div>
+          <div class="cm-info-box">Predicciones <strong>positivas incorrectas</strong>. El modelo predijo "sí" pero era "no".</div>
+        </div>
+        <div class="ctrl-group">
+          <label>Falsos Negativos (FN)</label>
+          <div class="ctrl-row"><input type="range" id="cmFnSlider" min="0" max="100" value="15"><span class="ctrl-val" id="cmFnVal">15</span></div>
+          <div class="cm-info-box">Predicciones <strong>negativas incorrectas</strong>. El modelo predijo "no" pero era "sí".</div>
+        </div>
+        <div class="btn-group" style="margin-bottom:15px;">
+          <button class="dbtn dbtn-secondary" onclick="cmReset()">🔄 Restablecer</button>
+          <button class="dbtn dbtn-primary dbtn-full" onclick="cmRandomize()">🎲 Aleatorio</button>
+        </div>
+        <div class="ctrl-group">
+          <label style="margin-bottom:12px;">📋 Escenarios Predefinidos</label>
+          <div class="btn-group-col">
+            <button class="dbtn dbtn-purple" onclick="cmSetPreset('good')">✅ Buen modelo</button>
+            <button class="dbtn dbtn-purple" onclick="cmSetPreset('random')">🎰 Modelo aleatorio</button>
+            <button class="dbtn dbtn-purple" onclick="cmSetPreset('high-precision')">🎯 Alta precisión / Bajo recall</button>
+            <button class="dbtn dbtn-purple" onclick="cmSetPreset('high-recall')">🔔 Alto recall / Baja precisión</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">📈 Matriz y Métricas</div>
+        <div class="cm-container">
+          <div class="cm-grid">
+            <div class="cm-lbl"></div>
+            <div class="cm-lbl">Predijo: Positivo</div>
+            <div class="cm-lbl">Predijo: Negativo</div>
+            <div class="cm-lbl">Real: Positivo</div>
+            <div class="cm-cell cm-tp">
+              <div class="cm-cell-lbl">TP</div>
+              <div class="cm-cell-val" id="cmMatrixTp">70</div>
+              <div class="cm-cell-pct" id="cmMatrixTpPct">70%</div>
+            </div>
+            <div class="cm-cell cm-fn">
+              <div class="cm-cell-lbl">FN</div>
+              <div class="cm-cell-val" id="cmMatrixFn">15</div>
+              <div class="cm-cell-pct" id="cmMatrixFnPct">15%</div>
+            </div>
+            <div class="cm-lbl">Real: Negativo</div>
+            <div class="cm-cell cm-fp">
+              <div class="cm-cell-lbl">FP</div>
+              <div class="cm-cell-val" id="cmMatrixFp">10</div>
+              <div class="cm-cell-pct" id="cmMatrixFpPct">10%</div>
+            </div>
+            <div class="cm-cell cm-tn">
+              <div class="cm-cell-lbl">TN</div>
+              <div class="cm-cell-val" id="cmMatrixTn">75</div>
+              <div class="cm-cell-pct" id="cmMatrixTnPct">75%</div>
+            </div>
+          </div>
+          <div class="cm-legend">
+            <div class="cm-legend-item"><div class="cm-legend-box cm-legend-pos"></div><span>Predicciones correctas</span></div>
+            <div class="cm-legend-item"><div class="cm-legend-box cm-legend-neg"></div><span>Predicciones incorrectas</span></div>
+          </div>
+        </div>
+        <div class="cm-metrics-grid" style="margin-top:20px;">
+          <div class="cm-metric-box"><div class="cm-metric-name">Exactitud (Accuracy)</div><div class="cm-metric-val" id="cmAccuracy">78.57%</div><div class="cm-metric-desc">(TP + TN) / Total</div></div>
+          <div class="cm-metric-box"><div class="cm-metric-name">Precisión</div><div class="cm-metric-val" id="cmPrecision">87.50%</div><div class="cm-metric-desc">TP / (TP + FP)</div></div>
+          <div class="cm-metric-box"><div class="cm-metric-name">Recall (Sensibilidad)</div><div class="cm-metric-val" id="cmRecall">82.35%</div><div class="cm-metric-desc">TP / (TP + FN)</div></div>
+          <div class="cm-metric-box"><div class="cm-metric-name">F1 Score</div><div class="cm-metric-val" id="cmF1">84.85%</div><div class="cm-metric-desc">Media armónica de P y R</div></div>
+          <div class="cm-metric-box"><div class="cm-metric-name">Especificidad</div><div class="cm-metric-val" id="cmSpecificity">88.24%</div><div class="cm-metric-desc">TN / (TN + FP)</div></div>
+          <div class="cm-metric-box"><div class="cm-metric-name">MCC</div><div class="cm-metric-val" id="cmMcc">0.649</div><div class="cm-metric-desc">Coeficiente Matthews</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ACCURACY Y MCC ===== -->
+  <div id="accuracy" class="section">
+    <a href="index.html" class="back-link">← Volver al inicio</a>
+    <div class="card">
+      <h2>Accuracy y Coeficiente de Correlación de Matthews (MCC)</h2>
+      <p>La Exactitud (Accuracy) es el porcentaje de predicciones correctas. El MCC es una métrica más robusta que considera todos los elementos de la matriz de confusión, especialmente útil con datos desbalanceados.</p>
+      <div class="info-box"><p><strong>✓ Accuracy:</strong> (TP + TN) / Total | <strong>📈 MCC:</strong> Mejor para datos desbalanceados</p></div>
+    </div>
+
+    <div class="demo-grid-3">
+      <div>
+        <div class="section-title">⚙️ Parámetros</div>
+        <div class="ctrl-group">
+          <label>Muestras Positivas</label>
+          <div class="ctrl-row"><input type="range" id="mccPositives" min="10" max="500" value="100"><span class="ctrl-val" id="mccPosVal">100</span></div>
+        </div>
+        <div class="ctrl-group">
+          <label>Muestras Negativas</label>
+          <div class="ctrl-row"><input type="range" id="mccNegatives" min="10" max="5000" value="900"><span class="ctrl-val" id="mccNegVal">900</span></div>
+        </div>
+        <div class="ctrl-group">
+          <label>Tasa de Verdaderos Positivos (TP%)</label>
+          <div class="ctrl-row"><input type="range" id="mccTpRate" min="0" max="100" value="80"><span class="ctrl-val" id="mccTpRateVal">80%</span></div>
+        </div>
+        <div class="ctrl-group">
+          <label>Tasa de Falsos Positivos (FP%)</label>
+          <div class="ctrl-row"><input type="range" id="mccFpRate" min="0" max="100" value="10"><span class="ctrl-val" id="mccFpRateVal">10%</span></div>
+        </div>
+        <div class="ctrl-group">
+          <h3>📋 Escenarios Predefinidos</h3>
+          <div class="btn-group-col">
+            <button class="dbtn dbtn-primary" onclick="mccLoadScenario(1)">✅ Datos Balanceados, Buen Modelo</button>
+            <button class="dbtn dbtn-primary" onclick="mccLoadScenario(2)">⚠️ Datos Desbalanceados, Pred. Negativa</button>
+            <button class="dbtn dbtn-primary" onclick="mccLoadScenario(3)">🔄 Datos Desbalanceados, Modelo Real</button>
+          </div>
+        </div>
+        <button class="dbtn dbtn-secondary dbtn-full" onclick="mccResetAll()" style="margin-top:5px;">Reiniciar</button>
+      </div>
+
+      <div>
+        <div class="section-title">📈 Matriz de Confusión</div>
+        <div class="mcc-matrix-wrap">
+          <div class="mcc-matrix-grid">
+            <div class="mcc-mheader"></div>
+            <div class="mcc-mheader">Predicción: Positivo</div>
+            <div class="mcc-mheader">Predicción: Negativo</div>
+            <div class="mcc-mheader">Real: Positivo</div>
+            <div class="mcc-mcell positive"><span class="mcc-cell-lbl">TP</span><span class="mcc-cell-val" id="mccTp">80</span></div>
+            <div class="mcc-mcell neutral"><span class="mcc-cell-lbl">FN</span><span class="mcc-cell-val" id="mccFn">20</span></div>
+            <div class="mcc-mheader">Real: Negativo</div>
+            <div class="mcc-mcell neutral"><span class="mcc-cell-lbl">FP</span><span class="mcc-cell-val" id="mccFp">90</span></div>
+            <div class="mcc-mcell negative"><span class="mcc-cell-lbl">TN</span><span class="mcc-cell-val" id="mccTn">810</span></div>
+          </div>
+        </div>
+        <div class="info-box" style="margin-top:15px;background:#fff3cd;border-left-color:#ffc107;">
+          <p style="color:#856404;"><strong style="color:#856404;">🎯 Definiciones</strong><br>
+          <strong>TP:</strong> Predicciones positivas correctas<br>
+          <strong>TN:</strong> Predicciones negativas correctas<br>
+          <strong>FP:</strong> Positivas incorrectas (Tipo I)<br>
+          <strong>FN:</strong> Negativas incorrectas (Tipo II)</p>
+        </div>
+        <div class="info-box" style="margin-top:10px;background:#e8f5e9;border-left-color:#4caf50;">
+          <p style="color:#2e7d32;"><strong style="color:#2e7d32;">📐 Fórmula del MCC</strong></p>
+          <div class="mcc-formula">
+            MCC = (TP×TN - FP×FN) / √((TP+FP)(TP+FN)(TN+FP)(TN+FN))<br><br>
+            = (<span class="mcc-highlight" id="mccFormTp">80</span>×<span class="mcc-highlight" id="mccFormTn">810</span> - <span class="mcc-highlight" id="mccFormFp">90</span>×<span class="mcc-highlight" id="mccFormFn">20</span>) / √((<span class="mcc-highlight" id="mccFormTpFp">170</span>)(<span class="mcc-highlight" id="mccFormTpFn">100</span>)(<span class="mcc-highlight" id="mccFormTnFp">900</span>)(<span class="mcc-highlight" id="mccFormTnFn">830</span>))
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">📊 Métricas</div>
+        <div class="mcc-metric-box">
+          <div class="mcc-mname">Exactitud (Accuracy)</div>
+          <div class="mcc-mval" id="mccAccuracy">88.0%</div>
+          <div class="mcc-bar"><div class="mcc-bar-fill" id="mccAccBar" style="width:88%"></div></div>
+          <p style="font-size:0.85em;color:#1565c0;margin-top:8px;">(TP+TN) / Total</p>
+        </div>
+        <div class="mcc-metric-box purple">
+          <div class="mcc-mname">F1-Score</div>
+          <div class="mcc-mval" id="mccF1">64.5%</div>
+          <div class="mcc-bar"><div class="mcc-bar-fill purple" id="mccF1Bar" style="width:64.5%"></div></div>
+          <p style="font-size:0.85em;color:#6a1b9a;margin-top:8px;">Media armónica de Precisión y Recall</p>
+        </div>
+        <div class="mcc-metric-box teal">
+          <div class="mcc-mname">MCC (Coef. Correlación Matthews)</div>
+          <div class="mcc-mval" id="mccMcc">0.000</div>
+          <div class="mcc-bar"><div class="mcc-bar-fill teal" id="mccMccBar" style="width:50%"></div></div>
+          <p style="font-size:0.85em;color:#00695c;margin-top:8px;">Rango: -1 (peor) · 0 (aleatorio) · +1 (perfecto)</p>
+        </div>
+        <div class="section-title" style="margin-top:15px;">📋 Comparación Visual</div>
+        <div class="mcc-chart-bars">
+          <div class="mcc-chart-bar" id="mccBarAcc" style="height:88%;"><div class="mcc-chart-val" id="mccChartAcc">88%</div><div class="mcc-chart-lbl">Accuracy</div></div>
+          <div class="mcc-chart-bar purple" id="mccBarF1" style="height:64.5%;"><div class="mcc-chart-val" id="mccChartF1">65%</div><div class="mcc-chart-lbl">F1-Score</div></div>
+          <div class="mcc-chart-bar teal" id="mccBarMcc" style="height:50%;"><div class="mcc-chart-val" id="mccChartMcc">50%</div><div class="mcc-chart-lbl">MCC</div></div>
+        </div>
+        <div class="info-box" style="margin-top:15px;background:#fce4ec;border-left-color:#e91e63;">
+          <p style="color:#880e4f;"><strong style="color:#880e4f;">⚡ Insight Clave</strong><br>Con <strong>datos desbalanceados</strong>, un modelo que siempre predice la clase mayoritaria puede obtener una <strong>Accuracy muy alta</strong>, pero un <strong>MCC cercano a 0</strong>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PRECISIÓN Y RECALL ===== -->
+  <div id="precision" class="section">
+    <a href="index.html" class="back-link">← Volver al inicio</a>
+    <div class="card">
+      <h2>Precisión y Recall (Sensibilidad)</h2>
+      <p>La Precisión mide qué porcentaje de predicciones positivas fueron correctas. El Recall mide qué porcentaje de casos positivos fueron identificados correctamente.</p>
+      <div class="info-box"><p><strong>🎯 Precisión:</strong> TP / (TP + FP) | <strong>🔔 Recall:</strong> TP / (TP + FN)</p></div>
+    </div>
+
+    <div class="demo-grid">
+      <div>
+        <div class="section-title">📊 Gráfico de Clasificación</div>
+        <div class="pr-canvas-wrap">
+          <canvas id="prScatterCanvas"></canvas>
+        </div>
+        <div class="pr-legend">
+          <div class="pr-legend-item"><div class="pr-legend-color positive"></div><span>Clase Positiva (Real)</span></div>
+          <div class="pr-legend-item"><div class="pr-legend-color negative"></div><span>Clase Negativa (Real)</span></div>
+        </div>
+        <p style="margin-top:10px;font-size:0.9em;color:#666;text-align:center;"><strong>Línea vertical naranja:</strong> Umbral de decisión</p>
+      </div>
+      <div>
+        <div class="section-title">⚙️ Controles</div>
+        <div class="ctrl-group">
+          <label>Umbral de Decisión</label>
+          <div class="ctrl-row">
+            <input type="range" id="prThresholdSlider" min="0" max="100" value="50" step="1">
+            <span class="ctrl-val" id="prThresholdVal">0.50</span>
+          </div>
+        </div>
+        <div class="btn-group" style="margin-bottom:10px;">
+          <button class="dbtn dbtn-primary" onclick="prSetPreset(0.2)">📈 Alta Sensibilidad</button>
+          <button class="dbtn dbtn-primary" onclick="prSetPreset(0.8)">🎯 Alta Precisión</button>
+          <button class="dbtn dbtn-primary" onclick="prSetPreset(0.5)">⚖️ Equilibrado</button>
+        </div>
+        <div class="btn-group" style="margin-bottom:15px;">
+          <button class="dbtn dbtn-primary" onclick="prGenerateNew()">🎲 Nuevo Dataset</button>
+          <button class="dbtn dbtn-secondary" onclick="prReset()">🔄 Reiniciar</button>
+        </div>
+        <div class="info-box">
+          <p><strong>💡 ¿Qué está sucediendo?</strong><br>
+          <strong>Umbral bajo:</strong> El modelo predice más positivos → ⬆️ Recall, ⬇️ Precisión.<br>
+          <strong>Umbral alto:</strong> El modelo es más conservador → ⬆️ Precisión, ⬇️ Recall.<br>
+          <strong>El equilibrio:</strong> El F1-score busca el balance entre ambas métricas.</p>
+        </div>
+        <div class="pr-metrics-grid">
+          <div class="pr-metric-card"><h3>Precisión 🎯</h3><div class="mv" id="prPrecisionVal">-</div><div class="pr-mbar"><div class="pr-mbar-fill" id="prPrecisionBar" style="width:0%"></div></div><p style="font-size:0.8em;margin-top:8px;opacity:0.9;">VP / (VP + FP)</p></div>
+          <div class="pr-metric-card"><h3>Recall 📈</h3><div class="mv" id="prRecallVal">-</div><div class="pr-mbar"><div class="pr-mbar-fill" id="prRecallBar" style="width:0%"></div></div><p style="font-size:0.8em;margin-top:8px;opacity:0.9;">VP / (VP + FN)</p></div>
+          <div class="pr-metric-card"><h3>F1-Score ⚖️</h3><div class="mv" id="prF1Val">-</div><div class="pr-mbar"><div class="pr-mbar-fill" id="prF1Bar" style="width:0%"></div></div><p style="font-size:0.8em;margin-top:8px;opacity:0.9;">2 × (P × R) / (P + R)</p></div>
+        </div>
+        <div style="margin-top:20px;">
+          <div class="section-title">📋 Matriz de Confusión</div>
+          <div class="pr-confmat">
+            <div class="pr-confmat-cell pr-cheader"></div>
+            <div class="pr-confmat-cell pr-cheader">Predicho Positivo</div>
+            <div class="pr-confmat-cell pr-cheader">Predicho Negativo</div>
+            <div class="pr-confmat-cell pr-clabel">Real Positivo</div>
+            <div class="pr-confmat-cell pr-ctp"><div style="font-size:0.85em;opacity:0.8;">VP</div><div id="prTp">-</div></div>
+            <div class="pr-confmat-cell pr-cfn"><div style="font-size:0.85em;opacity:0.8;">FN</div><div id="prFn">-</div></div>
+            <div class="pr-confmat-cell pr-clabel">Real Negativo</div>
+            <div class="pr-confmat-cell pr-cfp"><div style="font-size:0.85em;opacity:0.8;">FP</div><div id="prFp">-</div></div>
+            <div class="pr-confmat-cell pr-ctn"><div style="font-size:0.85em;opacity:0.8;">VN</div><div id="prTn">-</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MÉTRICAS REGRESIÓN ===== -->
+  <div id="metricas" class="section">
+    <a href="index.html" class="back-link">← Volver al inicio</a>
+    <div class="card">
+      <h2>Métricas para Regresión</h2>
+      <p>Para problemas de regresión, usamos diferentes métricas que evalúan qué tan cercanas son las predicciones a los valores reales. Las principales son MAE, MSE, RMSE y R².</p>
+      <div class="info-box"><p><strong>📐 MAE:</strong> Error Medio Absoluto | <strong>📊 MSE:</strong> Error Cuadrático Medio | <strong>📈 RMSE:</strong> Raíz del Error Cuadrático Medio | <strong>🎯 R²:</strong> Coeficiente de Determinación</p></div>
+    </div>
+
+    <div class="demo-grid">
+      <div>
+        <div class="section-title">📈 Visualización de Regresión</div>
+        <canvas id="regCanvas" width="600" height="500" style="border:2px solid #e0e0e0;border-radius:8px;background:#fafafa;cursor:crosshair;max-width:100%;height:auto;display:block;"></canvas>
+      </div>
+      <div>
+        <div class="ctrl-group">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-weight:600;color:#333;">🔢 Pendiente (Slope)</span><span class="ctrl-val" id="regSlopeVal">0.80</span></div>
+          <input type="range" id="regSlopeSlider" min="-2" max="2" step="0.01" value="0.8">
+        </div>
+        <div class="ctrl-group">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-weight:600;color:#333;">📍 Intersección (Intercept)</span><span class="ctrl-val" id="regInterceptVal">2.00</span></div>
+          <input type="range" id="regInterceptSlider" min="-10" max="10" step="0.1" value="2">
+        </div>
+        <div class="ctrl-group">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-weight:600;color:#333;">🌪️ Ruido en Datos</span><span class="ctrl-val" id="regNoiseVal">0.5</span></div>
+          <input type="range" id="regNoiseSlider" min="0" max="2" step="0.1" value="0.5">
+        </div>
+        <div class="ctrl-group">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-weight:600;color:#333;">📊 Número de Puntos</span><span class="ctrl-val" id="regPointsVal">30</span></div>
+          <input type="range" id="regPointsSlider" min="5" max="100" step="5" value="30">
+        </div>
+        <div class="btn-group" style="margin-bottom:10px;">
+          <button class="dbtn dbtn-primary" id="regRandomBtn">🔄 Datos Aleatorios</button>
+          <button class="dbtn dbtn-secondary" id="regResetBtn">↻ Reiniciar</button>
+        </div>
+        <div class="btn-group" style="margin-bottom:15px;">
+          <button class="dbtn dbtn-green" id="regBestFitBtn">✨ Mejor Ajuste</button>
+          <button class="dbtn dbtn-orange" id="regOutlierBtn">⚠️ Añadir Atípico</button>
+        </div>
+        <div class="reg-legend">
+          <strong>Leyenda de Residuos:</strong>
+          <div class="reg-legend-item"><div class="reg-legend-color" style="background:#4caf50;"></div><span>Error pequeño (&lt; promedio)</span></div>
+          <div class="reg-legend-item"><div class="reg-legend-color" style="background:#ff9800;"></div><span>Error moderado (≈ promedio)</span></div>
+          <div class="reg-legend-item"><div class="reg-legend-color" style="background:#f44336;"></div><span>Error grande (&gt; promedio)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reg-metrics-grid" style="margin-top:20px;">
+      <div class="reg-metric-box mae"><div class="reg-metric-lbl">MAE 📏</div><div class="reg-metric-val" id="regMaeVal">0.00</div><div class="reg-metric-desc">Error Absoluto Medio — Promedio de errores sin penalizar grandes desvíos</div></div>
+      <div class="reg-metric-box mse"><div class="reg-metric-lbl">MSE 🎯</div><div class="reg-metric-val" id="regMseVal">0.00</div><div class="reg-metric-desc">Error Cuadrado Medio — Penaliza más los errores grandes</div></div>
+      <div class="reg-metric-box rmse"><div class="reg-metric-lbl">RMSE 📊</div><div class="reg-metric-val" id="regRmseVal">0.00</div><div class="reg-metric-desc">Raíz del MSE — En las mismas unidades que Y</div></div>
+      <div class="reg-metric-box r2"><div class="reg-metric-lbl">R² 🎪</div><div class="reg-metric-val" id="regR2Val">0.00</div><div class="reg-metric-desc">Coef. Determinación — Proporción de varianza explicada</div></div>
+    </div>
+
+    <div class="reg-info-grid">
+      <div class="reg-info-box"><h3>🔍 ¿Cuándo usar MAE?</h3><p>Cuando cada error tiene la misma importancia, independientemente de su magnitud. Menos sensible a valores atípicos que MSE.</p></div>
+      <div class="reg-info-box"><h3>⚡ ¿Cuándo usar RMSE?</h3><p>Cuando los errores grandes son más importantes. Es la métrica más común. Penaliza mucho más que MAE los valores atípicos.</p></div>
+      <div class="reg-info-box"><h3>🎯 ¿Cuándo usar R²?</h3><p>Para entender qué porcentaje de variabilidad explica tu modelo. Útil para comparar modelos (0 = malo, 1 = perfecto).</p></div>
+      <div class="reg-info-box"><h3>💡 Prueba el botón "Atípico"</h3><p>Añade un valor extremo y observa cómo MAE cambia poco, pero MSE y RMSE se disparan, demostrando la sensibilidad a outliers.</p></div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<!-- ======================================================= -->
+<!-- SCRIPTS -->
+<!-- ======================================================= -->
+
+<!-- Navigation -->
+<script>
+  function showSection(sectionId, tabEl) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(sectionId).classList.add('active');
+    if (tabEl) tabEl.classList.add('active');
+    window.scrollTo(0, 0);
+  }
+</script>
+
+<!-- ===== ROC Script ===== -->
+<script>
+(function() {
+  const canvas = document.getElementById('rocCanvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('rocQuality');
+  const qualityValEl = document.getElementById('rocQualityVal');
+  const aucValEl = document.getElementById('rocAucValue');
+  const aucInterpEl = document.getElementById('rocAucInterp');
+  const thresholdInfoEl = document.getElementById('rocThresholdInfo');
+
+  // targetAUC: valor directo del slider (50–99) → AUC = targetAUC/100
+  let targetAUC = 50;
+  let hoverX = null, hoverY = null;
+
+  // tpr(fpr) = fpr^c  con  c = 1/AUC - 1
+  // Integrar: AUC = ∫₀¹ fpr^c dfpr = 1/(c+1) = AUC  ✓
+  function generateROCCurve(aucVal) {
+    const points = [];
+    const auc = Math.max(0.501, aucVal / 100); // evitar división por cero en AUC=0.5 exacto
+    const c = 1 / auc - 1;
+    for (let i = 0; i <= 200; i++) {
+      const fpr = i / 200;
+      const tpr = Math.min(1, Math.pow(fpr, c));
+      points.push({ fpr, tpr });
+    }
+    return points;
+  }
+
+  function calculateAUC(pts) {
+    let auc = 0;
+    for (let i = 1; i < pts.length; i++) {
+      auc += ((pts[i].fpr - pts[i-1].fpr) * (pts[i-1].tpr + pts[i].tpr)) / 2;
+    }
+    return auc;
+  }
+
+  function getAUCInterp(auc) {
+    if (auc < 0.6) return '❌ Muy pobre, peor que aleatorio';
+    if (auc < 0.8) return '⚠️ Aceptable, modelo útil';
+    if (auc < 0.9) return '✅ Excelente, muy buen rendimiento';
+    return '🌟 Sobresaliente, casi perfecto';
+  }
+
+  function getAUCColor(auc) {
+    if (auc < 0.6) return '#d32f2f';
+    if (auc < 0.8) return '#f57c00';
+    if (auc < 0.9) return '#388e3c';
+    return '#1b5e20';
+  }
+
+  function dataToPixel(dx, dy) {
+    const p = 50, cw = canvas.width - 2*p, ch = canvas.height - 2*p;
+    return { x: p + dx*cw, y: canvas.height - p - dy*ch };
+  }
+
+  function findClosestPoint(mx, my, pts) {
+    let closest = null, minDist = Infinity;
+    for (const pt of pts) {
+      const px = dataToPixel(pt.fpr, pt.tpr);
+      const d = Math.hypot(px.x - mx, px.y - my);
+      if (d < minDist && d < 30) { minDist = d; closest = pt; }
+    }
+    return closest;
+  }
+
+  function draw() {
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const p = 50, cw = canvas.width - 2*p, ch = canvas.height - 2*p;
+    const pts = generateROCCurve(targetAUC);
+    const auc = calculateAUC(pts);
+
+    aucValEl.textContent = auc.toFixed(3);
+    aucInterpEl.textContent = getAUCInterp(auc);
+    aucValEl.style.color = getAUCColor(auc);
+
+    // Fill under curve
+    ctx.fillStyle = 'rgba(102,126,234,0.2)';
+    ctx.beginPath();
+    ctx.moveTo(p, canvas.height - p);
+    for (const pt of pts) { const px = dataToPixel(pt.fpr, pt.tpr); ctx.lineTo(px.x, px.y); }
+    ctx.lineTo(canvas.width - p, canvas.height - p);
+    ctx.closePath(); ctx.fill();
+
+    // Diagonal reference
+    ctx.strokeStyle = '#ccc'; ctx.setLineDash([5,5]); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(p, canvas.height-p); ctx.lineTo(canvas.width-p, p); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // ROC curve
+    ctx.strokeStyle = '#667eea'; ctx.lineWidth = 3;
+    ctx.beginPath();
+    pts.forEach((pt, i) => { const px = dataToPixel(pt.fpr, pt.tpr); i===0 ? ctx.moveTo(px.x, px.y) : ctx.lineTo(px.x, px.y); });
+    ctx.stroke();
+
+    // Hover point
+    if (hoverX !== null) {
+      const closest = findClosestPoint(hoverX, hoverY, pts);
+      if (closest) {
+        const px = dataToPixel(closest.fpr, closest.tpr);
+        ctx.fillStyle = '#764ba2'; ctx.beginPath(); ctx.arc(px.x, px.y, 8, 0, 2*Math.PI); ctx.fill();
+        ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(px.x, px.y, 5, 0, 2*Math.PI); ctx.fill();
+        thresholdInfoEl.innerHTML = `<strong>📍 Punto en la curva:</strong><br>TPR (Sensibilidad): <strong>${(closest.tpr*100).toFixed(1)}%</strong><br>FPR (1-Especificidad): <strong>${(closest.fpr*100).toFixed(1)}%</strong>`;
+      }
+    }
+
+    // Axes
+    ctx.strokeStyle = '#333'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(p,p); ctx.lineTo(p, canvas.height-p); ctx.lineTo(canvas.width-p, canvas.height-p); ctx.stroke();
+
+    // Labels
+    ctx.fillStyle = '#333'; ctx.font = 'bold 12px Segoe UI,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Tasa de Falsos Positivos (FPR) →', canvas.width/2, canvas.height-10);
+    ctx.save(); ctx.translate(15, canvas.height/2); ctx.rotate(-Math.PI/2);
+    ctx.fillText('Tasa de Verdaderos Positivos (TPR) →', 0, 0); ctx.restore();
+
+    // Scale marks
+    ctx.font = '11px Segoe UI,sans-serif'; ctx.fillStyle = '#666';
+    for (let i = 0; i <= 5; i++) {
+      const v = i/5;
+      const px = dataToPixel(v, 0);
+      ctx.textAlign = 'center'; ctx.fillText(v.toFixed(1), px.x, canvas.height-p+20);
+      ctx.textAlign = 'right'; ctx.fillText(v.toFixed(1), p-10, canvas.height-p-v*ch+4);
+    }
+  }
+
+  slider.addEventListener('input', e => {
+    targetAUC = parseInt(e.target.value);
+    qualityValEl.textContent = (targetAUC / 100).toFixed(2);
+    draw();
+  });
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    hoverX = (e.clientX - rect.left) * (canvas.width / rect.width);
+    hoverY = (e.clientY - rect.top) * (canvas.height / rect.height);
+    draw();
+  });
+  canvas.addEventListener('mouseleave', () => {
+    hoverX = null; hoverY = null;
+    thresholdInfoEl.innerHTML = '<strong>Umbral:</strong> Mueve el cursor sobre la curva para ver TPR y FPR';
+    draw();
+  });
+
+  window.rocSetQuality = function(q) {
+    targetAUC = q; slider.value = q; qualityValEl.textContent = (q/100).toFixed(2); draw();
+  };
+  window.rocReset = function() {
+    targetAUC = 50; slider.value = 50; qualityValEl.textContent = '0.50';
+    hoverX = null; hoverY = null;
+    thresholdInfoEl.innerHTML = '<strong>Umbral:</strong> Mueve el cursor sobre la curva para ver TPR y FPR';
+    draw();
+  };
+
+  draw();
+})();
+</script>
+
+<!-- ===== F1 Score Script ===== -->
+<script>
+(function() {
+  const precSlider = document.getElementById('f1PrecSlider');
+  const recSlider  = document.getElementById('f1RecallSlider');
+  const precValEl  = document.getElementById('f1PrecVal');
+  const recValEl   = document.getElementById('f1RecallVal');
+  const f1ScoreEl  = document.getElementById('f1ScoreVal');
+  const f1InterpEl = document.getElementById('f1Interp');
+  const arithBar   = document.getElementById('f1ArithBar');
+  const harmBar    = document.getElementById('f1HarmBar');
+  const arithValEl = document.getElementById('f1ArithVal');
+  const harmValEl  = document.getElementById('f1HarmVal');
+  const hCanvas    = document.getElementById('f1HeatmapCanvas');
+  const hCtx       = hCanvas.getContext('2d');
+
+  function calcF1(p,r) { return (p+r===0) ? 0 : 2*p*r/(p+r); }
+  function calcArith(p,r) { return (p+r)/2; }
+  function getInterp(f1) {
+    if (f1>0.9) return '✨ Excelente (> 0.9)';
+    if (f1>0.7) return '👍 Bueno (0.7 – 0.9)';
+    if (f1>0.5) return '⚠️ Regular (0.5 – 0.7)';
+    return '❌ Malo (< 0.5)';
+  }
+  function colorForF1(f) {
+    if (f>0.9) return {r:76,g:175,b:80};
+    if (f>0.7) return {r:33,g:150,b:243};
+    if (f>0.5) return {r:255,g:152,b:0};
+    return {r:244,g:67,b:54};
+  }
+
+  function resizeHeatmap() {
+    const container = hCanvas.parentElement;
+    const size = Math.min(container.clientWidth, container.clientHeight) - 40;
+    if (size > 0) { hCanvas.width = size; hCanvas.height = size; drawHeatmap(); }
+  }
+
+  function drawHeatmap() {
+    const size = hCanvas.width;
+    if (!size) return;
+    const cellSize = size / 100;
+    const imageData = hCtx.createImageData(size, size);
+    const d = imageData.data;
+    for (let y = 0; y < 100; y++) {
+      for (let x = 0; x < 100; x++) {
+        const f1 = calcF1(x/100, (100-y)/100);
+        const c = colorForF1(f1);
+        for (let dy = 0; dy < cellSize; dy++) {
+          for (let dx = 0; dx < cellSize; dx++) {
+            const px = Math.floor(x*cellSize+dx), py = Math.floor(y*cellSize+dy);
+            if (px < size && py < size) {
+              const idx = (py*size+px)*4;
+              d[idx]=c.r; d[idx+1]=c.g; d[idx+2]=c.b; d[idx+3]=255;
+            }
+          }
+        }
+      }
+    }
+    hCtx.putImageData(imageData, 0, 0);
+    const p = parseFloat(precSlider.value)/100, r = parseFloat(recSlider.value)/100;
+    const mx = p*size, my = (1-r)*size;
+    hCtx.fillStyle = 'rgba(255,255,255,0.9)'; hCtx.strokeStyle = 'rgba(0,0,0,0.7)'; hCtx.lineWidth = 2;
+    hCtx.beginPath(); hCtx.arc(mx,my,6,0,2*Math.PI); hCtx.fill(); hCtx.stroke();
+    hCtx.fillStyle = '#333'; hCtx.font = 'bold 10px Arial'; hCtx.textAlign = 'center';
+    hCtx.fillText('Precisión →', size/2, size-5);
+  }
+
+  function update() {
+    const p = parseFloat(precSlider.value)/100, r = parseFloat(recSlider.value)/100;
+    precValEl.textContent = p.toFixed(2); recValEl.textContent = r.toFixed(2);
+    const f1 = calcF1(p,r), arith = calcArith(p,r);
+    f1ScoreEl.textContent = f1.toFixed(3); f1InterpEl.textContent = getInterp(f1);
+    arithBar.style.height = Math.max(5, arith*100) + '%'; harmBar.style.height = Math.max(5, f1*100) + '%';
+    arithValEl.textContent = arith.toFixed(3); harmValEl.textContent = f1.toFixed(3);
+    drawHeatmap();
+  }
+
+  precSlider.addEventListener('input', update);
+  recSlider.addEventListener('input', update);
+  window.addEventListener('resize', resizeHeatmap);
+
+  window.f1SetScenario = function(s) {
+    if (s===1) { precSlider.value=80; recSlider.value=80; }
+    else if (s===2) { precSlider.value=90; recSlider.value=40; }
+    else { precSlider.value=40; recSlider.value=90; }
+    update();
+  };
+  window.f1Reset = function() { precSlider.value=50; recSlider.value=50; update(); };
+
+  resizeHeatmap();
+  update();
+})();
+</script>
+
+<!-- ===== Confusion Matrix Script ===== -->
+<script>
+(function() {
+  const tpS = document.getElementById('cmTpSlider'), tnS = document.getElementById('cmTnSlider');
+  const fpS = document.getElementById('cmFpSlider'), fnS = document.getElementById('cmFnSlider');
+  const tpV = document.getElementById('cmTpVal'), tnV = document.getElementById('cmTnVal');
+  const fpV = document.getElementById('cmFpVal'), fnV = document.getElementById('cmFnVal');
+
+  function pct(v, total) { return total > 0 ? (v/total*100).toFixed(1)+'%' : '0%'; }
+
+  function update() {
+    const tp=+tpS.value, tn=+tnS.value, fp=+fpS.value, fn=+fnS.value;
+    tpV.textContent=tp; tnV.textContent=tn; fpV.textContent=fp; fnV.textContent=fn;
+    const total = tp+tn+fp+fn;
+    document.getElementById('cmMatrixTp').textContent=tp;
+    document.getElementById('cmMatrixTn').textContent=tn;
+    document.getElementById('cmMatrixFp').textContent=fp;
+    document.getElementById('cmMatrixFn').textContent=fn;
+    document.getElementById('cmMatrixTpPct').textContent=pct(tp,total);
+    document.getElementById('cmMatrixTnPct').textContent=pct(tn,total);
+    document.getElementById('cmMatrixFpPct').textContent=pct(fp,total);
+    document.getElementById('cmMatrixFnPct').textContent=pct(fn,total);
+
+    const acc = total>0 ? (tp+tn)/total : 0;
+    const prec = (tp+fp)>0 ? tp/(tp+fp) : 0;
+    const rec  = (tp+fn)>0 ? tp/(tp+fn) : 0;
+    const spec = (tn+fp)>0 ? tn/(tn+fp) : 0;
+    const f1   = (prec+rec)>0 ? 2*prec*rec/(prec+rec) : 0;
+    const num  = tp*tn - fp*fn;
+    const den  = Math.sqrt((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn));
+    const mcc  = den>0 ? num/den : 0;
+
+    document.getElementById('cmAccuracy').textContent   = (acc*100).toFixed(2)+'%';
+    document.getElementById('cmPrecision').textContent  = (prec*100).toFixed(2)+'%';
+    document.getElementById('cmRecall').textContent     = (rec*100).toFixed(2)+'%';
+    document.getElementById('cmSpecificity').textContent= (spec*100).toFixed(2)+'%';
+    document.getElementById('cmF1').textContent         = (f1*100).toFixed(2)+'%';
+    document.getElementById('cmMcc').textContent        = mcc.toFixed(3);
+  }
+
+  [tpS,tnS,fpS,fnS].forEach(s => s.addEventListener('input', update));
+
+  window.cmReset = function() { tpS.value=70; tnS.value=75; fpS.value=10; fnS.value=15; update(); };
+  window.cmRandomize = function() {
+    tpS.value=Math.floor(Math.random()*101); tnS.value=Math.floor(Math.random()*101);
+    fpS.value=Math.floor(Math.random()*101); fnS.value=Math.floor(Math.random()*101);
+    update();
+  };
+  window.cmSetPreset = function(p) {
+    const presets = {
+      'good':           {tp:85,tn:85,fp:5, fn:5 },
+      'random':         {tp:25,tn:25,fp:25,fn:25},
+      'high-precision': {tp:40,tn:85,fp:5, fn:50},
+      'high-recall':    {tp:85,tn:40,fp:50,fn:5 }
+    };
+    const v = presets[p]; if (!v) return;
+    tpS.value=v.tp; tnS.value=v.tn; fpS.value=v.fp; fnS.value=v.fn;
+    update();
+  };
+
+  update();
+})();
+</script>
+
+<!-- ===== MCC / Accuracy Script ===== -->
+<script>
+(function() {
+  const posS = document.getElementById('mccPositives'), negS = document.getElementById('mccNegatives');
+  const tpRS = document.getElementById('mccTpRate'),    fpRS = document.getElementById('mccFpRate');
+
+  function updateVals() {
+    document.getElementById('mccPosVal').textContent    = posS.value;
+    document.getElementById('mccNegVal').textContent    = negS.value;
+    document.getElementById('mccTpRateVal').textContent = tpRS.value + '%';
+    document.getElementById('mccFpRateVal').textContent = fpRS.value + '%';
+    calc();
+  }
+
+  function calc() {
+    const pos=+posS.value, neg=+negS.value, tpPct=+tpRS.value, fpPct=+fpRS.value;
+    const tp=Math.round(pos*tpPct/100), fn=pos-tp, fp=Math.round(neg*fpPct/100), tn=neg-fp;
+    const total=pos+neg;
+
+    document.getElementById('mccTp').textContent=tp; document.getElementById('mccFn').textContent=fn;
+    document.getElementById('mccFp').textContent=fp; document.getElementById('mccTn').textContent=tn;
+    document.getElementById('mccFormTp').textContent=tp; document.getElementById('mccFormTn').textContent=tn;
+    document.getElementById('mccFormFp').textContent=fp; document.getElementById('mccFormFn').textContent=fn;
+    document.getElementById('mccFormTpFp').textContent=tp+fp;
+    document.getElementById('mccFormTpFn').textContent=tp+fn;
+    document.getElementById('mccFormTnFp').textContent=tn+fp;
+    document.getElementById('mccFormTnFn').textContent=tn+fn;
+
+    const acc  = (tp+tn)/total*100;
+    const prec = (tp+fp)>0 ? tp/(tp+fp) : 0;
+    const rec  = (tp+fn)>0 ? tp/(tp+fn) : 0;
+    const f1   = (prec+rec)>0 ? 2*prec*rec/(prec+rec)*100 : 0;
+    const num  = tp*tn - fp*fn;
+    const den  = Math.sqrt((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn));
+    const mcc  = den===0 ? 0 : num/den;
+
+    document.getElementById('mccAccuracy').textContent = acc.toFixed(1)+'%';
+    document.getElementById('mccF1').textContent       = f1.toFixed(1)+'%';
+    // MCC va de -1 a +1: se muestra como decimal, no como porcentaje
+    document.getElementById('mccMcc').textContent      = mcc.toFixed(3);
+
+    document.getElementById('mccAccBar').style.width  = Math.min(100,acc)+'%';
+    document.getElementById('mccF1Bar').style.width   = Math.min(100,f1)+'%';
+    // Barra MCC normalizada a [0%,100%] mediante (mcc+1)/2
+    document.getElementById('mccMccBar').style.width  = Math.min(100,Math.max(0,(mcc+1)/2*100))+'%';
+
+    document.getElementById('mccBarAcc').style.height  = Math.max(20,acc)+'%';
+    document.getElementById('mccBarF1').style.height   = Math.max(20,f1)+'%';
+    // Altura también normalizada con (mcc+1)/2 para ser consistente con la barra de progreso
+    document.getElementById('mccBarMcc').style.height  = Math.max(20,(mcc+1)/2*100)+'%';
+    document.getElementById('mccChartAcc').textContent = acc.toFixed(0)+'%';
+    document.getElementById('mccChartF1').textContent  = f1.toFixed(0)+'%';
+    document.getElementById('mccChartMcc').textContent = mcc.toFixed(2);
+  }
+
+  [posS,negS,tpRS,fpRS].forEach(s => s.addEventListener('input', updateVals));
+
+  window.mccLoadScenario = function(s) {
+    if (s===1) { posS.value=500; negS.value=500; tpRS.value=95; fpRS.value=5; }
+    else if (s===2) { posS.value=100; negS.value=900; tpRS.value=0; fpRS.value=0; }
+    else { posS.value=100; negS.value=900; tpRS.value=80; fpRS.value=10; }
+    updateVals();
+  };
+  window.mccResetAll = function() {
+    posS.value=100; negS.value=900; tpRS.value=80; fpRS.value=10; updateVals();
+  };
+
+  calc();
+})();
+</script>
+
+<!-- ===== Precision / Recall Script ===== -->
+<script>
+(function() {
+  const CANVAS_WIDTH = 500, CANVAS_HEIGHT = 400, NUM_SAMPLES = 50, POS_RATIO = 0.4;
+  let canvas, ctx, data = [], threshold = 0.5;
+
+  class Sample {
+    constructor(score, isPos) {
+      this.score = score; this.isPositive = isPos;
+      this.x = Math.random() * (CANVAS_WIDTH - 40) + 20;
+      this.y = Math.random() * (CANVAS_HEIGHT - 40) + 20;
+    }
+    predicted(t) { return this.score >= t; }
+  }
+
+  function generateData() {
+    data = [];
+    for (let i = 0; i < NUM_SAMPLES; i++) {
+      const isPos = Math.random() < POS_RATIO;
+      const score = isPos ? 0.3 + Math.random()*0.65 : Math.random()*0.55;
+      data.push(new Sample(score, isPos));
+    }
+  }
+
+  function calcMetrics() {
+    let tp=0,fp=0,fn=0,tn=0;
+    for (const s of data) {
+      const pred = s.predicted(threshold);
+      if (s.isPositive) { pred ? tp++ : fn++; } else { pred ? fp++ : tn++; }
+    }
+    const prec = (tp+fp)===0 ? 0 : tp/(tp+fp);
+    const rec  = (tp+fn)===0 ? 0 : tp/(tp+fn);
+    const f1   = (prec+rec)===0 ? 0 : 2*prec*rec/(prec+rec);
+    return {tp,fp,fn,tn,prec,rec,f1};
+  }
+
+  function updateMetrics() {
+    const {tp,fp,fn,tn,prec,rec,f1} = calcMetrics();
+    document.getElementById('prPrecisionVal').textContent = prec.toFixed(2);
+    document.getElementById('prRecallVal').textContent    = rec.toFixed(2);
+    document.getElementById('prF1Val').textContent        = f1.toFixed(2);
+    document.getElementById('prPrecisionBar').style.width = (prec*100)+'%';
+    document.getElementById('prRecallBar').style.width    = (rec*100)+'%';
+    document.getElementById('prF1Bar').style.width        = (f1*100)+'%';
+    document.getElementById('prTp').textContent = tp; document.getElementById('prFp').textContent = fp;
+    document.getElementById('prFn').textContent = fn; document.getElementById('prTn').textContent = tn;
+  }
+
+  function draw() {
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width > 0) {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+    }
+    const w = canvas.width / (window.devicePixelRatio||1);
+    const h = canvas.height / (window.devicePixelRatio||1);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,w,h);
+    ctx.strokeStyle = '#ddd'; ctx.lineWidth=1; ctx.strokeRect(0,0,w,h);
+    const tX = threshold * w;
+    ctx.strokeStyle='#FF9800'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(tX,0); ctx.lineTo(tX,h); ctx.stroke();
+    ctx.font='12px Arial'; ctx.fillStyle='#FF9800'; ctx.textAlign='center';
+    ctx.fillText('T='+threshold.toFixed(2), tX, 15);
+    ctx.font='11px Arial'; ctx.fillStyle='#999';
+    ctx.textAlign='left';  ctx.fillText('Predicho Positivo', tX+5, 28);
+    ctx.textAlign='right'; ctx.fillText('Predicho Negativo', tX-5, 28);
+    for (const s of data) {
+      const sx = (s.score/1.0)*w, sy = s.y * (h/CANVAS_HEIGHT);
+      ctx.beginPath(); ctx.arc(sx, sy, 6, 0, 2*Math.PI);
+      ctx.fillStyle = s.isPositive ? '#4CAF50' : '#FF6B6B';
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.fill(); ctx.lineWidth=2; ctx.stroke();
+    }
+    ctx.font='bold 12px Arial'; ctx.fillStyle='#333'; ctx.textAlign='center';
+    ctx.fillText('Puntuación de Probabilidad', w/2, h-5);
+    updateMetrics();
+  }
+
+  function animate() {
+    draw();
+    requestAnimationFrame(animate);
+  }
+
+  window.prSetPreset = function(v) {
+    threshold = v;
+    document.getElementById('prThresholdSlider').value = v*100;
+    document.getElementById('prThresholdVal').textContent = v.toFixed(2);
+  };
+  window.prGenerateNew = function() { generateData(); };
+  window.prReset = function() {
+    threshold = 0.5;
+    document.getElementById('prThresholdSlider').value = 50;
+    document.getElementById('prThresholdVal').textContent = '0.50';
+    generateData();
+  };
+
+  document.getElementById('prThresholdSlider').addEventListener('input', function() {
+    threshold = parseFloat(this.value)/100;
+    document.getElementById('prThresholdVal').textContent = threshold.toFixed(2);
+  });
+
+  canvas = document.getElementById('prScatterCanvas');
+  ctx = canvas.getContext('2d');
+  generateData();
+  animate();
+})();
+</script>
+
+<!-- ===== Regression Metrics Script ===== -->
+<script>
+(function() {
+  const canvas       = document.getElementById('regCanvas');
+  const ctx          = canvas.getContext('2d');
+  const slopeSlider  = document.getElementById('regSlopeSlider');
+  const interceptSlider = document.getElementById('regInterceptSlider');
+  const noiseSlider  = document.getElementById('regNoiseSlider');
+  const pointsSlider = document.getElementById('regPointsSlider');
+  const slopeValEl   = document.getElementById('regSlopeVal');
+  const interceptValEl = document.getElementById('regInterceptVal');
+  const noiseValEl   = document.getElementById('regNoiseVal');
+  const pointsValEl  = document.getElementById('regPointsVal');
+  const maeEl        = document.getElementById('regMaeVal');
+  const mseEl        = document.getElementById('regMseVal');
+  const rmseEl       = document.getElementById('regRmseVal');
+  const r2El         = document.getElementById('regR2Val');
+  const randomBtn    = document.getElementById('regRandomBtn');
+  const resetBtn     = document.getElementById('regResetBtn');
+  const bestFitBtn   = document.getElementById('regBestFitBtn');
+  const outlierBtn   = document.getElementById('regOutlierBtn');
+
+  let dataPoints = [], outlierAdded = false;
+
+  function generateData() {
+    const n = +pointsSlider.value, noise = +noiseSlider.value;
+    dataPoints = [];
+    for (let i = 0; i < n; i++) {
+      const x = Math.random()*10;
+      dataPoints.push({ x, y: x + 2 + (Math.random()-0.5)*2*noise });
+    }
+    outlierAdded = false;
+    outlierBtn.textContent = '⚠️ Añadir Atípico';
+    outlierBtn.disabled = false;
+  }
+
+  function calcMetrics(slope, intercept) {
+    let mae=0, mse=0, residuals=[];
+    dataPoints.forEach(pt => {
+      const pred = slope*pt.x + intercept;
+      const res = pt.y - pred, abs = Math.abs(res);
+      mae += abs; mse += res*res; residuals.push({residual:res, absError:abs});
+    });
+    mae /= dataPoints.length; mse /= dataPoints.length;
+    const meanY = dataPoints.reduce((s,p)=>s+p.y,0)/dataPoints.length;
+    let ssT=0, ssR=0;
+    dataPoints.forEach(pt => {
+      const pred = slope*pt.x + intercept;
+      ssT += (pt.y - meanY)**2; ssR += (pt.y - pred)**2;
+    });
+    const r2 = ssT===0 ? 0 : 1-ssR/ssT;
+    return { mae, mse, rmse: Math.sqrt(mse), r2, residuals };
+  }
+
+  function draw() {
+    const w=canvas.width, h=canvas.height, p=50;
+    ctx.fillStyle='#fafafa'; ctx.fillRect(0,0,w,h);
+    ctx.strokeStyle='#ccc'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(p,h-p); ctx.lineTo(w-p,h-p); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(p,h-p); ctx.lineTo(p,p); ctx.stroke();
+    ctx.fillStyle='#666'; ctx.font='12px Segoe UI';
+    ctx.textAlign='center'; ctx.fillText('X', w-20, h-20);
+    ctx.save(); ctx.translate(20,p); ctx.rotate(-Math.PI/2); ctx.fillText('Y',0,0); ctx.restore();
+
+    const slope=+slopeSlider.value, intercept=+interceptSlider.value;
+    const xMin=0,xMax=10,yMin=-5,yMax=15;
+    const scX=(w-2*p)/(xMax-xMin), scY=(h-2*p)/(yMax-yMin);
+    const tX = x => p+(x-xMin)*scX;
+    const tY = y => h-p-(y-yMin)*scY;
+
+    const metrics = calcMetrics(slope, intercept);
+
+    // Regression line
+    ctx.strokeStyle='#2196f3'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(tX(xMin),tY(slope*xMin+intercept)); ctx.lineTo(tX(xMax),tY(slope*xMax+intercept)); ctx.stroke();
+
+    // Residuals
+    metrics.residuals.forEach((res,i) => {
+      const pt = dataPoints[i], pred = slope*pt.x+intercept;
+      const ratio = res.absError / (metrics.mae*2);
+      ctx.strokeStyle = ratio<0.5 ? '#4caf50' : ratio<1.5 ? '#ff9800' : '#f44336';
+      ctx.lineWidth=2; ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(tX(pt.x),tY(pt.y)); ctx.lineTo(tX(pt.x),tY(pred)); ctx.stroke();
+      ctx.setLineDash([]);
+    });
+
+    // Data points
+    dataPoints.forEach((pt,i) => {
+      ctx.fillStyle = (outlierAdded && i===dataPoints.length-1) ? '#ff6b6b' : '#667eea';
+      ctx.beginPath(); ctx.arc(tX(pt.x),tY(pt.y),5,0,2*Math.PI); ctx.fill();
+      ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+    });
+
+    maeEl.textContent  = metrics.mae.toFixed(4);
+    mseEl.textContent  = metrics.mse.toFixed(4);
+    rmseEl.textContent = metrics.rmse.toFixed(4);
+    r2El.textContent   = metrics.r2.toFixed(4);
+  }
+
+  slopeSlider.addEventListener('input', () => { slopeValEl.textContent = (+slopeSlider.value).toFixed(2); draw(); });
+  interceptSlider.addEventListener('input', () => { interceptValEl.textContent = (+interceptSlider.value).toFixed(2); draw(); });
+  noiseSlider.addEventListener('input', () => { noiseValEl.textContent = (+noiseSlider.value).toFixed(2); generateData(); draw(); });
+  pointsSlider.addEventListener('input', () => { pointsValEl.textContent = +pointsSlider.value; generateData(); draw(); });
+
+  randomBtn.addEventListener('click', () => { generateData(); draw(); });
+  resetBtn.addEventListener('click', () => {
+    slopeSlider.value=0.8; interceptSlider.value=2; noiseSlider.value=0.5; pointsSlider.value=30;
+    slopeValEl.textContent='0.80'; interceptValEl.textContent='2.00'; noiseValEl.textContent='0.50'; pointsValEl.textContent='30';
+    generateData(); draw();
+  });
+  bestFitBtn.addEventListener('click', () => {
+    const n=dataPoints.length;
+    let sX=0,sY=0,sXY=0,sX2=0;
+    dataPoints.forEach(pt => { sX+=pt.x; sY+=pt.y; sXY+=pt.x*pt.y; sX2+=pt.x*pt.x; });
+    const newSlope = (n*sXY-sX*sY)/(n*sX2-sX*sX);
+    const newInt   = (sY-newSlope*sX)/n;
+    slopeSlider.value=newSlope; interceptSlider.value=newInt;
+    slopeValEl.textContent=newSlope.toFixed(2); interceptValEl.textContent=newInt.toFixed(2);
+    draw();
+  });
+  outlierBtn.addEventListener('click', () => {
+    if (!outlierAdded) {
+      dataPoints.push({ x:10, y:1*10+2+6 });
+      outlierAdded=true; outlierBtn.textContent='✓ Atípico Añadido'; outlierBtn.disabled=true;
+      draw();
+    }
+  });
+
+  generateData();
+  draw();
+})();
+</script>
+
+</body>
+</html>
