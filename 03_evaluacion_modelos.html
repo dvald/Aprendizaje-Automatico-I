@@ -97,7 +97,8 @@
   .f1-bar-fill { width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 6px 6px 0 0; transition: height 0.3s ease; min-height: 20px; position: relative; }
   .f1-bar-label { margin-top: 10px; font-size: 0.85em; font-weight: 600; color: #333; text-align: center; }
   .f1-bar-top-val { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-weight: 700; color: #667eea; font-size: 0.95em; white-space: nowrap; }
-  .f1-heatmap-wrap { background: #f8f9fa; padding: 20px; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
+  .f1-heatmap-wrap { background: #f8f9fa; padding: 20px; border-radius: 8px; display: block; }
+  .f1-heatmap-wrap canvas { display: block; width: 100%; height: auto; }
   .f1-zones { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 10px; }
   .f1-zone { padding: 12px; border-radius: 6px; font-size: 0.85em; text-align: center; font-weight: 600; color: white; }
   .f1-zone-excellent { background: #4caf50; }
@@ -907,15 +908,12 @@
     return {r:244,g:67,b:54};
   }
 
-  function resizeHeatmap() {
-    const container = hCanvas.parentElement;
-    const size = Math.min(container.clientWidth, container.clientHeight) - 40;
-    if (size > 0) { hCanvas.width = size; hCanvas.height = size; drawHeatmap(); }
-  }
+  const HEATMAP_SIZE = 400;
+  hCanvas.width  = HEATMAP_SIZE;
+  hCanvas.height = HEATMAP_SIZE;
 
   function drawHeatmap() {
-    const size = hCanvas.width;
-    if (!size) return;
+    const size = HEATMAP_SIZE;
     const cellSize = size / 100;
     const imageData = hCtx.createImageData(size, size);
     const d = imageData.data;
@@ -941,6 +939,11 @@
     hCtx.beginPath(); hCtx.arc(mx,my,6,0,2*Math.PI); hCtx.fill(); hCtx.stroke();
     hCtx.fillStyle = '#333'; hCtx.font = 'bold 10px Arial'; hCtx.textAlign = 'center';
     hCtx.fillText('Precisión →', size/2, size-5);
+    hCtx.save();
+    hCtx.translate(12, size/2);
+    hCtx.rotate(-Math.PI/2);
+    hCtx.fillText('↑ Recall', 0, 0);
+    hCtx.restore();
   }
 
   function update() {
@@ -955,7 +958,6 @@
 
   precSlider.addEventListener('input', update);
   recSlider.addEventListener('input', update);
-  window.addEventListener('resize', resizeHeatmap);
 
   window.f1SetScenario = function(s) {
     if (s===1) { precSlider.value=80; recSlider.value=80; }
@@ -965,7 +967,6 @@
   };
   window.f1Reset = function() { precSlider.value=50; recSlider.value=50; update(); };
 
-  resizeHeatmap();
   update();
 })();
 </script>
