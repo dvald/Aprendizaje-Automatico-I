@@ -1,0 +1,2226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Interactiva: Clasificación en Machine Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .back-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin: 0.5rem 0 0 0;
+            background: #f0f0f0;
+            color: #0f1b2d;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .back-link:hover {
+            background: #e0e0e0;
+            color: #000;
+        }
+
+        .header {
+            background: #0f1b2d;
+            color: white;
+            padding: 2rem 2rem 1.5rem;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .header p {
+            color: #90a4ae;
+            font-size: 0.95rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: #1a2940;
+            padding: 0 2rem;
+            overflow-x: auto;
+            border-bottom: 1px solid #0f1b2d;
+        }
+
+        .tab {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            color: #90a4ae;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 0.95rem;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            color: #fff;
+        }
+
+        .tab.active {
+            color: #fff;
+            border-bottom-color: #2196f3;
+        }
+
+        .content {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 1rem 1.2rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .info-box strong {
+            color: #0f1b2d;
+        }
+
+        canvas {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            display: block;
+            margin: 1rem 0;
+            background: white;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 1.5rem 0;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #0f1b2d;
+        }
+
+        input[type="range"] {
+            width: 200px;
+            cursor: pointer;
+        }
+
+        input[type="number"] {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            width: 100px;
+        }
+
+        button {
+            padding: 0.7rem 1.5rem;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #1976d2;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+            text-align: center;
+        }
+
+        .stat-box .label {
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-box .value {
+            font-size: 1.5rem;
+            color: #0f1b2d;
+            font-weight: bold;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .comparison-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid #e0e0e0;
+            min-width: 0;
+        }
+
+        .comparison-item h3 {
+            margin-bottom: 0.8rem;
+            color: #0f1b2d;
+        }
+
+        .comparison-item canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+        }
+
+        .comparison-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #555;
+            margin: 0.5rem 0 1rem;
+        }
+        .comparison-legend .swatch {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+        .comparison-legend .swatch.train-0 { background: #ff6b6b; }
+        .comparison-legend .swatch.train-1 { background: #4dabf7; }
+        .comparison-legend .swatch.test {
+            background: white;
+            border: 2px solid #222;
+        }
+
+        .accuracy-bar {
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .accuracy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50 0%, #2196f3 100%);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 0.5rem;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .legend {
+            display: flex;
+            gap: 1.5rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+            font-size: 0.95rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        h2 {
+            color: #0f1b2d;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        h3 {
+            color: #1a2940;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+        }
+
+        .formula {
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 1rem 0;
+            color: #0f1b2d;
+        }
+
+        @media (max-width: 768px) {
+            .header { padding: 1.5rem 1rem 1rem; }
+            .header h1 { font-size: 1.4rem; }
+            .tabs { padding: 0 1rem; }
+            .content { padding: 0 1rem; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            input[type="range"] { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a class="back-link" href="../../../index.html">← Volver al índice</a>
+        <h1>Tema 4: Clasificación</h1>
+        <p>Demostraciones interactivas de algoritmos de clasificación en Machine Learning</p>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('tab0', event)">GridSearchCV</div>
+        <div class="tab" onclick="showTab('tab1', event)">Regresión Logística</div>
+        <div class="tab" onclick="showTab('tab2', event)">KNN Interactivo</div>
+        <div class="tab" onclick="showTab('tab6', event)">Naive Bayes</div>
+        <div class="tab" onclick="showTab('tab3', event)">Árboles de Decisión</div>
+        <div class="tab" onclick="showTab('tab7', event)">Random Forest</div>
+        <div class="tab" onclick="showTab('tab4', event)">SVM</div>
+        <div class="tab" onclick="showTab('tab5', event)">Comparativa</div>
+    </div>
+
+    <div class="content">
+        <!-- Tab 0: GridSearchCV -->
+        <div id="tab0" class="section active">
+            <h2>GridSearchCV: Búsqueda de hiperparámetros</h2>
+            <p class="description">
+                <strong>GridSearchCV</strong> prueba todas las combinaciones de una rejilla de hiperparámetros y evalúa cada una con <strong>validación cruzada</strong> (k-fold) sobre el conjunto de entrenamiento. Se elige la combinación con mejor accuracy media en CV y se evalúa en un conjunto de test independiente que no se ha tocado durante la búsqueda.
+            </p>
+
+            <div class="card">
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Dataset:</label>
+                        <select id="gsDataset" onchange="runGridSearch()">
+                            <option value="moons">Lunas (no lineal)</option>
+                            <option value="circles">Círculos (no lineal)</option>
+                            <option value="linear">Linealmente separable</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Número de folds: <span id="gsFoldsValue">5</span></label>
+                        <input type="range" id="gsFolds" min="3" max="10" value="5" step="1" oninput="updateGSFoldsLabel()">
+                    </div>
+                    <button onclick="runGridSearch()">Ejecutar GridSearchCV</button>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:1.5rem; margin-top:1rem; align-items:start;">
+                    <div style="min-width:0;">
+                        <h3>Accuracy de CV por combinación (KNN)</h3>
+                        <canvas id="gsHeatmap" width="560" height="320" style="width:100%; height:auto; max-width:100%; display:block;"></canvas>
+                        <p style="font-size:.85rem; color:#555; margin-top:.4rem;">Cada celda muestra la accuracy media en validación cruzada. La celda con borde amarillo es la combinación ganadora.</p>
+                    </div>
+                    <div>
+                        <h3>Resultado</h3>
+                        <div class="stat-box">
+                            <div class="label">Mejores hiperparámetros</div>
+                            <div class="value" id="gsBestParams" style="font-size:1.1rem;">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">Accuracy media en CV</div>
+                            <div class="value" id="gsCvAcc">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">Accuracy en test (evaluación final)</div>
+                            <div class="value" id="gsTestAcc">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">Combinaciones evaluadas</div>
+                            <div class="value" id="gsTotalFits">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box" style="margin-top:1rem;">
+                    <strong>Proceso paso a paso:</strong>
+                    <ol style="margin-left:1.5rem; margin-top:.3rem;">
+                        <li>Se reserva un <strong>20% de test</strong>, que no se usa en toda la búsqueda.</li>
+                        <li>El <strong>80% restante</strong> se divide en <em>k folds</em> estratificados por clase.</li>
+                        <li>Para cada combinación de hiperparámetros se hacen <em>k</em> entrenamientos: se entrena con <em>k-1</em> folds y se valida con el fold restante. Se promedian las k accuracies → <strong>accuracy CV</strong>.</li>
+                        <li>Se elige la combinación con mejor accuracy CV y se reentrena con todo el 80%.</li>
+                        <li>Se reporta la accuracy sobre el 20% de test, que es una estimación honesta del rendimiento.</li>
+                    </ol>
+                </div>
+
+                <div class="info-box" style="margin-top:1rem;">
+                    <strong>Por qué importa:</strong> si eligiéramos los hiperparámetros mirando directamente el conjunto de test, estaríamos "contaminando" la evaluación — el modelo estaría optimizado para ese test concreto. La validación cruzada simula varios test sets <em>dentro</em> del training, y deja un test final intocado para la estimación real.
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 1: Regresión Logística -->
+        <div id="tab1" class="section">
+            <h2>Regresión Logística</h2>
+            <p class="description">La regresión logística es un algoritmo de clasificación que usa la función sigmoide para mapear cualquier entrada a una probabilidad entre 0 y 1. Usa un umbral (threshold) para tomar la decisión de clasificación.</p>
+
+            <div class="card">
+                <h3>Función Sigmoide y Clasificación</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Umbral de decisión: <span id="thresholdValue">0.50</span></label>
+                        <input type="range" id="thresholdSlider" min="0" max="100" value="50" step="1"
+                               oninput="updateLogisticThreshold()">
+                    </div>
+                </div>
+                <canvas id="logisticCanvas" width="800" height="500"></canvas>
+                <div class="info-box">
+                    <strong>Cómo funciona:</strong> Arrastra el umbral para ver cómo cambia la frontera de decisión.
+                    Si la probabilidad sigmoide está por debajo del umbral, se clasifica como Negativo (rojo).
+                    Si está por encima, se clasifica como Positivo (azul).
+                </div>
+                <div class="stats" id="logisticStats"></div>
+            </div>
+        </div>
+
+        <!-- Tab 2: KNN Interactivo -->
+        <div id="tab2" class="section">
+            <h2>K-Nearest Neighbors (KNN)</h2>
+            <p class="description">KNN es un algoritmo no paramétrico que clasifica un punto basándose en los K vecinos más cercanos.
+            Haz clic en el canvas para añadir puntos de entrenamiento (azul y rojo). Luego, haz clic en cualquier lugar con el botón derecho
+            para clasificar un nuevo punto.</p>
+
+            <div class="card">
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Valor de K: <span id="kValue">3</span></label>
+                        <input type="range" id="kSlider" min="1" max="15" value="3" step="1"
+                               oninput="updateKValue()">
+                    </div>
+                    <button onclick="toggleKNNClass()" id="knnClassBtn">Añadir Clase Azul (Click izq.)</button>
+                    <button onclick="clearKNNCanvas()">Limpiar Canvas</button>
+                </div>
+                <canvas id="knnCanvas" width="800" height="500"></canvas>
+                <div class="info-box">
+                    <strong>Instrucciones:</strong>
+                    <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+                        <li>Click izquierdo: añade punto de la clase actual (azul o rojo)</li>
+                        <li>Botón "Añadir Clase...": cambia entre clases</li>
+                        <li>Click derecho: clasifica el punto donde haces click</li>
+                        <li>Usa el slider para cambiar K y observa cómo cambia la clasificación</li>
+                    </ul>
+                </div>
+                <div id="knnInfo" style="margin-top: 1rem; font-size: 0.95rem; color: #666;"></div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Árboles de Decisión -->
+        <div id="tab3" class="section">
+            <h2>Árboles de Decisión</h2>
+            <p class="description">Los árboles de decisión dividen recursivamente el espacio de características basándose en criterios de ganancia de información
+            (impureza de Gini). Cada nodo interno contiene una pregunta, y cada hoja es una clasificación.</p>
+
+            <div class="card">
+                <h3>Construcción paso a paso</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Profundidad máxima: <span id="depthValue">3</span></label>
+                        <input type="range" id="depthSlider" min="1" max="5" value="3" step="1"
+                               oninput="updateTreeDepth()">
+                    </div>
+                    <button onclick="buildDecisionTree()">Construir Árbol</button>
+                </div>
+                <canvas id="treeCanvas" width="800" height="500"></canvas>
+                <div class="info-box">
+                    <strong>Impureza de Gini:</strong> Mide la probabilidad de clasificar incorrectamente un elemento seleccionado aleatoriamente.
+                    Un nodo con Gini=0 es puro (solo una clase).
+                </div>
+                <div id="treeStats" style="margin-top: 1rem;"></div>
+            </div>
+
+            <div class="card">
+                <h3>Ejemplo de cálculo de Gini</h3>
+                <div class="formula">
+                    Gini = 1 - Σ(p_i)²
+                    <br><br>
+                    Donde p_i es la proporción de muestras de cada clase en el nodo.
+                    <br><br>
+                    Ejemplo: Nodo con 60% clase A y 40% clase B:
+                    <br>
+                    Gini = 1 - (0.6² + 0.4²) = 1 - (0.36 + 0.16) = 0.48
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: SVM -->
+        <div id="tab4" class="section">
+            <h2>Support Vector Machine (SVM)</h2>
+            <p class="description">SVM busca el hiperplano que maximiza el margen (distancia mínima a los puntos más cercanos de ambas clases).
+            El parámetro C controla cuánto penaliza los errores de clasificación.</p>
+
+            <div class="card">
+                <h3>SVM con diferentes kernels</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Parámetro C: <span id="cValue">1.0</span></label>
+                        <input type="range" id="cSlider" min="0.1" max="10" value="1" step="0.1"
+                               oninput="updateSVMC()">
+                    </div>
+                    <button onclick="toggleSVMKernel()" id="kernelBtn">Kernel: Lineal</button>
+                    <button onclick="generateSVMData()">Generar Datos</button>
+                </div>
+                <canvas id="svmCanvas" width="800" height="500"></canvas>
+                <div class="info-box">
+                    <strong>Parámetro C:</strong> Valores altos (C > 1) penalizan más los errores, creando márgenes más pequeños pero ajuste más preciso.
+                    Valores bajos (C < 1) toleran más errores para márgenes más amplios.
+                </div>
+                <div class="legend" id="svmLegend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff6b6b;"></div>
+                        <span>Clase Negativa</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4dabf7;"></div>
+                        <span>Clase Positiva</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="border: 2px solid #333;"></div>
+                        <span>Vectores de Soporte</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 5: Comparativa -->
+        <div id="tab5" class="section">
+            <h2>Comparativa de Algoritmos</h2>
+            <p class="description">Aplica todos los algoritmos de clasificación al mismo dataset y compara su rendimiento y frontera de decisión.</p>
+
+            <div class="card">
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Tipo de Dataset:</label>
+                        <select id="datasetType" onchange="generateComparisonData()">
+                            <option value="moons">Lunas (No lineal)</option>
+                            <option value="circles">Círculos (No lineal)</option>
+                            <option value="linear">Linealmente Separable</option>
+                        </select>
+                    </div>
+                    <button onclick="generateComparisonData()">Generar Dataset</button>
+                </div>
+
+                <div class="comparison-legend">
+                    <span><span class="swatch train-0"></span>Entrenamiento clase 0</span>
+                    <span><span class="swatch train-1"></span>Entrenamiento clase 1</span>
+                    <span><span class="swatch test"></span>Test (sin relleno)</span>
+                    <span style="margin-left:auto;"><strong>Precisión = aciertos en test</strong> (70/30 train-test split)</span>
+                </div>
+
+                <div class="comparison-grid" id="comparisonGrid">
+                    <div class="comparison-item">
+                        <h3>Regresión Logística</h3>
+                        <canvas id="compCanvas1" width="400" height="300"></canvas>
+                        <div class="stat-box">
+                            <div class="label">Precisión (Accuracy)</div>
+                            <div class="value" id="acc1">--</div>
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <h3>KNN (k=5)</h3>
+                        <canvas id="compCanvas2" width="400" height="300"></canvas>
+                        <div class="stat-box">
+                            <div class="label">Precisión (Accuracy)</div>
+                            <div class="value" id="acc2">--</div>
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <h3>Árbol de Decisión</h3>
+                        <canvas id="compCanvas3" width="400" height="300"></canvas>
+                        <div class="stat-box">
+                            <div class="label">Precisión (Accuracy)</div>
+                            <div class="value" id="acc3">--</div>
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <h3>SVM (RBF)</h3>
+                        <canvas id="compCanvas4" width="400" height="300"></canvas>
+                        <div class="stat-box">
+                            <div class="label">Precisión (Accuracy)</div>
+                            <div class="value" id="acc4">--</div>
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <h3>Naive Bayes (Gaussiano)</h3>
+                        <canvas id="compCanvas5" width="400" height="300"></canvas>
+                        <div class="stat-box">
+                            <div class="label">Precisión (Accuracy)</div>
+                            <div class="value" id="acc5">--</div>
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <h3>Random Forest (15 árboles)</h3>
+                        <canvas id="compCanvas6" width="400" height="300"></canvas>
+                        <div class="stat-box">
+                            <div class="label">Precisión (Accuracy)</div>
+                            <div class="value" id="acc6">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <strong>Resumen:</strong>
+                    <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+                        <li><strong>Regresión Logística:</strong> Rápida y eficiente para datos linealmente separables.</li>
+                        <li><strong>KNN:</strong> Flexible pero lento con muchos datos. Excelente para problemas no lineales pequeños.</li>
+                        <li><strong>Árbol de Decisión:</strong> Fácil de interpretar pero propenso a sobreajuste.</li>
+                        <li><strong>SVM:</strong> Potente con kernel no lineal. Excelente para datos complejos.</li>
+                        <li><strong>Naive Bayes:</strong> Muy rápido, asume independencia entre features. Funciona sorprendentemente bien en muchos casos.</li>
+                        <li><strong>Random Forest:</strong> Ensemble de árboles con bagging. Reduce el sobreajuste y suele dar fronteras robustas.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 6: Naive Bayes -->
+        <div id="tab6" class="section">
+            <h2>Naive Bayes</h2>
+            <p class="description">Naive Bayes aplica el teorema de Bayes asumiendo independencia entre características.
+            Para cada punto <em>x</em> calcula la <strong>probabilidad posterior</strong> P(C|x) ∝ P(x|C)·P(C) y predice la clase con mayor posterior.
+            La variante Gaussiana modela cada característica con una distribución normal por clase.</p>
+
+            <div class="card">
+                <h3>Clasificador Naive Bayes Gaussiano (3 clases)</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Prior P(A): <span id="priorAValue">0.33</span></label>
+                        <input type="range" id="priorASlider" min="5" max="80" value="33" step="1" oninput="updateNBPriors()">
+                    </div>
+                    <div class="control-group">
+                        <label>Prior P(B): <span id="priorBValue">0.33</span></label>
+                        <input type="range" id="priorBSlider" min="5" max="80" value="33" step="1" oninput="updateNBPriors()">
+                    </div>
+                    <button onclick="regenerateNBData()">Regenerar Datos</button>
+                </div>
+                <canvas id="nbCanvas" width="800" height="500"></canvas>
+                <div class="info-box">
+                    <strong>Cómo leer el gráfico:</strong> los círculos punteados son las elipses a 1σ y 2σ de cada gaussiana.
+                    El color de fondo indica la clase con mayor probabilidad posterior (la ganadora).
+                    Ajusta los priors P(A) y P(B) y observa cómo la frontera se desplaza: dar más peso a una clase "invade" zonas de las otras
+                    aunque los datos no hayan cambiado.
+                </div>
+                <div id="nbStats" style="margin-top: 1rem;"></div>
+            </div>
+
+            <div class="card">
+                <h3>Teorema de Bayes aplicado</h3>
+                <div class="formula">
+                    P(C|x) = P(x|C) · P(C) / P(x)
+                    <br><br>
+                    El clasificador asigna: ŷ = argmax<sub>C</sub> P(x|C) · P(C)
+                    <br><br>
+                    Para Gaussian Naive Bayes:
+                    <br>
+                    P(x|C) = (1 / √(2π·σ²)) · exp(-(x - μ)² / (2σ²))
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 7: Random Forest -->
+        <div id="tab7" class="section">
+            <h2>Random Forest (Bosques de decisión)</h2>
+            <p class="description">Un <strong>bosque aleatorio</strong> combina múltiples árboles de decisión entrenados sobre muestras <em>bootstrap</em>
+            distintas de los datos originales (bagging). Cada árbol además elige aleatoriamente un subconjunto de características en cada división.
+            La predicción final se obtiene por <strong>voto mayoritario</strong> de todos los árboles, lo que reduce la varianza respecto a un árbol individual.</p>
+
+            <div class="card">
+                <h3>Ensemble de árboles con bootstrap</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Nº de árboles: <span id="rfTreesValue">5</span></label>
+                        <input type="range" id="rfTreesSlider" min="1" max="25" value="5" step="1" oninput="updateRFTrees()">
+                    </div>
+                    <div class="control-group">
+                        <label>Profundidad máxima: <span id="rfDepthValue">3</span></label>
+                        <input type="range" id="rfDepthSlider" min="1" max="6" value="3" step="1" oninput="updateRFDepth()">
+                    </div>
+                    <div class="control-group">
+                        <label>Dataset:</label>
+                        <select id="rfDataset" onchange="regenerateRFData()">
+                            <option value="moons">Lunas</option>
+                            <option value="circles">Círculos concéntricos</option>
+                            <option value="blobs">Dos blobs</option>
+                        </select>
+                    </div>
+                    <button onclick="regenerateRFData()">Regenerar datos</button>
+                </div>
+                <canvas id="rfCanvas" width="800" height="500"></canvas>
+                <div class="info-box">
+                    <strong>Lo que estás viendo:</strong> la intensidad del color representa la proporción de árboles que votan por cada clase.
+                    Zonas claras = poco consenso (cerca de la frontera); zonas saturadas = casi todos los árboles coinciden.
+                    Aumenta el número de árboles y verás cómo la frontera se suaviza y la precisión se estabiliza.
+                </div>
+                <div id="rfStats" style="margin-top: 1rem;"></div>
+            </div>
+
+            <div class="card">
+                <h3>Hiperparámetros clave</h3>
+                <div class="formula">
+                    <strong>n_estimators:</strong> número de árboles (más = más estable, pero más lento).<br>
+                    <strong>max_depth:</strong> profundidad máxima de cada árbol (controla el sobreajuste individual).<br>
+                    <strong>max_features:</strong> número de características candidatas por split (introduce diversidad).<br>
+                    <strong>bootstrap:</strong> si se usa muestreo con reemplazo (activado por defecto).
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== Utilidades generales ====================
+        function showTab(id, event) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // ==================== TAB 0: GRIDSEARCHCV ====================
+        function updateGSFoldsLabel() {
+            const v = document.getElementById('gsFolds').value;
+            document.getElementById('gsFoldsValue').textContent = v;
+            runGridSearch();
+        }
+
+        function generateGSData(type, nPerClass) {
+            const data = [];
+            const gauss = (s) => {
+                const u1 = Math.max(1e-9, Math.random());
+                const u2 = Math.random();
+                return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2) * s;
+            };
+            if (type === 'moons') {
+                for (let i = 0; i < nPerClass; i++) {
+                    const a = (i / nPerClass) * Math.PI;
+                    data.push({ x: 0.32 + 0.28 * Math.cos(a) + gauss(0.05), y: 0.48 + 0.25 * Math.sin(a) + gauss(0.05), class: 0 });
+                }
+                for (let i = 0; i < nPerClass; i++) {
+                    const a = Math.PI + (i / nPerClass) * Math.PI;
+                    data.push({ x: 0.55 + 0.28 * Math.cos(a) + gauss(0.05), y: 0.62 + 0.25 * Math.sin(a) + gauss(0.05), class: 1 });
+                }
+            } else if (type === 'circles') {
+                for (let i = 0; i < nPerClass; i++) {
+                    const a = Math.random() * Math.PI * 2;
+                    const r = 0.38 + gauss(0.045);
+                    data.push({ x: 0.5 + r * Math.cos(a), y: 0.5 + r * Math.sin(a), class: 0 });
+                }
+                for (let i = 0; i < nPerClass; i++) {
+                    const a = Math.random() * Math.PI * 2;
+                    const r = 0.17 + gauss(0.04);
+                    data.push({ x: 0.5 + r * Math.cos(a), y: 0.5 + r * Math.sin(a), class: 1 });
+                }
+            } else {
+                for (let i = 0; i < nPerClass; i++) data.push({ x: 0.3 + gauss(0.12), y: Math.random(), class: 0 });
+                for (let i = 0; i < nPerClass; i++) data.push({ x: 0.7 + gauss(0.12), y: Math.random(), class: 1 });
+            }
+            return data;
+        }
+
+        function gsShuffle(arr) {
+            const a = arr.slice();
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function gsStratifiedFolds(train, k) {
+            const by = { 0: gsShuffle(train.filter(p => p.class === 0)), 1: gsShuffle(train.filter(p => p.class === 1)) };
+            const folds = Array.from({ length: k }, () => []);
+            by[0].forEach((pt, i) => folds[i % k].push(pt));
+            by[1].forEach((pt, i) => folds[i % k].push(pt));
+            return folds;
+        }
+
+        function gsPredictKNN(trainSet, x, y, k, power) {
+            const dists = new Array(trainSet.length);
+            for (let i = 0; i < trainSet.length; i++) {
+                const pt = trainSet[i];
+                dists[i] = { c: pt.class, d2: (pt.x - x) ** 2 + (pt.y - y) ** 2 };
+            }
+            dists.sort((a, b) => a.d2 - b.d2);
+            const kk = Math.min(k, dists.length);
+            let w0 = 0, w1 = 0;
+            for (let i = 0; i < kk; i++) {
+                const d = Math.sqrt(dists[i].d2);
+                const w = power === 0 ? 1 : 1 / Math.pow(d + 1e-3, power);
+                if (dists[i].c === 0) w0 += w; else w1 += w;
+            }
+            return w0 > w1 ? 0 : 1;
+        }
+
+        function runGridSearch() {
+            const foldsInput = document.getElementById('gsFolds');
+            if (!foldsInput) return;
+            const folds = parseInt(foldsInput.value);
+            document.getElementById('gsFoldsValue').textContent = folds;
+            const type = document.getElementById('gsDataset').value;
+
+            // Dataset
+            const data = generateGSData(type, 90);
+
+            // Split 80/20 estratificado
+            const by = { 0: gsShuffle(data.filter(p => p.class === 0)), 1: gsShuffle(data.filter(p => p.class === 1)) };
+            const train = [], test = [];
+            for (const c of [0, 1]) {
+                const n = by[c].length;
+                const nTr = Math.floor(n * 0.8);
+                train.push(...by[c].slice(0, nTr));
+                test.push(...by[c].slice(nTr));
+            }
+
+            const kValues = [1, 3, 5, 7, 11, 17, 25];
+            const powers = [0, 1, 2];
+
+            const foldArr = gsStratifiedFolds(train, folds);
+            const scores = [];
+            let best = { ki: -1, pi: -1, k: -1, p: -1, acc: -1 };
+
+            for (let ki = 0; ki < kValues.length; ki++) {
+                scores.push([]);
+                for (let pi = 0; pi < powers.length; pi++) {
+                    const foldAccs = [];
+                    for (let f = 0; f < folds; f++) {
+                        const val = foldArr[f];
+                        const tr = [];
+                        for (let g = 0; g < folds; g++) if (g !== f) tr.push(...foldArr[g]);
+                        if (val.length === 0 || tr.length === 0) continue;
+                        let correct = 0;
+                        for (let vi = 0; vi < val.length; vi++) {
+                            const pt = val[vi];
+                            if (gsPredictKNN(tr, pt.x, pt.y, kValues[ki], powers[pi]) === pt.class) correct++;
+                        }
+                        foldAccs.push(correct / val.length);
+                    }
+                    const mean = foldAccs.length > 0 ? foldAccs.reduce((s, v) => s + v, 0) / foldAccs.length : 0;
+                    scores[ki].push(mean);
+                    if (mean > best.acc) best = { ki, pi, k: kValues[ki], p: powers[pi], acc: mean };
+                }
+            }
+
+            drawGSHeatmap(scores, kValues, powers, best);
+
+            // Evaluación final en test con todo el train
+            let correct = 0;
+            for (let i = 0; i < test.length; i++) {
+                const pt = test[i];
+                if (gsPredictKNN(train, pt.x, pt.y, best.k, best.p) === pt.class) correct++;
+            }
+            const testAcc = test.length > 0 ? correct / test.length : 0;
+
+            const powerLabel = best.p === 0 ? 'uniforme' : `1/d^${best.p}`;
+            document.getElementById('gsBestParams').textContent = `k=${best.k}, peso=${powerLabel}`;
+            document.getElementById('gsCvAcc').textContent = (best.acc * 100).toFixed(1) + '%';
+            document.getElementById('gsTestAcc').textContent = (testAcc * 100).toFixed(1) + '%';
+            document.getElementById('gsTotalFits').textContent = `${kValues.length * powers.length} combos × ${folds} folds = ${kValues.length * powers.length * folds} ajustes`;
+        }
+
+        function drawGSHeatmap(scores, ks, powers, best) {
+            const canvas = document.getElementById('gsHeatmap');
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width, H = canvas.height;
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, W, H);
+
+            const padL = 80, padR = 90, padT = 30, padB = 55;
+            const plotW = W - padL - padR;
+            const plotH = H - padT - padB;
+            const nRows = ks.length;
+            const nCols = powers.length;
+            const cellW = plotW / nCols;
+            const cellH = plotH / nRows;
+
+            let minV = 1, maxV = 0;
+            scores.forEach(row => row.forEach(v => { if (v < minV) minV = v; if (v > maxV) maxV = v; }));
+            if (maxV - minV < 1e-6) { minV = Math.max(0, minV - 0.05); maxV = Math.min(1, maxV + 0.05); }
+
+            const colorFor = (t) => {
+                // Escala azul claro → azul oscuro
+                const r = Math.round(230 * (1 - t) + 25 * t);
+                const g = Math.round(240 * (1 - t) + 110 * t);
+                const b = Math.round(252 * (1 - t) + 210 * t);
+                return `rgb(${r},${g},${b})`;
+            };
+
+            for (let i = 0; i < nRows; i++) {
+                for (let j = 0; j < nCols; j++) {
+                    const v = scores[i][j];
+                    const t = (v - minV) / (maxV - minV);
+                    ctx.fillStyle = colorFor(t);
+                    const x = padL + j * cellW;
+                    const y = padT + i * cellH;
+                    ctx.fillRect(x, y, cellW, cellH);
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(x, y, cellW, cellH);
+                    ctx.fillStyle = t > 0.55 ? '#fff' : '#222';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText((v * 100).toFixed(1) + '%', x + cellW / 2, y + cellH / 2);
+                }
+            }
+
+            // Borde de la mejor combinación
+            if (best.ki >= 0) {
+                const bx = padL + best.pi * cellW;
+                const by = padT + best.ki * cellH;
+                ctx.strokeStyle = '#ffd43b';
+                ctx.lineWidth = 4;
+                ctx.strokeRect(bx + 2, by + 2, cellW - 4, cellH - 4);
+            }
+
+            // Ejes
+            ctx.fillStyle = '#222';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i < nRows; i++) {
+                ctx.fillText('k=' + ks[i], padL - 8, padT + i * cellH + cellH / 2);
+            }
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            for (let j = 0; j < nCols; j++) {
+                const label = powers[j] === 0 ? 'uniforme' : `1/d^${powers[j]}`;
+                ctx.fillText(label, padL + j * cellW + cellW / 2, padT + plotH + 6);
+            }
+
+            // Títulos de ejes
+            ctx.save();
+            ctx.translate(20, padT + plotH / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Número de vecinos (k)', 0, 0);
+            ctx.restore();
+
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText('Ponderación por distancia', padL + plotW / 2, H - 6);
+
+            // Colorbar
+            const cbX = padL + plotW + 18;
+            const cbW = 14;
+            const cbH = plotH;
+            const steps = 60;
+            for (let i = 0; i < steps; i++) {
+                ctx.fillStyle = colorFor(1 - i / steps);
+                ctx.fillRect(cbX, padT + (i * cbH / steps), cbW, cbH / steps + 1);
+            }
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(cbX, padT, cbW, cbH);
+            ctx.fillStyle = '#222';
+            ctx.font = '11px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText((maxV * 100).toFixed(0) + '%', cbX + cbW + 4, padT);
+            ctx.fillText((minV * 100).toFixed(0) + '%', cbX + cbW + 4, padT + cbH);
+        }
+
+        // ==================== TAB 1: REGRESIÓN LOGÍSTICA ====================
+        let logisticThreshold = 0.5;
+
+        function updateLogisticThreshold() {
+            logisticThreshold = parseInt(document.getElementById('thresholdSlider').value) / 100;
+            document.getElementById('thresholdValue').textContent = logisticThreshold.toFixed(2);
+            drawLogisticFunction();
+        }
+
+        function sigmoid(x) {
+            return 1 / (1 + Math.exp(-x));
+        }
+
+        function drawLogisticFunction() {
+            const canvas = document.getElementById('logisticCanvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const padL = 70, padR = 40, padT = 40, padB = 60;
+            const plotW = width - padL - padR;
+            const plotH = height - padT - padB;
+            const baseY = height - padB;
+            const centerX = padL + plotW / 2;
+            const scale = 50;
+
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, width, height);
+
+            // Áreas de clasificación
+            const thresholdY = baseY - logisticThreshold * plotH;
+            ctx.fillStyle = 'rgba(33, 150, 243, 0.10)';
+            ctx.fillRect(padL, padT, plotW, thresholdY - padT);
+            ctx.fillStyle = 'rgba(244, 67, 54, 0.10)';
+            ctx.fillRect(padL, thresholdY, plotW, baseY - thresholdY);
+
+            // Cuadrícula horizontal (valores de probabilidad) + etiquetas Y
+            ctx.strokeStyle = '#eee';
+            ctx.lineWidth = 1;
+            ctx.fillStyle = '#666';
+            ctx.font = '11px sans-serif';
+            ctx.textAlign = 'right';
+            for (let yval = 0; yval <= 1.001; yval += 0.2) {
+                const py = baseY - yval * plotH;
+                ctx.beginPath();
+                ctx.moveTo(padL, py);
+                ctx.lineTo(padL + plotW, py);
+                ctx.stroke();
+                ctx.fillText(yval.toFixed(1), padL - 8, py + 4);
+            }
+
+            // Cuadrícula vertical (valores de x) + etiquetas X
+            ctx.textAlign = 'center';
+            for (let xval = -6; xval <= 6; xval += 2) {
+                const px = centerX + xval * scale;
+                if (px < padL || px > padL + plotW) continue;
+                ctx.strokeStyle = '#eee';
+                ctx.beginPath();
+                ctx.moveTo(px, padT);
+                ctx.lineTo(px, baseY);
+                ctx.stroke();
+                ctx.fillStyle = '#666';
+                ctx.fillText(xval.toString(), px, baseY + 18);
+            }
+
+            // Ejes principales
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padL, baseY);
+            ctx.lineTo(padL + plotW, baseY);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(centerX, padT);
+            ctx.lineTo(centerX, baseY);
+            ctx.stroke();
+
+            // Curva sigmoide
+            ctx.strokeStyle = '#2196f3';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let px = padL; px <= padL + plotW; px++) {
+                const x = (px - centerX) / scale;
+                const y = sigmoid(x);
+                const py = baseY - y * plotH;
+                if (px === padL) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+
+            // Línea de umbral
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 6]);
+            ctx.beginPath();
+            ctx.moveTo(padL, thresholdY);
+            ctx.lineTo(padL + plotW, thresholdY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Etiqueta del umbral
+            ctx.fillStyle = '#c62828';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(`umbral = ${logisticThreshold.toFixed(2)}`, padL + plotW - 8, thresholdY - 6);
+
+            // Etiquetas de zonas
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#1976d2';
+            ctx.font = 'bold 13px sans-serif';
+            ctx.fillText('Positivo (1)', padL + 12, padT + 20);
+            ctx.fillStyle = '#c62828';
+            ctx.fillText('Negativo (0)', padL + 12, baseY - 10);
+
+            // Títulos de ejes
+            ctx.fillStyle = '#333';
+            ctx.font = '13px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('x (entrada lineal)', centerX, height - 15);
+            ctx.save();
+            ctx.translate(22, (padT + baseY) / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('P(y=1 | x)', 0, 0);
+            ctx.restore();
+
+            // Estadísticas
+            const stats = `
+                <div class="stat-box">
+                    <div class="label">Umbral</div>
+                    <div class="value">${logisticThreshold.toFixed(2)}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Rango Positivo</div>
+                    <div class="value">[${logisticThreshold.toFixed(2)}, 1.00]</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Rango Negativo</div>
+                    <div class="value">[0.00, ${logisticThreshold.toFixed(2)})</div>
+                </div>
+            `;
+            document.getElementById('logisticStats').innerHTML = stats;
+        }
+
+        // ==================== TAB 2: KNN ====================
+        let knnPoints = [];
+        let knnValue = 3;
+        let knnCurrentClass = 0; // 0 = azul, 1 = rojo
+
+        function toggleKNNClass() {
+            knnCurrentClass = 1 - knnCurrentClass;
+            const btn = document.getElementById('knnClassBtn');
+            btn.textContent = knnCurrentClass === 0 ? 'Añadir Clase Azul (Click izq.)' : 'Añadir Clase Roja (Click izq.)';
+        }
+
+        function updateKValue() {
+            knnValue = parseInt(document.getElementById('kSlider').value);
+            document.getElementById('kValue').textContent = knnValue;
+            drawKNNCanvas();
+        }
+
+        function clearKNNCanvas() {
+            knnPoints = [];
+            drawKNNCanvas();
+        }
+
+        function drawKNNCanvas() {
+            const canvas = document.getElementById('knnCanvas');
+            ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Cuadrícula
+            ctx.strokeStyle = '#eee';
+            ctx.lineWidth = 1;
+            for (let i = 1; i < 10; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * (canvas.width / 10), 0);
+                ctx.lineTo(i * (canvas.width / 10), canvas.height);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i * (canvas.height / 10));
+                ctx.lineTo(canvas.width, i * (canvas.height / 10));
+                ctx.stroke();
+            }
+
+            // Dibujar puntos
+            knnPoints.forEach(p => {
+                ctx.fillStyle = p.class === 0 ? '#4dabf7' : '#ff6b6b';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+
+            ctx.fillStyle = '#666';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Total puntos: ${knnPoints.length} | Click derecho para clasificar | Clase actual: ${knnCurrentClass === 0 ? 'Azul' : 'Rojo'}`, canvas.width / 2, 20);
+        }
+
+        function distance(p1, p2) {
+            return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
+        }
+
+        function knnClassify(testPoint) {
+            if (knnPoints.length === 0) {
+                document.getElementById('knnInfo').textContent = 'No hay puntos de entrenamiento.';
+                return;
+            }
+
+            const distances = knnPoints.map(p => ({
+                ...p,
+                dist: distance(p, testPoint)
+            })).sort((a, b) => a.dist - b.dist).slice(0, Math.min(knnValue, knnPoints.length));
+
+            const blueCount = distances.filter(p => p.class === 0).length;
+            const redCount = distances.filter(p => p.class === 1).length;
+            const predicted = blueCount > redCount ? 0 : 1;
+
+            const info = `
+                <strong>K=5 vecinos más cercanos encontrados:</strong> ${distances.length}<br>
+                Azules: ${blueCount} | Rojos: ${redCount}<br>
+                <strong>Predicción: ${predicted === 0 ? 'Azul (Clase 0)' : 'Rojo (Clase 1)'}</strong>
+            `;
+            document.getElementById('knnInfo').innerHTML = info;
+
+            // Dibujar círculos alrededor de los vecinos
+            const canvas = document.getElementById('knnCanvas');
+            const ctx = canvas.getContext('2d');
+            distances.forEach((p, i) => {
+                ctx.strokeStyle = '#ff9800';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath();
+                ctx.moveTo(testPoint.x, testPoint.y);
+                ctx.lineTo(p.x, p.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            });
+
+            ctx.fillStyle = '#ffeb3b';
+            ctx.beginPath();
+            ctx.arc(testPoint.x, testPoint.y, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        document.getElementById('knnCanvas')?.addEventListener('click', function(e) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            knnPoints.push({ x, y, class: knnCurrentClass });
+            drawKNNCanvas();
+        });
+
+        document.getElementById('knnCanvas')?.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            knnClassify({ x, y });
+        });
+
+        // ==================== TAB 3: ÁRBOLES DE DECISIÓN ====================
+        let treeDepth = 3;
+
+        function updateTreeDepth() {
+            treeDepth = parseInt(document.getElementById('depthSlider').value);
+            document.getElementById('depthValue').textContent = treeDepth;
+            buildDecisionTree();
+        }
+
+        function buildDecisionTree() {
+            const canvas = document.getElementById('treeCanvas');
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width, H = canvas.height;
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, W, H);
+
+            // Espaciado dinámico: radio y offset decrecen con la profundidad
+            // para que incluso con profundidad 5 (16 hojas) no se solapen en 800px.
+            const topMargin = 35;
+            const bottomMargin = 30;
+            const initialOffset = W / 4;  // los hijos del root quedan en W/4 y 3W/4
+
+            function radiusAt(depth) {
+                // A profundidad 1 → 32; a profundidad 5 → 14
+                return Math.max(14, 34 - (depth - 1) * 5);
+            }
+            // Calcular verticalGap para que el último nivel quepa dentro del canvas
+            const rootTopY = topMargin + radiusAt(1);
+            const lastRadius = radiusAt(treeDepth);
+            const availableVertical = H - bottomMargin - rootTopY - lastRadius;
+            const verticalGap = treeDepth > 1 ? availableVertical / (treeDepth - 1) : 0;
+            function fontSizeAt(depth) {
+                return Math.max(8, 12 - (depth - 1));
+            }
+
+            function drawNode(x, y, text, gini, depth, offset) {
+                const r = radiusAt(depth);
+                const fs = fontSizeAt(depth);
+
+                // Círculo del nodo
+                const alpha = Math.max(0.45, 1 - (depth - 1) / 5);
+                ctx.fillStyle = `rgba(33, 150, 243, ${alpha})`;
+                ctx.strokeStyle = '#1976d2';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Texto principal y Gini dentro del nodo
+                ctx.fillStyle = '#fff';
+                ctx.font = `bold ${fs}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, x, y - fs * 0.55);
+                ctx.fillStyle = '#ffeb3b';
+                ctx.font = `${Math.max(8, fs - 2)}px sans-serif`;
+                ctx.fillText(`G:${gini.toFixed(2)}`, x, y + fs * 0.7);
+
+                if (depth < treeDepth) {
+                    const childOffset = offset / 2;
+                    const leftX = x - childOffset;
+                    const rightX = x + childOffset;
+                    const childY = y + verticalGap;
+                    const childR = radiusAt(depth + 1);
+
+                    // Líneas a hijos (de borde a borde, evitando cruzar el círculo)
+                    ctx.strokeStyle = '#999';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y + r);
+                    ctx.lineTo(leftX, childY - childR);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(x, y + r);
+                    ctx.lineTo(rightX, childY - childR);
+                    ctx.stroke();
+
+                    drawNode(leftX, childY, `S${depth}L`, gini * 0.7, depth + 1, childOffset);
+                    drawNode(rightX, childY, `S${depth}R`, gini * 0.6, depth + 1, childOffset);
+                }
+            }
+
+            drawNode(W / 2, rootTopY, 'Root', 0.5, 1, initialOffset);
+
+            // Estadísticas
+            let nodeCount = 0;
+            for (let d = 1; d <= treeDepth; d++) {
+                nodeCount += Math.pow(2, d - 1);
+            }
+
+            const stats = `
+                <strong>Estadísticas del Árbol:</strong><br>
+                Profundidad máxima: ${treeDepth}<br>
+                Nodos totales: ${nodeCount}<br>
+                Hojas (último nivel): ${Math.pow(2, treeDepth - 1)}
+            `;
+            document.getElementById('treeStats').innerHTML = stats;
+        }
+
+        // ==================== TAB 4: SVM ====================
+        let svmC = 1.0;
+        let svmKernel = 'linear';
+        let svmData = [];
+
+        function updateSVMC() {
+            svmC = parseFloat(document.getElementById('cSlider').value).toFixed(1);
+            document.getElementById('cValue').textContent = svmC;
+            drawSVMVisualization();
+        }
+
+        function toggleSVMKernel() {
+            svmKernel = svmKernel === 'linear' ? 'rbf' : 'linear';
+            document.getElementById('kernelBtn').textContent = `Kernel: ${svmKernel === 'linear' ? 'Lineal' : 'RBF'}`;
+            drawSVMVisualization();
+        }
+
+        function generateSVMData() {
+            svmData = [];
+            // Clase 0 (roja) — agrupada a la izquierda/arriba
+            for (let i = 0; i < 30; i++) {
+                svmData.push({
+                    x: Math.random() * 250 + 100,
+                    y: Math.random() * 200 + 80,
+                    class: 0
+                });
+            }
+            // Clase 1 (azul) — agrupada a la derecha/abajo
+            for (let i = 0; i < 30; i++) {
+                svmData.push({
+                    x: Math.random() * 250 + 430,
+                    y: Math.random() * 200 + 220,
+                    class: 1
+                });
+            }
+            drawSVMVisualization();
+        }
+
+        function drawSVMVisualization() {
+            const canvas = document.getElementById('svmCanvas');
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width, H = canvas.height;
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, W, H);
+
+            if (svmData.length === 0) {
+                ctx.fillStyle = '#999';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Pulsa "Generar Datos" para comenzar', W / 2, H / 2);
+                return;
+            }
+
+            const c0 = svmData.filter(p => p.class === 0);
+            const c1 = svmData.filter(p => p.class === 1);
+            const mean0 = {
+                x: c0.reduce((s, p) => s + p.x, 0) / c0.length,
+                y: c0.reduce((s, p) => s + p.y, 0) / c0.length
+            };
+            const mean1 = {
+                x: c1.reduce((s, p) => s + p.x, 0) / c1.length,
+                y: c1.reduce((s, p) => s + p.y, 0) / c1.length
+            };
+            const C = parseFloat(svmC);
+
+            const gridSize = 5;
+            let supportVectors = [];
+
+            if (svmKernel === 'linear') {
+                // Hiperplano perpendicular al vector entre medias, pasando por el punto medio
+                const dx = mean1.x - mean0.x;
+                const dy = mean1.y - mean0.y;
+                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                const nx = dx / dist, ny = dy / dist; // normal unitaria
+                const midX = (mean0.x + mean1.x) / 2;
+                const midY = (mean0.y + mean1.y) / 2;
+
+                // Regiones de clase (sombreado por distancia con signo al hiperplano)
+                for (let px = 0; px < W; px += gridSize) {
+                    for (let py = 0; py < H; py += gridSize) {
+                        const signed = (px - midX) * nx + (py - midY) * ny;
+                        const intensity = Math.min(1, Math.abs(signed) / 180);
+                        ctx.fillStyle = signed < 0
+                            ? `rgba(255, 107, 107, ${0.12 + 0.18 * intensity})`
+                            : `rgba(77, 171, 247, ${0.12 + 0.18 * intensity})`;
+                        ctx.fillRect(px, py, gridSize, gridSize);
+                    }
+                }
+
+                // Margen: C alto → margen estrecho; C bajo → margen amplio
+                const margin = Math.max(12, 90 / C);
+
+                // Márgenes (líneas discontinuas naranjas paralelas al hiperplano)
+                ctx.strokeStyle = 'rgba(255, 152, 0, 0.85)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([8, 6]);
+                const L = 700;
+                for (const side of [-1, 1]) {
+                    const sx = side * margin * nx;
+                    const sy = side * margin * ny;
+                    ctx.beginPath();
+                    ctx.moveTo(midX + sx - ny * L, midY + sy + nx * L);
+                    ctx.lineTo(midX + sx + ny * L, midY + sy - nx * L);
+                    ctx.stroke();
+                }
+                ctx.setLineDash([]);
+
+                // Hiperplano principal (línea negra sólida)
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(midX - ny * L, midY + nx * L);
+                ctx.lineTo(midX + ny * L, midY - nx * L);
+                ctx.stroke();
+
+                // Vectores de soporte: puntos dentro del margen (|signed| <= margen)
+                supportVectors = svmData.filter(p => {
+                    const s = (p.x - midX) * nx + (p.y - midY) * ny;
+                    return Math.abs(s) <= margin + 6;
+                });
+            } else {
+                // RBF: gamma aumenta con C → frontera más ajustada y curvada
+                const gamma = 0.00005 * (0.5 + C * 0.8);
+
+                function rbfScore(px, py) {
+                    let w0 = 0, w1 = 0;
+                    for (const p of c0) w0 += Math.exp(-gamma * ((px - p.x) ** 2 + (py - p.y) ** 2));
+                    for (const p of c1) w1 += Math.exp(-gamma * ((px - p.x) ** 2 + (py - p.y) ** 2));
+                    const total = w0 + w1;
+                    return total === 0 ? 0 : w1 / total; // 0 = muy clase 0, 1 = muy clase 1
+                }
+
+                for (let px = 0; px < W; px += gridSize) {
+                    for (let py = 0; py < H; py += gridSize) {
+                        const prob = rbfScore(px, py);
+                        if (prob < 0.5) {
+                            ctx.fillStyle = `rgba(255, 107, 107, ${(0.5 - prob) * 0.7})`;
+                        } else {
+                            ctx.fillStyle = `rgba(77, 171, 247, ${(prob - 0.5) * 0.7})`;
+                        }
+                        ctx.fillRect(px, py, gridSize, gridSize);
+                    }
+                }
+
+                // Frontera de decisión: contorno en prob=0.5 (muestreo denso por columna)
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                let started = false;
+                for (let px = 0; px < W; px += 4) {
+                    // Buscar cruce de 0.5 columna por columna
+                    let prev = rbfScore(px, 0);
+                    for (let py = gridSize; py < H; py += gridSize) {
+                        const cur = rbfScore(px, py);
+                        if ((prev < 0.5 && cur >= 0.5) || (prev >= 0.5 && cur < 0.5)) {
+                            if (!started) { ctx.moveTo(px, py); started = true; }
+                            else ctx.lineTo(px, py);
+                            break;
+                        }
+                        prev = cur;
+                    }
+                }
+                ctx.stroke();
+
+                // Vectores de soporte: puntos cercanos a la frontera
+                supportVectors = svmData.filter(p => Math.abs(rbfScore(p.x, p.y) - 0.5) < 0.18);
+            }
+
+            // Dibujar todos los puntos; resaltar vectores de soporte
+            const svSet = new Set(supportVectors);
+            svmData.forEach(p => {
+                const isSV = svSet.has(p);
+                ctx.fillStyle = p.class === 0 ? '#ff6b6b' : '#4dabf7';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, isSV ? 8 : 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = isSV ? '#ff9800' : '#222';
+                ctx.lineWidth = isSV ? 3 : 1;
+                ctx.stroke();
+            });
+
+            // Cabecera informativa (fondo blanco translúcido para legibilidad)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+            ctx.fillRect(8, 8, 380, 44);
+            ctx.fillStyle = '#0f1b2d';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(`C = ${svmC}   |   Kernel: ${svmKernel === 'linear' ? 'Lineal' : 'RBF'}`, 18, 28);
+            ctx.fillStyle = '#555';
+            ctx.font = '12px sans-serif';
+            ctx.fillText(`Vectores de soporte: ${supportVectors.length} (borde naranja)`, 18, 45);
+        }
+
+        // ==================== TAB 5: COMPARATIVA ====================
+        // Canvas 400x300; generamos datos dentro de esas dimensiones.
+        function generateComparisonData() {
+            const type = document.getElementById('datasetType').value;
+            const n = 80;
+            let data = [];
+
+            // Ruido gaussiano reutilizable (Box-Muller)
+            const gauss = (sigma) => {
+                const u1 = Math.max(1e-9, Math.random());
+                const u2 = Math.random();
+                return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2) * sigma;
+            };
+
+            if (type === 'moons') {
+                // Lunas con más ruido y algo de solape
+                for (let i = 0; i < n; i++) {
+                    const angle = (i / n) * Math.PI;
+                    const x = 150 + 90 * Math.cos(angle) + gauss(15);
+                    const y = 130 + 70 * Math.sin(angle) + gauss(15);
+                    data.push({ x, y, class: 0 });
+                }
+                for (let i = 0; i < n; i++) {
+                    const angle = Math.PI + (i / n) * Math.PI;
+                    const x = 240 + 90 * Math.cos(angle) + gauss(15);
+                    const y = 180 + 70 * Math.sin(angle) + gauss(15);
+                    data.push({ x, y, class: 1 });
+                }
+            } else if (type === 'circles') {
+                // Círculos concéntricos con ruido radial mayor para que se solapen un poco
+                for (let i = 0; i < n; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const r = 105 + gauss(14);
+                    const x = 200 + r * Math.cos(angle);
+                    const y = 150 + r * Math.sin(angle);
+                    data.push({ x, y, class: 0 });
+                }
+                for (let i = 0; i < n; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const r = 50 + gauss(14);
+                    const x = 200 + r * Math.cos(angle);
+                    const y = 150 + r * Math.sin(angle);
+                    data.push({ x, y, class: 1 });
+                }
+            } else {
+                // Linealmente separable pero con solape cerca de la frontera
+                for (let i = 0; i < n; i++) {
+                    data.push({
+                        x: 110 + gauss(45),
+                        y: Math.random() * 240 + 30,
+                        class: 0
+                    });
+                }
+                for (let i = 0; i < n; i++) {
+                    data.push({
+                        x: 290 + gauss(45),
+                        y: Math.random() * 240 + 30,
+                        class: 1
+                    });
+                }
+                // Recortar al canvas
+                data = data.map(p => ({
+                    x: Math.max(10, Math.min(390, p.x)),
+                    y: Math.max(10, Math.min(290, p.y)),
+                    class: p.class
+                }));
+            }
+
+            drawComparison(data);
+        }
+
+        function buildComparisonPredictors(data) {
+            const c0 = data.filter(p => p.class === 0);
+            const c1 = data.filter(p => p.class === 1);
+            const mean = arr => ({
+                x: arr.reduce((s, p) => s + p.x, 0) / arr.length,
+                y: arr.reduce((s, p) => s + p.y, 0) / arr.length
+            });
+            const m0 = mean(c0), m1 = mean(c1);
+
+            // Discriminante lineal basado en vector entre medias
+            const dx = m1.x - m0.x, dy = m1.y - m0.y;
+            const midX = (m0.x + m1.x) / 2, midY = (m0.y + m1.y) / 2;
+            const predLogistic = (x, y) => {
+                const signed = (x - midX) * dx + (y - midY) * dy;
+                return signed < 0 ? 0 : 1;
+            };
+
+            // KNN con k=5
+            const k = 5;
+            const predKNN = (x, y) => {
+                const dists = new Array(data.length);
+                for (let i = 0; i < data.length; i++) {
+                    const p = data[i];
+                    dists[i] = { c: p.class, d: (p.x - x) * (p.x - x) + (p.y - y) * (p.y - y) };
+                }
+                dists.sort((a, b) => a.d - b.d);
+                let c0n = 0;
+                const kk = Math.min(k, dists.length);
+                for (let i = 0; i < kk; i++) if (dists[i].c === 0) c0n++;
+                return c0n > kk / 2 ? 0 : 1;
+            };
+
+            // Árbol de decisión: un split en x (mediana) y otro en y dentro de cada rama
+            const xs = [...data].sort((a, b) => a.x - b.x);
+            const xMid = xs[Math.floor(xs.length / 2)].x;
+            const left = data.filter(p => p.x < xMid);
+            const right = data.filter(p => p.x >= xMid);
+            const yMedian = arr => {
+                if (arr.length === 0) return 150;
+                const ys = arr.map(p => p.y).sort((a, b) => a - b);
+                return ys[Math.floor(ys.length / 2)];
+            };
+            const lYMid = yMedian(left);
+            const rYMid = yMedian(right);
+            const majority = arr => {
+                if (arr.length === 0) return 0;
+                const n0 = arr.filter(p => p.class === 0).length;
+                return n0 > arr.length / 2 ? 0 : 1;
+            };
+            const qLT = majority(left.filter(p => p.y < lYMid));
+            const qLB = majority(left.filter(p => p.y >= lYMid));
+            const qRT = majority(right.filter(p => p.y < rYMid));
+            const qRB = majority(right.filter(p => p.y >= rYMid));
+            const predTree = (x, y) => {
+                if (x < xMid) return y < lYMid ? qLT : qLB;
+                return y < rYMid ? qRT : qRB;
+            };
+
+            // SVM con kernel RBF (nearest-cluster ponderado por Gaussiana)
+            const gamma = 0.0008;
+            const predSVM = (x, y) => {
+                let w0 = 0, w1 = 0;
+                for (let i = 0; i < c0.length; i++) {
+                    const p = c0[i];
+                    w0 += Math.exp(-gamma * ((x - p.x) ** 2 + (y - p.y) ** 2));
+                }
+                for (let i = 0; i < c1.length; i++) {
+                    const p = c1[i];
+                    w1 += Math.exp(-gamma * ((x - p.x) ** 2 + (y - p.y) ** 2));
+                }
+                return w0 > w1 ? 0 : 1;
+            };
+
+            // Naive Bayes gaussiano: media/varianza por clase y feature, prior por frecuencia
+            const n = data.length || 1;
+            const prior0 = Math.log(Math.max(1, c0.length) / n);
+            const prior1 = Math.log(Math.max(1, c1.length) / n);
+            const stats = arr => {
+                if (arr.length === 0) return { mx: 0, my: 0, vx: 1, vy: 1 };
+                const mx = arr.reduce((s, p) => s + p.x, 0) / arr.length;
+                const my = arr.reduce((s, p) => s + p.y, 0) / arr.length;
+                const vx = arr.reduce((s, p) => s + (p.x - mx) ** 2, 0) / arr.length + 1e-3;
+                const vy = arr.reduce((s, p) => s + (p.y - my) ** 2, 0) / arr.length + 1e-3;
+                return { mx, my, vx, vy };
+            };
+            const s0 = stats(c0), s1 = stats(c1);
+            const logGauss = (v, m, var_) => -0.5 * Math.log(2 * Math.PI * var_) - ((v - m) ** 2) / (2 * var_);
+            const predNB = (x, y) => {
+                const ll0 = prior0 + logGauss(x, s0.mx, s0.vx) + logGauss(y, s0.my, s0.vy);
+                const ll1 = prior1 + logGauss(x, s1.mx, s1.vx) + logGauss(y, s1.my, s1.vy);
+                return ll0 > ll1 ? 0 : 1;
+            };
+
+            // Random Forest: 15 árboles con bootstrap y feature aleatoria por split
+            const rfTrees = [];
+            const nTrees = 15;
+            const maxDepth = 4;
+            const buildTree = (subset, depth) => {
+                const cnt0 = subset.filter(p => p.class === 0).length;
+                const cnt1 = subset.length - cnt0;
+                if (depth >= maxDepth || subset.length < 4 || cnt0 === 0 || cnt1 === 0) {
+                    return { leaf: true, cls: cnt0 >= cnt1 ? 0 : 1 };
+                }
+                const feat = Math.random() < 0.5 ? 'x' : 'y';
+                const vals = subset.map(p => p[feat]).sort((a, b) => a - b);
+                // Buscar mejor threshold entre 3 candidatos
+                let bestGini = Infinity, bestT = vals[Math.floor(vals.length / 2)];
+                const candidates = [vals[Math.floor(vals.length / 4)], vals[Math.floor(vals.length / 2)], vals[Math.floor(3 * vals.length / 4)]];
+                for (const t of candidates) {
+                    const L = subset.filter(p => p[feat] < t);
+                    const R = subset.filter(p => p[feat] >= t);
+                    if (L.length === 0 || R.length === 0) continue;
+                    const gini = (S) => {
+                        if (S.length === 0) return 0;
+                        const p0 = S.filter(p => p.class === 0).length / S.length;
+                        return 1 - p0 * p0 - (1 - p0) * (1 - p0);
+                    };
+                    const g = (L.length * gini(L) + R.length * gini(R)) / subset.length;
+                    if (g < bestGini) { bestGini = g; bestT = t; }
+                }
+                const L = subset.filter(p => p[feat] < bestT);
+                const R = subset.filter(p => p[feat] >= bestT);
+                if (L.length === 0 || R.length === 0) return { leaf: true, cls: cnt0 >= cnt1 ? 0 : 1 };
+                return {
+                    leaf: false, feat, t: bestT,
+                    left: buildTree(L, depth + 1),
+                    right: buildTree(R, depth + 1)
+                };
+            };
+            const traverse = (node, x, y) => {
+                if (node.leaf) return node.cls;
+                const v = node.feat === 'x' ? x : y;
+                return traverse(v < node.t ? node.left : node.right, x, y);
+            };
+            for (let t = 0; t < nTrees; t++) {
+                const sample = [];
+                for (let i = 0; i < data.length; i++) {
+                    sample.push(data[Math.floor(Math.random() * data.length)]);
+                }
+                rfTrees.push(buildTree(sample, 0));
+            }
+            const predRF = (x, y) => {
+                let votes0 = 0;
+                for (let t = 0; t < rfTrees.length; t++) {
+                    if (traverse(rfTrees[t], x, y) === 0) votes0++;
+                }
+                return votes0 > rfTrees.length / 2 ? 0 : 1;
+            };
+
+            return [predLogistic, predKNN, predTree, predSVM, predNB, predRF];
+        }
+
+        function drawComparison(data) {
+            // Split estratificado 70/30 por clase para que ambas aparezcan en test
+            const byClass = { 0: [], 1: [] };
+            data.forEach(p => byClass[p.class].push(p));
+            const shuffle = arr => {
+                const a = arr.slice();
+                for (let i = a.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [a[i], a[j]] = [a[j], a[i]];
+                }
+                return a;
+            };
+            const train = [], test = [];
+            for (const c of [0, 1]) {
+                const shuf = shuffle(byClass[c]);
+                const nTrain = Math.floor(shuf.length * 0.7);
+                train.push(...shuf.slice(0, nTrain));
+                test.push(...shuf.slice(nTrain));
+            }
+
+            const predictors = buildComparisonPredictors(train);
+            const canvasIds = ['compCanvas1', 'compCanvas2', 'compCanvas3', 'compCanvas4', 'compCanvas5', 'compCanvas6'];
+            const accIds = ['acc1', 'acc2', 'acc3', 'acc4', 'acc5', 'acc6'];
+
+            predictors.forEach((predict, idx) => {
+                const canvas = document.getElementById(canvasIds[idx]);
+                const ctx = canvas.getContext('2d');
+                const W = canvas.width, H = canvas.height;
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, W, H);
+
+                // Regiones de decisión (bloques de píxeles)
+                const step = 6;
+                for (let px = 0; px < W; px += step) {
+                    for (let py = 0; py < H; py += step) {
+                        const pred = predict(px + step / 2, py + step / 2);
+                        ctx.fillStyle = pred === 0
+                            ? 'rgba(255, 107, 107, 0.22)'
+                            : 'rgba(77, 171, 247, 0.22)';
+                        ctx.fillRect(px, py, step, step);
+                    }
+                }
+
+                // Puntos de entrenamiento: rellenos
+                train.forEach(p => {
+                    ctx.fillStyle = p.class === 0 ? '#ff6b6b' : '#4dabf7';
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 3.2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#222';
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                });
+
+                // Puntos de test: sin relleno, borde grueso del color de la clase real
+                test.forEach(p => {
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 4.2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = p.class === 0 ? '#c92a2a' : '#1971c2';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                });
+
+                // Precisión solo sobre test
+                let correct = 0;
+                for (let i = 0; i < test.length; i++) {
+                    if (predict(test[i].x, test[i].y) === test[i].class) correct++;
+                }
+                const acc = test.length > 0 ? (correct / test.length * 100).toFixed(1) : '--';
+                document.getElementById(accIds[idx]).textContent = acc + '%';
+            });
+        }
+
+        // ==================== TAB 6: NAIVE BAYES ====================
+        const nbClasses = [
+            { name: 'A', hex: '#ff6b6b', mean: { x: 220, y: 160 }, sigma: 55 },
+            { name: 'B', hex: '#4dabf7', mean: { x: 560, y: 180 }, sigma: 65 },
+            { name: 'C', hex: '#9775fa', mean: { x: 400, y: 370 }, sigma: 60 }
+        ];
+        let nbData = [];
+        let nbPriors = [1 / 3, 1 / 3, 1 / 3];
+
+        function hexToRgb(hex) {
+            return [
+                parseInt(hex.slice(1, 3), 16),
+                parseInt(hex.slice(3, 5), 16),
+                parseInt(hex.slice(5, 7), 16)
+            ];
+        }
+
+        function gaussianSample(meanX, meanY, sigma) {
+            const u1 = Math.max(1e-9, Math.random());
+            const u2 = Math.random();
+            const z1 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+            const z2 = Math.sqrt(-2 * Math.log(u1)) * Math.sin(2 * Math.PI * u2);
+            return { x: meanX + z1 * sigma, y: meanY + z2 * sigma };
+        }
+
+        function regenerateNBData() {
+            nbData = [];
+            nbClasses.forEach((cls, idx) => {
+                for (let i = 0; i < 40; i++) {
+                    const s = gaussianSample(cls.mean.x, cls.mean.y, cls.sigma);
+                    nbData.push({ x: s.x, y: s.y, class: idx });
+                }
+            });
+            drawNB();
+        }
+
+        function updateNBPriors() {
+            const pA = parseInt(document.getElementById('priorASlider').value) / 100;
+            const pB = parseInt(document.getElementById('priorBSlider').value) / 100;
+            let pC = Math.max(0.05, 1 - pA - pB);
+            const total = pA + pB + pC;
+            nbPriors = [pA / total, pB / total, pC / total];
+            document.getElementById('priorAValue').textContent = nbPriors[0].toFixed(2);
+            document.getElementById('priorBValue').textContent = nbPriors[1].toFixed(2);
+            drawNB();
+        }
+
+        function nbPredict(x, y) {
+            let maxLog = -Infinity, win = 0;
+            for (let i = 0; i < nbClasses.length; i++) {
+                const cls = nbClasses[i];
+                const dx = x - cls.mean.x, dy = y - cls.mean.y;
+                const s2 = cls.sigma * cls.sigma;
+                // log-posterior ∝ log P(x|C) + log P(C)
+                const logLike = -(dx * dx + dy * dy) / (2 * s2) - Math.log(2 * Math.PI * s2);
+                const logPost = logLike + Math.log(nbPriors[i]);
+                if (logPost > maxLog) { maxLog = logPost; win = i; }
+            }
+            return win;
+        }
+
+        function drawNB() {
+            const canvas = document.getElementById('nbCanvas');
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width, H = canvas.height;
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, W, H);
+
+            // Fondo: clase ganadora por píxel
+            const step = 6;
+            for (let px = 0; px < W; px += step) {
+                for (let py = 0; py < H; py += step) {
+                    const cls = nbPredict(px + step / 2, py + step / 2);
+                    const [r, g, b] = hexToRgb(nbClasses[cls].hex);
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.22)`;
+                    ctx.fillRect(px, py, step, step);
+                }
+            }
+
+            // Elipses (círculos, gaussiana isotrópica) a 1σ y 2σ
+            nbClasses.forEach(cls => {
+                ctx.strokeStyle = cls.hex;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(cls.mean.x, cls.mean.y, cls.sigma, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.arc(cls.mean.x, cls.mean.y, cls.sigma * 2, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                // Marcador de la media
+                ctx.fillStyle = cls.hex;
+                ctx.beginPath();
+                ctx.arc(cls.mean.x, cls.mean.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+
+            // Puntos de datos
+            nbData.forEach(p => {
+                ctx.fillStyle = nbClasses[p.class].hex;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#222';
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+            });
+
+            // Leyenda
+            ctx.fillStyle = 'rgba(255,255,255,0.92)';
+            ctx.fillRect(10, 10, 250, 92);
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(10, 10, 250, 92);
+            ctx.fillStyle = '#0f1b2d';
+            ctx.font = 'bold 13px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('Probabilidades a priori', 20, 28);
+            ctx.font = '12px sans-serif';
+            nbClasses.forEach((cls, idx) => {
+                ctx.fillStyle = cls.hex;
+                ctx.fillRect(20, 36 + idx * 20, 14, 14);
+                ctx.fillStyle = '#333';
+                ctx.fillText(`Clase ${cls.name} — P(${cls.name}) = ${nbPriors[idx].toFixed(2)}`, 40, 48 + idx * 20);
+            });
+
+            // Precisión real
+            let correct = 0;
+            for (const p of nbData) if (nbPredict(p.x, p.y) === p.class) correct++;
+            const acc = (correct / nbData.length * 100).toFixed(1);
+
+            document.getElementById('nbStats').innerHTML = `
+                <div class="stats">
+                    <div class="stat-box"><div class="label">Nº muestras</div><div class="value">${nbData.length}</div></div>
+                    <div class="stat-box"><div class="label">Precisión</div><div class="value">${acc}%</div></div>
+                    <div class="stat-box"><div class="label">Σ priors</div><div class="value">${(nbPriors[0] + nbPriors[1] + nbPriors[2]).toFixed(2)}</div></div>
+                </div>
+            `;
+        }
+
+        // ==================== TAB 7: RANDOM FOREST ====================
+        let rfData = [];
+        let rfTrees = [];
+        let rfNumTrees = 5;
+        let rfMaxDepth = 3;
+
+        function regenerateRFData() {
+            const type = document.getElementById('rfDataset').value;
+            rfData = [];
+            const n = 70;
+            if (type === 'moons') {
+                for (let i = 0; i < n; i++) {
+                    const a = (i / n) * Math.PI;
+                    rfData.push({
+                        x: 280 + 160 * Math.cos(a) + (Math.random() - 0.5) * 40,
+                        y: 190 + 120 * Math.sin(a) + (Math.random() - 0.5) * 40,
+                        class: 0
+                    });
+                }
+                for (let i = 0; i < n; i++) {
+                    const a = Math.PI + (i / n) * Math.PI;
+                    rfData.push({
+                        x: 460 + 160 * Math.cos(a) + (Math.random() - 0.5) * 40,
+                        y: 290 + 120 * Math.sin(a) + (Math.random() - 0.5) * 40,
+                        class: 1
+                    });
+                }
+            } else if (type === 'circles') {
+                for (let i = 0; i < n; i++) {
+                    const a = (i / n) * 2 * Math.PI;
+                    const r = 170 + (Math.random() - 0.5) * 25;
+                    rfData.push({ x: 400 + r * Math.cos(a), y: 250 + r * Math.sin(a) * 0.75, class: 0 });
+                }
+                for (let i = 0; i < n; i++) {
+                    const a = (i / n) * 2 * Math.PI;
+                    const r = 70 + (Math.random() - 0.5) * 20;
+                    rfData.push({ x: 400 + r * Math.cos(a), y: 250 + r * Math.sin(a) * 0.75, class: 1 });
+                }
+            } else {
+                for (let i = 0; i < n; i++) {
+                    const s = gaussianSample(260, 200, 55);
+                    rfData.push({ x: s.x, y: s.y, class: 0 });
+                }
+                for (let i = 0; i < n; i++) {
+                    const s = gaussianSample(540, 320, 60);
+                    rfData.push({ x: s.x, y: s.y, class: 1 });
+                }
+            }
+            buildRFTrees();
+            drawRF();
+        }
+
+        function rfGini(d) {
+            if (d.length === 0) return 0;
+            const p0 = d.filter(p => p.class === 0).length / d.length;
+            return 1 - p0 * p0 - (1 - p0) * (1 - p0);
+        }
+
+        function rfMajority(d) {
+            if (d.length === 0) return 0;
+            const c0 = d.filter(p => p.class === 0).length;
+            return c0 > d.length / 2 ? 0 : 1;
+        }
+
+        function rfBestSplit(d) {
+            // Random Forest: elegir un único eje al azar (max_features ~ √(d) ≈ 1 en 2D)
+            const axis = Math.random() < 0.5 ? 'x' : 'y';
+            const sorted = d.map(p => p[axis]).sort((a, b) => a - b);
+            let bestImp = Infinity, bestVal = sorted[Math.floor(sorted.length / 2)];
+            const stepIdx = Math.max(1, Math.floor(sorted.length / 12));
+            for (let i = stepIdx; i < sorted.length - stepIdx; i += stepIdx) {
+                const v = sorted[i];
+                const left = d.filter(p => p[axis] < v);
+                const right = d.filter(p => p[axis] >= v);
+                if (left.length === 0 || right.length === 0) continue;
+                const imp = (left.length * rfGini(left) + right.length * rfGini(right)) / d.length;
+                if (imp < bestImp) { bestImp = imp; bestVal = v; }
+            }
+            return { axis, value: bestVal };
+        }
+
+        function rfBuildTree(data, depth) {
+            if (data.length < 4 || depth >= rfMaxDepth || rfGini(data) < 0.05) {
+                return { leaf: true, class: rfMajority(data) };
+            }
+            const split = rfBestSplit(data);
+            const left = data.filter(p => p[split.axis] < split.value);
+            const right = data.filter(p => p[split.axis] >= split.value);
+            if (left.length === 0 || right.length === 0) {
+                return { leaf: true, class: rfMajority(data) };
+            }
+            return {
+                leaf: false,
+                axis: split.axis,
+                value: split.value,
+                left: rfBuildTree(left, depth + 1),
+                right: rfBuildTree(right, depth + 1)
+            };
+        }
+
+        function rfPredictTree(tree, x, y) {
+            if (tree.leaf) return tree.class;
+            const v = tree.axis === 'x' ? x : y;
+            return rfPredictTree(v < tree.value ? tree.left : tree.right, x, y);
+        }
+
+        function buildRFTrees() {
+            rfTrees = [];
+            for (let t = 0; t < rfNumTrees; t++) {
+                // Muestra bootstrap con reemplazo
+                const sample = new Array(rfData.length);
+                for (let i = 0; i < rfData.length; i++) {
+                    sample[i] = rfData[Math.floor(Math.random() * rfData.length)];
+                }
+                rfTrees.push(rfBuildTree(sample, 0));
+            }
+        }
+
+        function updateRFTrees() {
+            rfNumTrees = parseInt(document.getElementById('rfTreesSlider').value);
+            document.getElementById('rfTreesValue').textContent = rfNumTrees;
+            buildRFTrees();
+            drawRF();
+        }
+
+        function updateRFDepth() {
+            rfMaxDepth = parseInt(document.getElementById('rfDepthSlider').value);
+            document.getElementById('rfDepthValue').textContent = rfMaxDepth;
+            buildRFTrees();
+            drawRF();
+        }
+
+        function drawRF() {
+            const canvas = document.getElementById('rfCanvas');
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width, H = canvas.height;
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, W, H);
+
+            if (rfTrees.length === 0) return;
+
+            // Fondo: proporción de votos por clase 0 (más intenso = más consenso)
+            const step = 5;
+            for (let px = 0; px < W; px += step) {
+                for (let py = 0; py < H; py += step) {
+                    let v0 = 0;
+                    for (let t = 0; t < rfTrees.length; t++) {
+                        if (rfPredictTree(rfTrees[t], px + step / 2, py + step / 2) === 0) v0++;
+                    }
+                    const prop = v0 / rfTrees.length;
+                    if (prop > 0.5) {
+                        ctx.fillStyle = `rgba(255, 107, 107, ${0.08 + 0.5 * (prop - 0.5)})`;
+                    } else {
+                        ctx.fillStyle = `rgba(77, 171, 247, ${0.08 + 0.5 * (0.5 - prop)})`;
+                    }
+                    ctx.fillRect(px, py, step, step);
+                }
+            }
+
+            // Puntos
+            rfData.forEach(p => {
+                ctx.fillStyle = p.class === 0 ? '#ff6b6b' : '#4dabf7';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#222';
+                ctx.lineWidth = 0.6;
+                ctx.stroke();
+            });
+
+            // Cabecera informativa
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            ctx.fillRect(10, 10, 300, 44);
+            ctx.strokeStyle = '#ccc';
+            ctx.strokeRect(10, 10, 300, 44);
+            ctx.fillStyle = '#0f1b2d';
+            ctx.font = 'bold 13px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Ensemble: ${rfNumTrees} árboles · profundidad máx ${rfMaxDepth}`, 20, 29);
+            ctx.fillStyle = '#666';
+            ctx.font = '11px sans-serif';
+            ctx.fillText('Fondo: proporción de votos (intensidad = consenso)', 20, 46);
+
+            // Precisión real (voto mayoritario) y precisión media de árboles individuales
+            let correctEnsemble = 0;
+            let sumIndiv = 0;
+            for (const p of rfData) {
+                let v0 = 0;
+                let indivCorrect = 0;
+                for (const t of rfTrees) {
+                    const pred = rfPredictTree(t, p.x, p.y);
+                    if (pred === 0) v0++;
+                    if (pred === p.class) indivCorrect++;
+                }
+                const ensemble = v0 > rfTrees.length / 2 ? 0 : 1;
+                if (ensemble === p.class) correctEnsemble++;
+                sumIndiv += indivCorrect / rfTrees.length;
+            }
+            const accEns = (correctEnsemble / rfData.length * 100).toFixed(1);
+            const accAvg = (sumIndiv / rfData.length * 100).toFixed(1);
+
+            document.getElementById('rfStats').innerHTML = `
+                <div class="stats">
+                    <div class="stat-box"><div class="label">Árboles</div><div class="value">${rfNumTrees}</div></div>
+                    <div class="stat-box"><div class="label">Profundidad máx</div><div class="value">${rfMaxDepth}</div></div>
+                    <div class="stat-box"><div class="label">Precisión media individual</div><div class="value">${accAvg}%</div></div>
+                    <div class="stat-box"><div class="label">Precisión ensemble</div><div class="value">${accEns}%</div></div>
+                </div>
+            `;
+        }
+
+        // Inicializar
+        window.addEventListener('load', () => {
+            runGridSearch();
+            drawLogisticFunction();
+            drawKNNCanvas();
+            buildDecisionTree();
+            generateSVMData();
+            generateComparisonData();
+            regenerateNBData();
+            regenerateRFData();
+        });
+
+        // Selector de dataset
+        const select = document.getElementById('datasetType');
+        if (select) {
+            select.addEventListener('change', generateComparisonData);
+        }
+    </script>
+</body>
+</html>
