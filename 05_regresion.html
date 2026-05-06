@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tema 5: Aprendizaje Supervisado · Regresión</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #333; }
+
+        .header { background: #0f1b2d; color: white; padding: 2rem 2rem 1.5rem; }
+        .header h1 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+        .header p { color: #90a4ae; font-size: 0.95rem; }
+
+        .tabs { display: flex; gap: 0; background: #1a2940; padding: 0 2rem; overflow-x: auto; border-bottom: 1px solid #0f1b2d; }
+        .tab { padding: 0.8rem 1.5rem; cursor: pointer; color: #90a4ae; border-bottom: 3px solid transparent; transition: all 0.2s; font-weight: 600; font-size: 0.95rem; white-space: nowrap; }
+        .tab:hover { color: #fff; }
+        .tab.active { color: #fff; border-bottom-color: #2196f3; }
+
+        .content { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .card { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .info-box { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0; font-size: 0.95rem; line-height: 1.5; }
+        .info-box strong { color: #0f1b2d; }
+
+        canvas { border: 1px solid #ddd; border-radius: 8px; background: #fafafa; cursor: crosshair; display: block; max-width: 100%; }
+
+        .controls { display: flex; flex-wrap: wrap; gap: 1.2rem; margin: 1rem 0; align-items: center; }
+        .control { display: flex; align-items: center; gap: 0.5rem; }
+        .control label { font-weight: 600; color: #0f1b2d; font-size: 0.9rem; min-width: 80px; }
+        .control input[type=range] { width: 180px; }
+        .control .val { font-family: monospace; background: #eef; padding: 2px 8px; border-radius: 4px; color: #0d47a1; min-width: 50px; text-align: center; }
+        .control button { padding: 0.5rem 1rem; background: #2196f3; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .control button:hover { background: #1976d2; }
+        .control select { padding: 0.4rem 0.8rem; border: 1px solid #bbb; border-radius: 6px; font-size: 0.9rem; }
+
+        .stats { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.8rem; }
+        .stat { background: #f5f7fa; padding: 0.6rem 1rem; border-radius: 8px; font-size: 0.9rem; }
+        .stat .lbl { color: #607d8b; font-size: 0.8rem; display: block; }
+        .stat .v { font-family: monospace; color: #0d47a1; font-size: 1.05rem; font-weight: 600; }
+
+        h2 { color: #0f1b2d; margin-bottom: 0.6rem; }
+        h3 { color: #1a2940; margin: 1rem 0 0.5rem; font-size: 1.05rem; }
+        p { line-height: 1.55; margin: 0.4rem 0; }
+        code { background: #eef; padding: 1px 6px; border-radius: 3px; font-family: 'Menlo', monospace; font-size: 0.88em; }
+        ul { margin: 0.4rem 0 0.4rem 1.5rem; line-height: 1.55; }
+
+        .formula { background: #f8f9fb; border: 1px solid #e0e7ee; padding: 0.6rem 1rem; border-radius: 6px; font-family: 'Menlo', monospace; font-size: 0.95rem; margin: 0.6rem 0; color: #0f1b2d; }
+
+        @media (max-width: 1100px) {
+          .controls { flex-direction: column; align-items: stretch; }
+          .control { justify-content: space-between; }
+        }
+        @media (max-width: 768px) {
+          .header { padding: 1.2rem 1rem; }
+          .header h1 { font-size: 1.4rem; }
+          .tabs { padding: 0 0.5rem; }
+          .tab { padding: 0.7rem 0.9rem; font-size: 0.85rem; }
+          .control input[type=range] { width: 130px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Tema 5: Aprendizaje Supervisado · Regresión</h1>
+    <p>De la geometría de la separabilidad a la regresión: hiperplanos, lineal, polinómica y modelos no lineales</p>
+</div>
+
+<div class="tabs">
+    <div class="tab active" data-tab="hiperplano">Hiperplano y separabilidad</div>
+    <div class="tab" data-tab="ols">Regresión lineal (OLS)</div>
+    <div class="tab" data-tab="ridge-lasso">Ridge vs LASSO</div>
+    <div class="tab" data-tab="polinomica">Polinómica</div>
+    <div class="tab" data-tab="knn-reg">KNN regresor</div>
+    <div class="tab" data-tab="arbol-reg">Árbol regresor</div>
+    <div class="tab" data-tab="svr">SVR (epsilon-tube)</div>
+</div>
+
+<div class="content">
+
+<!-- =================== TAB 1: HIPERPLANO =================== -->
+<div class="section active" id="hiperplano">
+    <div class="card">
+        <h2>Hiperplano y separabilidad</h2>
+        <p>Un <strong>hiperplano</strong> en 2D es una recta definida por <code>w·x + b = 0</code>.
+        En clasificación lo usamos para <em>separar</em> dos clases (signo de <code>w·x+b</code>);
+        en regresión lo usamos directamente para <em>predecir</em> el valor.</p>
+        <div class="formula">Distancia firmada de un punto al hiperplano: d(x) = (w·x + b) / ||w||</div>
+        <p>Mueve los sliders y observa cómo se traduce eso geométricamente. Haz clic en el lienzo
+        para añadir puntos y ver cómo los clasifica.</p>
+
+        <div class="controls">
+            <div class="control"><label>w<sub>1</sub></label>
+              <input type="range" id="hp-w1" min="-3" max="3" step="0.05" value="1">
+              <span class="val" id="hp-w1v">1.00</span></div>
+            <div class="control"><label>w<sub>2</sub></label>
+              <input type="range" id="hp-w2" min="-3" max="3" step="0.05" value="1">
+              <span class="val" id="hp-w2v">1.00</span></div>
+            <div class="control"><label>b</label>
+              <input type="range" id="hp-b" min="-5" max="5" step="0.05" value="0">
+              <span class="val" id="hp-bv">0.00</span></div>
+            <div class="control"><button id="hp-reset">Reiniciar</button></div>
+        </div>
+        <canvas id="hp-canvas" width="700" height="500"></canvas>
+        <div class="stats">
+            <div class="stat"><span class="lbl">|| w ||</span><span class="v" id="hp-norm">1.41</span></div>
+            <div class="stat"><span class="lbl">Margen 1/||w||</span><span class="v" id="hp-margin">0.71</span></div>
+            <div class="stat"><span class="lbl">Distancia origen→recta (−b/||w||)</span><span class="v" id="hp-dist">0.00</span></div>
+            <div class="stat"><span class="lbl">Bien clasificados</span><span class="v" id="hp-acc">100 %</span></div>
+        </div>
+        <div class="info-box"><strong>Cómo leer cada parámetro:</strong>
+        <ul>
+          <li><strong>w<sub>1</sub>, w<sub>2</sub></strong> definen la <em>orientación</em> del hiperplano: el vector verde
+              es perpendicular a la recta. Cambiarlos rota la recta.</li>
+          <li><strong>b</strong> es el <em>sesgo</em>: traslada la recta paralelamente. La línea punteada
+              azul une el origen con el punto más cercano de la recta; su longitud es |b|/||w||.
+              Por eso al mover b la recta se aleja del origen.</li>
+          <li><strong>Tip:</strong> si pones b a 0 la recta pasa por el origen, sin importar
+              la dirección de w.</li>
+        </ul></div>
+    </div>
+</div>
+
+<!-- =================== TAB 2: OLS =================== -->
+<div class="section" id="ols">
+    <div class="card">
+        <h2>Regresión lineal por mínimos cuadrados</h2>
+        <p>El <strong>mismo hiperplano</strong>, pero ahora <em>ajustando</em>: buscamos
+        <code>w, b</code> que minimicen el error cuadrático medio.</p>
+        <div class="formula">w*, b* = argmin (1/n) Σ (yᵢ − (w·xᵢ + b))²    →    w = (XᵀX)⁻¹ Xᵀy</div>
+        <p>Haz clic para añadir puntos y observa cómo cambia la recta de mejor ajuste.
+        Las líneas verticales rojas son los <em>residuos</em>.</p>
+
+        <div class="controls">
+            <div class="control"><label>Ruido</label>
+              <input type="range" id="ols-noise" min="0" max="2" step="0.1" value="0.6">
+              <span class="val" id="ols-noisev">0.6</span></div>
+            <div class="control"><button id="ols-regen">Regenerar</button></div>
+            <div class="control"><button id="ols-clear">Limpiar</button></div>
+        </div>
+        <canvas id="ols-canvas" width="700" height="500"></canvas>
+        <div class="stats">
+            <div class="stat"><span class="lbl">w</span><span class="v" id="ols-w">—</span></div>
+            <div class="stat"><span class="lbl">b</span><span class="v" id="ols-b">—</span></div>
+            <div class="stat"><span class="lbl">MSE</span><span class="v" id="ols-mse">—</span></div>
+            <div class="stat"><span class="lbl">R²</span><span class="v" id="ols-r2">—</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- =================== TAB 3: Ridge vs LASSO =================== -->
+<div class="section" id="ridge-lasso">
+    <div class="card">
+        <h2>Ridge (L2) vs LASSO (L1)</h2>
+        <p>Cuando hay muchas variables, OLS sobreajusta. Las regularizaciones añaden una
+        penalización al tamaño de los coeficientes:</p>
+        <div class="formula">Ridge: minimizar ||y − Xw||² + α ||w||²     (encoge coeficientes)</div>
+        <div class="formula">LASSO: minimizar ||y − Xw||² + α ||w||₁     (anula coeficientes)</div>
+        <p>Movemos α y vemos cómo cambian los coeficientes de un dataset con 12 features
+        (solo 4 son verdaderamente relevantes).</p>
+
+        <div class="controls">
+            <div class="control"><label>α</label>
+              <input type="range" id="rl-alpha" min="-3" max="2" step="0.05" value="-1">
+              <span class="val" id="rl-alphav">0.10</span></div>
+            <div class="control"><label>Regularizador</label>
+              <select id="rl-mode">
+                  <option value="ols">OLS (sin penalización)</option>
+                  <option value="ridge" selected>Ridge L2</option>
+                  <option value="lasso">LASSO L1</option>
+              </select></div>
+            <div class="control"><button id="rl-regen">Regenerar dataset</button></div>
+        </div>
+        <canvas id="rl-canvas" width="700" height="440"></canvas>
+        <div class="stats">
+            <div class="stat"><span class="lbl">Coef. no nulos</span><span class="v" id="rl-nz">—</span></div>
+            <div class="stat"><span class="lbl">||w||₂</span><span class="v" id="rl-l2">—</span></div>
+            <div class="stat"><span class="lbl">||w||₁</span><span class="v" id="rl-l1">—</span></div>
+        </div>
+        <div class="info-box"><strong>Lo que vemos:</strong> Ridge encoge todos los coeficientes
+        proporcionalmente. LASSO los lleva a <em>cero exacto</em> uno a uno → hace selección
+        automática de variables.</div>
+    </div>
+</div>
+
+<!-- =================== TAB 4: Polinómica =================== -->
+<div class="section" id="polinomica">
+    <div class="card">
+        <h2>Regresión polinómica: el truco de transformar features</h2>
+        <p>Si la relación no es lineal, transformamos las features con
+        <code>φ(x) = [1, x, x², x³, …, xᵖ]</code> y aplicamos regresión lineal sobre las nuevas
+        variables. <strong>El modelo es no lineal en x pero lineal en los parámetros</strong>.</p>
+
+        <div class="controls">
+            <div class="control"><label>Grado p</label>
+              <input type="range" id="poly-deg" min="1" max="15" step="1" value="3">
+              <span class="val" id="poly-degv">3</span></div>
+            <div class="control"><label>α (Ridge)</label>
+              <input type="range" id="poly-alpha" min="-5" max="2" step="0.05" value="-5">
+              <span class="val" id="poly-alphav">0.00</span></div>
+            <div class="control"><label>Ruido</label>
+              <input type="range" id="poly-noise" min="0" max="0.6" step="0.05" value="0.2">
+              <span class="val" id="poly-noisev">0.20</span></div>
+            <div class="control"><button id="poly-regen">Regenerar</button></div>
+        </div>
+        <canvas id="poly-canvas" width="700" height="500"></canvas>
+        <div class="stats">
+            <div class="stat"><span class="lbl">MSE train</span><span class="v" id="poly-mse-tr">—</span></div>
+            <div class="stat"><span class="lbl">MSE test</span><span class="v" id="poly-mse-te">—</span></div>
+            <div class="stat"><span class="lbl">Estado</span><span class="v" id="poly-status">—</span></div>
+        </div>
+        <div class="info-box"><strong>Sesgo–varianza:</strong> grado bajo = subajuste (sesgo);
+        grado alto sin α = sobreajuste (varianza enorme); subiendo α se controla el
+        sobreajuste sin reducir el grado.</div>
+    </div>
+</div>
+
+<!-- =================== TAB 5: KNN regresor =================== -->
+<div class="section" id="knn-reg">
+    <div class="card">
+        <h2>KNN regresor: del voto al promedio</h2>
+        <p>El <strong>mismo algoritmo</strong> que el clasificador KNN, pero en lugar de votar la
+        clase mayoritaria entre los <em>k</em> vecinos más cercanos, devolvemos el
+        <strong>promedio</strong> (o la mediana) de sus valores <code>y</code>.</p>
+        <div class="controls">
+            <div class="control"><label>k</label>
+              <input type="range" id="knn-k" min="1" max="40" step="1" value="5">
+              <span class="val" id="knn-kv">5</span></div>
+            <div class="control"><label>Agregación</label>
+              <select id="knn-agg">
+                  <option value="mean" selected>media</option>
+                  <option value="median">mediana</option>
+              </select></div>
+            <div class="control"><button id="knn-regen">Regenerar</button></div>
+        </div>
+        <canvas id="knn-canvas" width="700" height="500"></canvas>
+        <div class="info-box"><strong>Efecto de k:</strong> con k=1 la curva pasa por todos los
+        puntos (sobreajuste). Con k grande se vuelve plana (sesgo alto).</div>
+    </div>
+</div>
+
+<!-- =================== TAB 6: Árbol regresor =================== -->
+<div class="section" id="arbol-reg">
+    <div class="card">
+        <h2>Árbol de regresión: cortes paralelos a los ejes</h2>
+        <p>Un árbol de decisión particiona el espacio con cortes paralelos a los ejes.
+        En cada hoja predice un <strong>valor constante</strong> (el promedio de los y de la hoja).
+        La función ajustada es <strong>constante a trozos</strong>.</p>
+        <p>Cambia con respecto a la versión clasificadora únicamente la métrica de impureza:
+        <strong>MSE</strong> en regresión vs <strong>Gini/entropía</strong> en clasificación.</p>
+        <div class="controls">
+            <div class="control"><label>profundidad max</label>
+              <input type="range" id="tree-depth" min="1" max="10" step="1" value="4">
+              <span class="val" id="tree-depthv">4</span></div>
+            <div class="control"><label>nº árboles (bagging)</label>
+              <input type="range" id="tree-n" min="1" max="50" step="1" value="1">
+              <span class="val" id="tree-nv">1</span></div>
+            <div class="control"><button id="tree-regen">Regenerar</button></div>
+        </div>
+        <canvas id="tree-canvas" width="700" height="500"></canvas>
+        <div class="info-box"><strong>Bosque aleatorio:</strong> aumenta el número de árboles
+        y observa cómo la curva escalonada se <em>suaviza</em>. Eso es bagging en acción.</div>
+    </div>
+</div>
+
+<!-- =================== TAB 7: SVR =================== -->
+<div class="section" id="svr">
+    <div class="card">
+        <h2>SVR — Regresión por máquina de vectores soporte</h2>
+        <p>SVM clasificador maximiza el margen entre clases. <strong>SVR</strong> hace algo
+        análogo: busca la recta para la que el máximo de puntos cae <em>dentro de un tubo de
+        ancho ε</em>. <strong>Errores menores que ε no se penalizan.</strong></p>
+        <div class="formula">L(y, ŷ) = max(0, |y − ŷ| − ε)    (epsilon-insensitive)</div>
+        <div class="controls">
+            <div class="control"><label>ε (ancho tubo)</label>
+              <input type="range" id="svr-eps" min="0.05" max="2" step="0.05" value="0.5">
+              <span class="val" id="svr-epsv">0.50</span></div>
+            <div class="control"><label>C (regularización)</label>
+              <input type="range" id="svr-c" min="-2" max="2" step="0.05" value="0">
+              <span class="val" id="svr-cv">1.00</span></div>
+            <div class="control"><button id="svr-regen">Regenerar</button></div>
+        </div>
+        <canvas id="svr-canvas" width="700" height="500"></canvas>
+        <div class="stats">
+            <div class="stat"><span class="lbl">Support vectors</span><span class="v" id="svr-sv">—</span></div>
+            <div class="stat"><span class="lbl">w</span><span class="v" id="svr-w">—</span></div>
+            <div class="stat"><span class="lbl">b</span><span class="v" id="svr-b">—</span></div>
+        </div>
+        <div class="info-box"><strong>Lo que vemos:</strong> los puntos <em>dentro</em> del tubo
+        no influyen en la solución. Solo los <em>support vectors</em> (los que tocan o quedan
+        fuera) determinan la recta.</div>
+    </div>
+</div>
+
+</div>
+
+<script>
+// =============== TAB SWITCHING ===============
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab).classList.add('active');
+  });
+});
+
+// =============== HELPERS ===============
+function rng(seed) {
+  let s = seed; return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+}
+function randn(rndFn) {
+  let u = 0, v = 0;
+  while (u === 0) u = rndFn();
+  while (v === 0) v = rndFn();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+function transposeMul(A) {
+  const n = A.length, d = A[0].length;
+  const out = Array.from({length: d}, () => Array(d).fill(0));
+  for (let i = 0; i < d; i++) for (let j = 0; j < d; j++)
+    for (let k = 0; k < n; k++) out[i][j] += A[k][i] * A[k][j];
+  return out;
+}
+function transposeMulVec(A, y) {
+  const n = A.length, d = A[0].length;
+  const out = Array(d).fill(0);
+  for (let i = 0; i < d; i++) for (let k = 0; k < n; k++) out[i] += A[k][i] * y[k];
+  return out;
+}
+function matMulVec(A, v) {
+  return A.map(row => row.reduce((s, x, i) => s + x * v[i], 0));
+}
+function solveLin(A, b) {
+  // Gauss-Jordan con pivoteo parcial
+  const n = b.length;
+  const M = A.map((r, i) => [...r, b[i]]);
+  for (let i = 0; i < n; i++) {
+    let mx = i;
+    for (let k = i + 1; k < n; k++) if (Math.abs(M[k][i]) > Math.abs(M[mx][i])) mx = k;
+    [M[i], M[mx]] = [M[mx], M[i]];
+    if (Math.abs(M[i][i]) < 1e-12) M[i][i] = 1e-12;
+    for (let k = 0; k < n; k++) if (k !== i) {
+      const f = M[k][i] / M[i][i];
+      for (let j = i; j <= n; j++) M[k][j] -= f * M[i][j];
+    }
+  }
+  // Tras la eliminación, la única posición no nula del lado izquierdo en la
+  // fila i es la diagonal M[i][i]; w[i] = M[i][n] / M[i][i].
+  return M.map((r, i) => r[n] / r[i]);
+}
+
+// ============================================================
+// TAB 1: HIPERPLANO
+// ============================================================
+(function() {
+  const cv = document.getElementById('hp-canvas');
+  const ctx = cv.getContext('2d');
+  let pts = [];
+  function genPts() {
+    const r = rng(42);
+    pts = [];
+    for (let i = 0; i < 30; i++) pts.push({x: -2 + 0.8 * randn(r), y: -2 + 0.8 * randn(r), c: -1});
+    for (let i = 0; i < 30; i++) pts.push({x:  2 + 0.8 * randn(r), y:  2 + 0.8 * randn(r), c: +1});
+  }
+  genPts();
+  const W = 700, H = 500, sx = W / 12, sy = H / 12;
+  const cx = W / 2, cy = H / 2;
+  const xPx = x => cx + x * sx, yPx = y => cy - y * sy;
+
+  function draw() {
+    const w1 = parseFloat(document.getElementById('hp-w1').value);
+    const w2 = parseFloat(document.getElementById('hp-w2').value);
+    const b = parseFloat(document.getElementById('hp-b').value);
+    document.getElementById('hp-w1v').textContent = w1.toFixed(2);
+    document.getElementById('hp-w2v').textContent = w2.toFixed(2);
+    document.getElementById('hp-bv').textContent = b.toFixed(2);
+    const norm = Math.hypot(w1, w2);
+    document.getElementById('hp-norm').textContent = norm.toFixed(2);
+    document.getElementById('hp-margin').textContent = (1 / Math.max(norm, 1e-6)).toFixed(2);
+    // Distancia firmada del origen al hiperplano w·x + b = 0:
+    //   d = -b / ||w||  (positivo en el lado al que apunta w)
+    const distSigned = -b / Math.max(norm, 1e-6);
+    document.getElementById('hp-dist').textContent = distSigned.toFixed(2);
+
+    ctx.clearRect(0, 0, W, H);
+    // shading lados
+    ctx.save();
+    for (let i = 0; i < W; i += 4) for (let j = 0; j < H; j += 4) {
+      const xv = (i - cx) / sx, yv = -(j - cy) / sy;
+      const z = w1 * xv + w2 * yv + b;
+      ctx.fillStyle = z >= 0 ? '#d6eaf855' : '#fadbd855';
+      ctx.fillRect(i, j, 4, 4);
+    }
+    ctx.restore();
+
+    // ejes
+    ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy);
+    ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+
+    // hiperplano: w1*x + w2*y + b = 0  =>  y = -(w1*x + b)/w2
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    if (Math.abs(w2) > 1e-6) {
+      const yA = -(w1 * (-6) + b) / w2;
+      const yB = -(w1 * (6) + b) / w2;
+      ctx.moveTo(xPx(-6), yPx(yA)); ctx.lineTo(xPx(6), yPx(yB));
+    } else if (Math.abs(w1) > 1e-6) {
+      const xV = -b / w1;
+      ctx.moveTo(xPx(xV), 0); ctx.lineTo(xPx(xV), H);
+    }
+    ctx.stroke();
+
+    // perpendicular del origen al hiperplano (segmento punteado azul).
+    // El pie de la perpendicular es t·w con t = -b/||w||²; su longitud es |b|/||w||.
+    const t = -b / Math.max(norm * norm, 1e-9);
+    const fx = w1 * t, fy = w2 * t;
+    if (Math.abs(b) > 1e-3) {
+      ctx.strokeStyle = '#1976d2'; ctx.lineWidth = 1.8;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(xPx(fx), yPx(fy)); ctx.stroke();
+      ctx.setLineDash([]);
+      // marca pequeña en el pie de la perpendicular
+      ctx.fillStyle = '#1976d2';
+      ctx.beginPath(); ctx.arc(xPx(fx), yPx(fy), 3.5, 0, 7); ctx.fill();
+      // etiqueta con la distancia firmada
+      ctx.fillStyle = '#0d47a1'; ctx.font = '12px sans-serif';
+      ctx.fillText(distSigned.toFixed(2), (cx + xPx(fx)) / 2 + 6, (cy + yPx(fy)) / 2 - 4);
+    }
+
+    // vector normal en el origen
+    const nL = 1.5 / Math.max(norm, 0.5);
+    ctx.strokeStyle = '#27ae60'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(xPx(w1 * nL), yPx(w2 * nL)); ctx.stroke();
+    ctx.fillStyle = '#27ae60';
+    ctx.beginPath(); ctx.arc(xPx(w1 * nL), yPx(w2 * nL), 4, 0, 7); ctx.fill();
+    ctx.font = '13px sans-serif';
+    ctx.fillText('w', xPx(w1 * nL) + 6, yPx(w2 * nL) - 6);
+
+    // puntos
+    let ok = 0;
+    pts.forEach(p => {
+      const z = w1 * p.x + w2 * p.y + b;
+      const pred = z >= 0 ? +1 : -1;
+      if (pred === p.c) ok++;
+      ctx.fillStyle = p.c === +1 ? '#2980b9' : '#e74c3c';
+      ctx.strokeStyle = '#000';
+      ctx.beginPath(); ctx.arc(xPx(p.x), yPx(p.y), 5.5, 0, 7); ctx.fill(); ctx.stroke();
+    });
+    document.getElementById('hp-acc').textContent = (100 * ok / pts.length).toFixed(0) + ' %';
+  }
+
+  cv.addEventListener('click', e => {
+    const rect = cv.getBoundingClientRect();
+    const px = (e.clientX - rect.left) * (cv.width / rect.width);
+    const py = (e.clientY - rect.top) * (cv.height / rect.height);
+    const xv = (px - cx) / sx, yv = -(py - cy) / sy;
+    pts.push({x: xv, y: yv, c: e.shiftKey ? -1 : +1});
+    draw();
+  });
+
+  ['hp-w1', 'hp-w2', 'hp-b'].forEach(id => document.getElementById(id).addEventListener('input', draw));
+  document.getElementById('hp-reset').addEventListener('click', () => { genPts(); draw(); });
+  draw();
+})();
+
+// ============================================================
+// TAB 2: OLS
+// ============================================================
+(function() {
+  const cv = document.getElementById('ols-canvas');
+  const ctx = cv.getContext('2d');
+  let pts = [];
+  function genPts(noise) {
+    const r = rng(123);
+    pts = [];
+    for (let i = 0; i < 25; i++) {
+      const x = -3 + 6 * (i / 24);
+      pts.push({x: x, y: 1.5 * x + 1 + noise * randn(r)});
+    }
+  }
+  const W = 700, H = 500, sx = W / 12, sy = H / 18;
+  const cx = W / 2, cy = H / 2;
+  const xPx = x => cx + x * sx, yPx = y => cy - y * sy;
+  genPts(0.6);
+
+  function ols() {
+    if (pts.length < 2) return {w: 0, b: 0, mse: 0, r2: 0};
+    let sx = 0, sy = 0, sxx = 0, sxy = 0; const n = pts.length;
+    pts.forEach(p => { sx += p.x; sy += p.y; sxx += p.x * p.x; sxy += p.x * p.y; });
+    const mx = sx / n, my = sy / n;
+    const w = (sxy - n * mx * my) / (sxx - n * mx * mx + 1e-12);
+    const b = my - w * mx;
+    let mse = 0, ss_tot = 0;
+    pts.forEach(p => { const e = p.y - (w * p.x + b); mse += e * e; ss_tot += (p.y - my) * (p.y - my); });
+    mse /= n;
+    const r2 = 1 - (mse * n) / Math.max(ss_tot, 1e-12);
+    return {w, b, mse, r2};
+  }
+
+  function draw() {
+    const noise = parseFloat(document.getElementById('ols-noise').value);
+    document.getElementById('ols-noisev').textContent = noise.toFixed(1);
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = '#ccc'; ctx.beginPath();
+    for (let xv = -6; xv <= 6; xv++) { ctx.moveTo(xPx(xv), 0); ctx.lineTo(xPx(xv), H); }
+    for (let yv = -8; yv <= 8; yv++) { ctx.moveTo(0, yPx(yv)); ctx.lineTo(W, yPx(yv)); }
+    ctx.stroke();
+    ctx.strokeStyle = '#888'; ctx.beginPath();
+    ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+
+    const m = ols();
+    ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(xPx(-6), yPx(m.w * (-6) + m.b)); ctx.lineTo(xPx(6), yPx(m.w * 6 + m.b)); ctx.stroke();
+
+    // residuos
+    ctx.strokeStyle = '#e67e22'; ctx.lineWidth = 1;
+    pts.forEach(p => {
+      const yhat = m.w * p.x + m.b;
+      ctx.beginPath(); ctx.moveTo(xPx(p.x), yPx(p.y)); ctx.lineTo(xPx(p.x), yPx(yhat)); ctx.stroke();
+    });
+    pts.forEach(p => {
+      ctx.fillStyle = '#3498db'; ctx.strokeStyle = '#000';
+      ctx.beginPath(); ctx.arc(xPx(p.x), yPx(p.y), 4.5, 0, 7); ctx.fill(); ctx.stroke();
+    });
+
+    document.getElementById('ols-w').textContent = m.w.toFixed(3);
+    document.getElementById('ols-b').textContent = m.b.toFixed(3);
+    document.getElementById('ols-mse').textContent = m.mse.toFixed(3);
+    document.getElementById('ols-r2').textContent = m.r2.toFixed(3);
+  }
+  cv.addEventListener('click', e => {
+    const rect = cv.getBoundingClientRect();
+    const px = (e.clientX - rect.left) * (cv.width / rect.width);
+    const py = (e.clientY - rect.top) * (cv.height / rect.height);
+    pts.push({x: (px - cx) / sx, y: -(py - cy) / sy});
+    draw();
+  });
+  document.getElementById('ols-noise').addEventListener('input', draw);
+  document.getElementById('ols-regen').addEventListener('click', () => {
+    genPts(parseFloat(document.getElementById('ols-noise').value)); draw();
+  });
+  document.getElementById('ols-clear').addEventListener('click', () => { pts = []; draw(); });
+  draw();
+})();
+
+// ============================================================
+// TAB 3: Ridge vs LASSO
+// ============================================================
+(function() {
+  const cv = document.getElementById('rl-canvas');
+  const ctx = cv.getContext('2d');
+  const W = 700, H = 440;
+  let X = [], y = [], wTrue = [];
+  function genData() {
+    const r = rng(7);
+    const n = 60, d = 12;
+    X = []; y = []; wTrue = Array(d).fill(0);
+    [0, 3, 5, 9].forEach(i => { wTrue[i] = (r() < 0.5 ? -1 : 1) * (2 + 1.5 * r()); });
+    for (let i = 0; i < n; i++) {
+      const row = []; for (let j = 0; j < d; j++) row.push(randn(r));
+      X.push(row);
+      y.push(row.reduce((s, x, j) => s + x * wTrue[j], 0) + 0.4 * randn(r));
+    }
+  }
+  function fit(mode, alpha) {
+    const n = X.length, d = X[0].length;
+    if (mode === 'ols' || mode === 'ridge') {
+      // ridge:  (X'X + alpha*n*I) w = X'y  (alpha=0 -> OLS)
+      const XtX = transposeMul(X);
+      if (mode === 'ridge') for (let i = 0; i < d; i++) XtX[i][i] += alpha * n;
+      const Xty = transposeMulVec(X, y);
+      try { return solveLin(XtX, Xty); } catch (e) { return Array(d).fill(0); }
+    } else {
+      // LASSO via ISTA
+      let w = Array(d).fill(0);
+      const eta = 0.005;
+      for (let it = 0; it < 1500; it++) {
+        const yhat = matMulVec(X, w);
+        const r = yhat.map((v, i) => v - y[i]);
+        const grad = transposeMulVec(X, r).map(g => 2 * g / n);
+        for (let i = 0; i < d; i++) {
+          let z = w[i] - eta * grad[i];
+          const lam = eta * alpha;
+          w[i] = Math.sign(z) * Math.max(Math.abs(z) - lam, 0);
+        }
+      }
+      return w;
+    }
+  }
+  function draw() {
+    const alphaLog = parseFloat(document.getElementById('rl-alpha').value);
+    const alpha = Math.pow(10, alphaLog);
+    document.getElementById('rl-alphav').textContent = alpha.toFixed(3);
+    const mode = document.getElementById('rl-mode').value;
+    const w = fit(mode, alpha);
+    const estColor = mode === 'ols' ? '#e74c3c' : (mode === 'ridge' ? '#3498db' : '#27ae60');
+
+    ctx.clearRect(0, 0, W, H);
+    const d = w.length;
+    const marginL = 50, marginR = 20, marginT = 50, marginB = 50;
+    const plotW = W - marginL - marginR;
+    const plotH = H - marginT - marginB;
+    const baseY = marginT + plotH / 2;
+    // Rango Y fijo [-5, 5] para que las barras sean comparables al cambiar α.
+    const yMax = 5;
+    const yScale = (plotH / 2) * 0.92 / yMax;
+    // Cada índice tiene un slot; dentro hay 2 barras (real y estimada).
+    const slotW = plotW / d;
+    const barW = slotW * 0.36;
+    const gap = slotW * 0.04;
+
+    // Grid horizontal con ticks en eje Y
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let v = -5; v <= 5; v++) {
+      const y0 = baseY - v * yScale;
+      ctx.strokeStyle = (v === 0) ? '#555' : '#e0e0e0';
+      ctx.lineWidth = (v === 0) ? 1.5 : 1;
+      ctx.beginPath(); ctx.moveTo(marginL, y0); ctx.lineTo(W - marginR, y0); ctx.stroke();
+      ctx.fillStyle = (v === 0) ? '#222' : '#888';
+      ctx.fillText(v.toString(), marginL - 6, y0);
+    }
+    ctx.lineWidth = 1;
+    ctx.textAlign = 'start';
+    ctx.textBaseline = 'alphabetic';
+
+    // Eje Y vertical
+    ctx.strokeStyle = '#bbb';
+    ctx.beginPath(); ctx.moveTo(marginL, marginT); ctx.lineTo(marginL, H - marginB); ctx.stroke();
+
+    // Etiqueta de eje Y
+    ctx.save();
+    ctx.translate(14, marginT + plotH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = '#444'; ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('valor del coeficiente', 0, 0);
+    ctx.restore();
+    ctx.textAlign = 'start';
+
+    // Barras y etiquetas por feature
+    for (let i = 0; i < d; i++) {
+      const slotX = marginL + i * slotW;
+      const xTrue = slotX + slotW / 2 - barW - gap / 2;
+      const xEst  = slotX + slotW / 2 + gap / 2;
+      const hTrue = -wTrue[i] * yScale;
+      const hEst  = -w[i] * yScale;
+
+      ctx.fillStyle = '#34495e';
+      ctx.fillRect(xTrue, baseY, barW, hTrue);
+      ctx.fillStyle = estColor;
+      ctx.fillRect(xEst, baseY, barW, hEst);
+
+      // Valor numérico encima/debajo de cada barra (solo si supera 0.1)
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#222';
+      if (Math.abs(wTrue[i]) > 0.1) {
+        const yLbl = baseY + hTrue + (hTrue < 0 ? -3 : 11);
+        ctx.fillText(wTrue[i].toFixed(1), xTrue + barW / 2, yLbl);
+      }
+      if (Math.abs(w[i]) > 0.1) {
+        const yLbl = baseY + hEst + (hEst < 0 ? -3 : 11);
+        ctx.fillText(w[i].toFixed(1), xEst + barW / 2, yLbl);
+      }
+
+      // Índice de feature debajo
+      ctx.font = '11px monospace';
+      ctx.fillStyle = '#444';
+      ctx.fillText('w' + i, slotX + slotW / 2, H - marginB + 18);
+    }
+    ctx.textAlign = 'start';
+
+    // Marcado de las features verdaderamente activas (las relevantes)
+    ctx.fillStyle = '#bdbdbd'; ctx.font = '10px sans-serif';
+    [0, 3, 5, 9].forEach(i => {
+      const slotX = marginL + i * slotW;
+      ctx.fillText('★', slotX + slotW / 2 - 4, H - marginB + 32);
+    });
+    ctx.fillStyle = '#888'; ctx.font = '10px sans-serif';
+    ctx.fillText('★ = features realmente relevantes', marginL, H - 6);
+
+    // Leyenda en la parte superior
+    ctx.font = '12px sans-serif';
+    ctx.fillStyle = '#34495e'; ctx.fillRect(marginL, 14, 14, 14);
+    ctx.fillStyle = '#222'; ctx.fillText('w real (verdadero)', marginL + 22, 25);
+    ctx.fillStyle = estColor; ctx.fillRect(marginL + 180, 14, 14, 14);
+    ctx.fillStyle = '#222';
+    const modeLbl = mode === 'ols' ? 'OLS (sin penalización)' : (mode === 'ridge' ? 'Ridge L2' : 'LASSO L1');
+    ctx.fillText('w estimado · ' + modeLbl, marginL + 202, 25);
+    ctx.fillStyle = '#666'; ctx.font = '11px sans-serif';
+    ctx.textAlign = 'end';
+    ctx.fillText('α = ' + alpha.toFixed(3), W - marginR, 25);
+    ctx.textAlign = 'start';
+
+    // stats
+    const nz = w.filter(v => Math.abs(v) > 1e-3).length;
+    const l2 = Math.sqrt(w.reduce((s, v) => s + v * v, 0));
+    const l1 = w.reduce((s, v) => s + Math.abs(v), 0);
+    document.getElementById('rl-nz').textContent = `${nz} / ${d}`;
+    document.getElementById('rl-l2').textContent = l2.toFixed(2);
+    document.getElementById('rl-l1').textContent = l1.toFixed(2);
+  }
+  genData();
+  ['rl-alpha', 'rl-mode'].forEach(id => document.getElementById(id).addEventListener('input', draw));
+  document.getElementById('rl-regen').addEventListener('click', () => { genData(); draw(); });
+  draw();
+})();
+
+// ============================================================
+// TAB 4: Polinómica
+// ============================================================
+(function() {
+  const cv = document.getElementById('poly-canvas');
+  const ctx = cv.getContext('2d');
+  const W = 700, H = 500;
+  let pts = [], ptsTest = [];
+  function gen(noise) {
+    const r = rng(99);
+    pts = []; ptsTest = [];
+    for (let i = 0; i < 30; i++) {
+      const x = -3 + 6 * (i / 29);
+      pts.push({x, y: Math.sin(x) + 0.5 * Math.cos(2 * x) + noise * randn(r)});
+    }
+    for (let i = 0; i < 60; i++) {
+      const x = -3 + 6 * r();
+      ptsTest.push({x, y: Math.sin(x) + 0.5 * Math.cos(2 * x) + noise * randn(r)});
+    }
+  }
+  // x se normaliza a [-1, 1] dividiendo por X_RANGE para evitar que la matriz
+  // de Vandermonde se vuelva catastróficamente mal condicionada (x^15 en x=3
+  // valdría ~14M y el solver Gauss-Jordan devolvería basura).
+  const X_RANGE = 3;
+  function fitPoly(deg, alpha) {
+    const X = pts.map(p => {
+      const xs = p.x / X_RANGE;
+      const row = []; let pw = 1;
+      for (let k = 0; k <= deg; k++) { row.push(pw); pw *= xs; }
+      return row;
+    });
+    const y = pts.map(p => p.y);
+    const XtX = transposeMul(X);
+    if (alpha > 0) for (let i = 1; i < XtX.length; i++) XtX[i][i] += alpha * X.length;
+    const Xty = transposeMulVec(X, y);
+    try { return solveLin(XtX, Xty); } catch (e) { return Array(deg + 1).fill(0); }
+  }
+  const margin = 40, plotW = W - 2 * margin, plotH = H - 2 * margin;
+  const xPx = x => margin + (x + 3) / 6 * plotW;
+  const yPx = y => H - margin - (y + 2.5) / 5 * plotH;
+
+  function draw() {
+    const deg = parseInt(document.getElementById('poly-deg').value);
+    const alphaLog = parseFloat(document.getElementById('poly-alpha').value);
+    const alpha = alphaLog <= -4.99 ? 0 : Math.pow(10, alphaLog);
+    const noise = parseFloat(document.getElementById('poly-noise').value);
+    document.getElementById('poly-degv').textContent = deg;
+    document.getElementById('poly-alphav').textContent = alpha === 0 ? '0' : alpha.toFixed(3);
+    document.getElementById('poly-noisev').textContent = noise.toFixed(2);
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = '#ccc';
+    for (let xv = -3; xv <= 3; xv++) { ctx.beginPath(); ctx.moveTo(xPx(xv), margin); ctx.lineTo(xPx(xv), H - margin); ctx.stroke(); }
+    for (let yv = -2; yv <= 2; yv++) { ctx.beginPath(); ctx.moveTo(margin, yPx(yv)); ctx.lineTo(W - margin, yPx(yv)); ctx.stroke(); }
+
+    const w = fitPoly(deg, alpha);
+    const evalPoly = x => {
+      const xs = x / X_RANGE;
+      let s = 0, pw = 1;
+      for (let i = 0; i < w.length; i++) { s += w[i] * pw; pw *= xs; }
+      return s;
+    };
+
+    // truth
+    ctx.strokeStyle = '#aaa'; ctx.setLineDash([4, 3]); ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i = 0; i <= 200; i++) {
+      const xv = -3 + 6 * i / 200; const yv = Math.sin(xv) + 0.5 * Math.cos(2 * xv);
+      if (i === 0) ctx.moveTo(xPx(xv), yPx(yv)); else ctx.lineTo(xPx(xv), yPx(yv));
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+
+    // ajuste — se trocea el camino cuando sale de la franja visible para que
+    // los grados muy altos sin regularización no produzcan una línea recta
+    // espuria entre dos puntos con yv enormes.
+    ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    let inside = false;
+    for (let i = 0; i <= 400; i++) {
+      const xv = -3 + 6 * i / 400;
+      const yv = evalPoly(xv);
+      if (Number.isFinite(yv) && yv >= -2.4 && yv <= 2.4) {
+        if (!inside) { ctx.moveTo(xPx(xv), yPx(yv)); inside = true; }
+        else ctx.lineTo(xPx(xv), yPx(yv));
+      } else {
+        inside = false;
+      }
+    }
+    ctx.stroke();
+
+    pts.forEach(p => { ctx.fillStyle = '#3498db'; ctx.strokeStyle = '#000';
+      ctx.beginPath(); ctx.arc(xPx(p.x), yPx(p.y), 4, 0, 7); ctx.fill(); ctx.stroke(); });
+
+    // metrics
+    const mse = (set) => set.reduce((s, p) => s + Math.pow(p.y - evalPoly(p.x), 2), 0) / set.length;
+    const mTr = mse(pts), mTe = mse(ptsTest);
+    document.getElementById('poly-mse-tr').textContent = mTr.toFixed(3);
+    document.getElementById('poly-mse-te').textContent = mTe.toFixed(3);
+    // Diagnóstico simple: si el train MSE está muy por encima del suelo de
+    // ruido (≈ noise²) hay subajuste; si test MSE >> train MSE hay sobreajuste.
+    const floor = Math.max(noise * noise, 0.02);
+    let status;
+    if (mTr > floor * 4 + 0.15) status = 'subajuste';
+    else if (mTe > Math.max(2 * mTr, mTr + 0.3)) status = 'sobreajuste';
+    else status = 'ok';
+    document.getElementById('poly-status').textContent = status;
+  }
+  gen(0.2);
+  ['poly-deg', 'poly-alpha'].forEach(id => document.getElementById(id).addEventListener('input', draw));
+  // El slider de ruido regenera al instante: cambiar el ruido sin redibujar
+  // el dataset solo movería el texto del label y desorientaría al alumno.
+  document.getElementById('poly-noise').addEventListener('input', () => {
+    gen(parseFloat(document.getElementById('poly-noise').value)); draw();
+  });
+  document.getElementById('poly-regen').addEventListener('click', () => {
+    gen(parseFloat(document.getElementById('poly-noise').value)); draw();
+  });
+  draw();
+})();
+
+// ============================================================
+// TAB 5: KNN regresor
+// ============================================================
+(function() {
+  const cv = document.getElementById('knn-canvas');
+  const ctx = cv.getContext('2d');
+  const W = 700, H = 500;
+  let pts = [];
+  function gen() {
+    const r = rng(33); pts = [];
+    for (let i = 0; i < 60; i++) {
+      const x = -3 + 6 * r();
+      pts.push({x, y: Math.sin(x) + 0.4 * Math.cos(2 * x) + 0.2 * randn(r)});
+    }
+  }
+  const margin = 40, plotW = W - 2 * margin, plotH = H - 2 * margin;
+  const xPx = x => margin + (x + 3) / 6 * plotW;
+  const yPx = y => H - margin - (y + 2.5) / 5 * plotH;
+
+  function knnPred(x, k, agg) {
+    const sorted = pts.slice().sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x)).slice(0, k);
+    if (agg === 'mean') return sorted.reduce((s, p) => s + p.y, 0) / k;
+    const ys = sorted.map(p => p.y).sort((a, b) => a - b);
+    return ys[Math.floor(k / 2)];
+  }
+
+  function draw() {
+    const k = parseInt(document.getElementById('knn-k').value);
+    const agg = document.getElementById('knn-agg').value;
+    document.getElementById('knn-kv').textContent = k;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = '#ccc';
+    for (let xv = -3; xv <= 3; xv++) { ctx.beginPath(); ctx.moveTo(xPx(xv), margin); ctx.lineTo(xPx(xv), H - margin); ctx.stroke(); }
+    for (let yv = -2; yv <= 2; yv++) { ctx.beginPath(); ctx.moveTo(margin, yPx(yv)); ctx.lineTo(W - margin, yPx(yv)); ctx.stroke(); }
+
+    ctx.strokeStyle = '#aaa'; ctx.setLineDash([4, 3]); ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    for (let i = 0; i <= 200; i++) {
+      const xv = -3 + 6 * i / 200; const yv = Math.sin(xv) + 0.4 * Math.cos(2 * xv);
+      if (i === 0) ctx.moveTo(xPx(xv), yPx(yv)); else ctx.lineTo(xPx(xv), yPx(yv));
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+
+    ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (let i = 0; i <= 400; i++) {
+      const xv = -3 + 6 * i / 400; const yv = knnPred(xv, k, agg);
+      if (i === 0) ctx.moveTo(xPx(xv), yPx(yv)); else ctx.lineTo(xPx(xv), yPx(yv));
+    }
+    ctx.stroke();
+    pts.forEach(p => {
+      ctx.fillStyle = '#3498db'; ctx.strokeStyle = '#000';
+      ctx.beginPath(); ctx.arc(xPx(p.x), yPx(p.y), 4, 0, 7); ctx.fill(); ctx.stroke();
+    });
+  }
+  gen();
+  ['knn-k', 'knn-agg'].forEach(id => document.getElementById(id).addEventListener('input', draw));
+  document.getElementById('knn-regen').addEventListener('click', () => { gen(); draw(); });
+  draw();
+})();
+
+// ============================================================
+// TAB 6: Árbol regresor (con bagging opcional)
+// ============================================================
+(function() {
+  const cv = document.getElementById('tree-canvas');
+  const ctx = cv.getContext('2d');
+  const W = 700, H = 500;
+  let pts = [];
+  function gen() {
+    const r = rng(77); pts = [];
+    for (let i = 0; i < 60; i++) {
+      const x = -3 + 6 * r();
+      pts.push({x, y: Math.sin(x) + 0.4 * Math.cos(2 * x) + 0.2 * randn(r)});
+    }
+  }
+  const margin = 40, plotW = W - 2 * margin, plotH = H - 2 * margin;
+  const xPx = x => margin + (x + 3) / 6 * plotW;
+  const yPx = y => H - margin - (y + 2.5) / 5 * plotH;
+
+  // Árbol 1D simple (CART, MSE)
+  function buildTree(data, depth, maxDepth) {
+    if (data.length <= 2 || depth >= maxDepth) {
+      return {leaf: true, val: data.reduce((s, p) => s + p.y, 0) / data.length};
+    }
+    let best = {gain: -1};
+    const sorted = data.slice().sort((a, b) => a.x - b.x);
+    const meanAll = sorted.reduce((s, p) => s + p.y, 0) / sorted.length;
+    const varAll = sorted.reduce((s, p) => s + (p.y - meanAll) * (p.y - meanAll), 0) / sorted.length;
+    for (let i = 1; i < sorted.length; i++) {
+      const t = (sorted[i - 1].x + sorted[i].x) / 2;
+      const L = sorted.slice(0, i), R = sorted.slice(i);
+      const mL = L.reduce((s, p) => s + p.y, 0) / L.length;
+      const mR = R.reduce((s, p) => s + p.y, 0) / R.length;
+      const vL = L.reduce((s, p) => s + (p.y - mL) ** 2, 0) / L.length;
+      const vR = R.reduce((s, p) => s + (p.y - mR) ** 2, 0) / R.length;
+      const wL = L.length / sorted.length;
+      const gain = varAll - (wL * vL + (1 - wL) * vR);
+      if (gain > best.gain) best = {gain, t, L, R};
+    }
+    if (best.gain <= 1e-6) return {leaf: true, val: meanAll};
+    return {leaf: false, t: best.t, izq: buildTree(best.L, depth + 1, maxDepth), der: buildTree(best.R, depth + 1, maxDepth)};
+  }
+  function predictTree(tree, x) {
+    while (!tree.leaf) tree = (x <= tree.t) ? tree.izq : tree.der;
+    return tree.val;
+  }
+  function bootstrap(data, seed) {
+    const r = rng(seed); const out = [];
+    for (let i = 0; i < data.length; i++) out.push(data[Math.floor(r() * data.length)]);
+    return out;
+  }
+
+  function draw() {
+    const depth = parseInt(document.getElementById('tree-depth').value);
+    const n = parseInt(document.getElementById('tree-n').value);
+    document.getElementById('tree-depthv').textContent = depth;
+    document.getElementById('tree-nv').textContent = n;
+
+    const trees = [];
+    if (n === 1) trees.push(buildTree(pts, 0, depth));
+    else for (let i = 0; i < n; i++) trees.push(buildTree(bootstrap(pts, i + 1), 0, depth));
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = '#ccc';
+    for (let xv = -3; xv <= 3; xv++) { ctx.beginPath(); ctx.moveTo(xPx(xv), margin); ctx.lineTo(xPx(xv), H - margin); ctx.stroke(); }
+    for (let yv = -2; yv <= 2; yv++) { ctx.beginPath(); ctx.moveTo(margin, yPx(yv)); ctx.lineTo(W - margin, yPx(yv)); ctx.stroke(); }
+
+    ctx.strokeStyle = '#aaa'; ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    for (let i = 0; i <= 200; i++) {
+      const xv = -3 + 6 * i / 200; const yv = Math.sin(xv) + 0.4 * Math.cos(2 * xv);
+      if (i === 0) ctx.moveTo(xPx(xv), yPx(yv)); else ctx.lineTo(xPx(xv), yPx(yv));
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+
+    ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (let i = 0; i <= 600; i++) {
+      const xv = -3 + 6 * i / 600;
+      const yv = trees.reduce((s, t) => s + predictTree(t, xv), 0) / trees.length;
+      if (i === 0) ctx.moveTo(xPx(xv), yPx(yv)); else ctx.lineTo(xPx(xv), yPx(yv));
+    }
+    ctx.stroke();
+    pts.forEach(p => {
+      ctx.fillStyle = '#3498db'; ctx.strokeStyle = '#000';
+      ctx.beginPath(); ctx.arc(xPx(p.x), yPx(p.y), 4, 0, 7); ctx.fill(); ctx.stroke();
+    });
+  }
+  gen();
+  ['tree-depth', 'tree-n'].forEach(id => document.getElementById(id).addEventListener('input', draw));
+  document.getElementById('tree-regen').addEventListener('click', () => { gen(); draw(); });
+  draw();
+})();
+
+// ============================================================
+// TAB 7: SVR
+// ============================================================
+(function() {
+  const cv = document.getElementById('svr-canvas');
+  const ctx = cv.getContext('2d');
+  const W = 700, H = 500;
+  let pts = [];
+  function gen() {
+    const r = rng(11); pts = [];
+    for (let i = 0; i < 50; i++) {
+      const x = -3 + 6 * r();
+      pts.push({x, y: 1.2 * x + 0.3 + 0.7 * randn(r)});
+    }
+  }
+  const margin = 40, plotW = W - 2 * margin, plotH = H - 2 * margin;
+  const xPx = x => margin + (x + 3) / 6 * plotW;
+  const yPx = y => H - margin - (y + 5) / 10 * plotH;
+
+  function fitSVR(eps, C) {
+    let w = 0, b = 0; const eta = 0.005;
+    for (let it = 0; it < 1500; it++) {
+      let gW = w, gB = 0;
+      pts.forEach(p => {
+        const r = (w * p.x + b) - p.y;
+        if (Math.abs(r) > eps) { gW += C * Math.sign(r) * p.x; gB += C * Math.sign(r); }
+      });
+      w -= eta * gW; b -= eta * gB;
+    }
+    return {w, b};
+  }
+
+  function draw() {
+    const eps = parseFloat(document.getElementById('svr-eps').value);
+    const Clog = parseFloat(document.getElementById('svr-c').value);
+    const C = Math.pow(10, Clog);
+    document.getElementById('svr-epsv').textContent = eps.toFixed(2);
+    document.getElementById('svr-cv').textContent = C.toFixed(2);
+
+    const m = fitSVR(eps, C);
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = '#ccc';
+    for (let xv = -3; xv <= 3; xv++) { ctx.beginPath(); ctx.moveTo(xPx(xv), margin); ctx.lineTo(xPx(xv), H - margin); ctx.stroke(); }
+    for (let yv = -4; yv <= 4; yv++) { ctx.beginPath(); ctx.moveTo(margin, yPx(yv)); ctx.lineTo(W - margin, yPx(yv)); ctx.stroke(); }
+
+    // tubo
+    ctx.fillStyle = '#fadbd866';
+    ctx.beginPath();
+    ctx.moveTo(xPx(-3), yPx(m.w * (-3) + m.b - eps));
+    ctx.lineTo(xPx(3), yPx(m.w * (3) + m.b - eps));
+    ctx.lineTo(xPx(3), yPx(m.w * (3) + m.b + eps));
+    ctx.lineTo(xPx(-3), yPx(m.w * (-3) + m.b + eps));
+    ctx.closePath(); ctx.fill();
+
+    // recta y bordes
+    ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(xPx(-3), yPx(m.w * (-3) + m.b)); ctx.lineTo(xPx(3), yPx(m.w * (3) + m.b));
+    ctx.stroke();
+    ctx.strokeStyle = '#e74c3c'; ctx.setLineDash([4, 3]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(xPx(-3), yPx(m.w * (-3) + m.b - eps)); ctx.lineTo(xPx(3), yPx(m.w * (3) + m.b - eps)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(xPx(-3), yPx(m.w * (-3) + m.b + eps)); ctx.lineTo(xPx(3), yPx(m.w * (3) + m.b + eps)); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // puntos: support vectors en color distinto
+    let nSV = 0;
+    pts.forEach(p => {
+      const r = (m.w * p.x + m.b) - p.y;
+      const isSV = Math.abs(r) > eps - 0.02;
+      if (isSV) nSV++;
+      ctx.fillStyle = isSV ? '#27ae60' : '#3498db';
+      ctx.strokeStyle = '#000';
+      ctx.beginPath(); ctx.arc(xPx(p.x), yPx(p.y), 4.5, 0, 7); ctx.fill(); ctx.stroke();
+    });
+
+    document.getElementById('svr-sv').textContent = nSV;
+    document.getElementById('svr-w').textContent = m.w.toFixed(3);
+    document.getElementById('svr-b').textContent = m.b.toFixed(3);
+  }
+  gen();
+  ['svr-eps', 'svr-c'].forEach(id => document.getElementById(id).addEventListener('input', draw));
+  document.getElementById('svr-regen').addEventListener('click', () => { gen(); draw(); });
+  draw();
+})();
+</script>
+</body>
+</html>
