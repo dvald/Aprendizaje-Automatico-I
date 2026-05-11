@@ -556,8 +556,12 @@ function solveLin(A, b) {
   const ctx = cv.getContext('2d');
   const W = 700, H = 440;
   let X = [], y = [], wTrue = [];
+  let dataSeed = 7;
+  let lipschitz = 1; // (2/n) * lambda_max(X'X), se recalcula en genData()
   function genData() {
-    const r = rng(7);
+    const r = rng(dataSeed);
+    // avanzar la semilla para la próxima regeneración
+    dataSeed = (dataSeed * 1103515245 + 12345) & 0x7fffffff;
     const n = 60, d = 12;
     X = []; y = []; wTrue = Array(d).fill(0);
     [0, 3, 5, 9].forEach(i => { wTrue[i] = (r() < 0.5 ? -1 : 1) * (2 + 1.5 * r()); });
@@ -566,6 +570,21 @@ function solveLin(A, b) {
       X.push(row);
       y.push(row.reduce((s, x, j) => s + x * wTrue[j], 0) + 0.4 * randn(r));
     }
+    // Constante de Lipschitz para FISTA: L = (2/n) * lambda_max(X'X).
+    // Power iteration sobre X'X (matriz d×d).
+    const XtX = transposeMul(X);
+    let pv = Array(d).fill(0).map((_, i) => Math.sin(i + 1));
+    let lam = 0;
+    for (let it = 0; it < 60; it++) {
+      const next = Array(d).fill(0);
+      for (let i = 0; i < d; i++) for (let j = 0; j < d; j++) next[i] += XtX[i][j] * pv[j];
+      let norm = 0; for (let i = 0; i < d; i++) norm += next[i] * next[i];
+      norm = Math.sqrt(norm);
+      if (norm < 1e-12) break;
+      lam = norm;
+      for (let i = 0; i < d; i++) pv[i] = next[i] / norm;
+    }
+    lipschitz = Math.max((2 / n) * lam, 1e-6);
   }
   function fit(mode, alpha) {
     const n = X.length, d = X[0].length;
@@ -576,19 +595,22 @@ function solveLin(A, b) {
       const Xty = transposeMulVec(X, y);
       try { return solveLin(XtX, Xty); } catch (e) { return Array(d).fill(0); }
     } else {
-      // LASSO via ISTA
-      let w = Array(d).fill(0);
-      const eta = 0.005;
-      for (let it = 0; it < 1500; it++) {
+      // LASSO via ISTA. Objetivo: (1/n)||y-Xw||² + alpha·||w||₁.
+      // eta = 0.95/L con L = lipschitz garantiza monotonía (sin oscilaciones).
+      // Para d=12 con 800 iteraciones converge holgadamente al óptimo.
+      const eta = 0.95 / lipschitz;
+      const w = Array(d).fill(0);
+      for (let it = 0; it < 800; it++) {
         const yhat = matMulVec(X, w);
-        const r = yhat.map((v, i) => v - y[i]);
-        const grad = transposeMulVec(X, r).map(g => 2 * g / n);
+        const res = yhat.map((v, i) => v - y[i]);
+        const grad = transposeMulVec(X, res).map(g => 2 * g / n);
+        const lam = eta * alpha;
         for (let i = 0; i < d; i++) {
-          let z = w[i] - eta * grad[i];
-          const lam = eta * alpha;
-          w[i] = Math.sign(z) * Math.max(Math.abs(z) - lam, 0);
+          const zi = w[i] - eta * grad[i];
+          w[i] = Math.sign(zi) * Math.max(Math.abs(zi) - lam, 0);
         }
       }
+      for (let i = 0; i < w.length; i++) if (Math.abs(w[i]) < 1e-6) w[i] = 0;
       return w;
     }
   }
