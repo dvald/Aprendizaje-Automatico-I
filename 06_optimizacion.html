@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Interactiva: Optimización de Algoritmos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .back-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin: 0.5rem 0 0 0;
+            background: #f0f0f0;
+            color: #0f1b2d;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .back-link:hover {
+            background: #e0e0e0;
+            color: #000;
+        }
+
+        .header {
+            background: #0f1b2d;
+            color: white;
+            padding: 2rem 2rem 1.5rem;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .header p {
+            color: #90a4ae;
+            font-size: 0.95rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: #1a2940;
+            padding: 0 2rem;
+            overflow-x: auto;
+            border-bottom: 1px solid #0f1b2d;
+        }
+
+        .tab {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            color: #90a4ae;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 0.95rem;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            color: #fff;
+        }
+
+        .tab.active {
+            color: #fff;
+            border-bottom-color: #2196f3;
+        }
+
+        .content {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 1rem 1.2rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .info-box strong {
+            color: #0f1b2d;
+        }
+
+        .warn-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 1rem 1.2rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .success-box {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 1rem 1.2rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        canvas {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            display: block;
+            margin: 1rem 0;
+            background: white;
+            max-width: 100%;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 1.5rem 0;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #0f1b2d;
+        }
+
+        input[type="range"] {
+            width: 220px;
+            cursor: pointer;
+        }
+
+        select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        button {
+            padding: 0.7rem 1.5rem;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #1976d2;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button.secondary {
+            background: #607d8b;
+        }
+        button.secondary:hover {
+            background: #455a64;
+        }
+        button.green {
+            background: #4caf50;
+        }
+        button.green:hover {
+            background: #388e3c;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+            text-align: center;
+        }
+
+        .stat-box .label {
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-box .value {
+            font-size: 1.5rem;
+            color: #0f1b2d;
+            font-weight: bold;
+        }
+
+        .stat-box.good { background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%); border-left-color: #4caf50; }
+        .stat-box.bad { background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%); border-left-color: #e53935; }
+
+        .description {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        h2 {
+            color: #0f1b2d;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        h3 {
+            color: #1a2940;
+            margin-top: 1.2rem;
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+        }
+
+        .code {
+            background: #0f1b2d;
+            color: #e0e0e0;
+            padding: 1rem 1.2rem;
+            border-radius: 8px;
+            font-family: 'Courier New', Menlo, monospace;
+            font-size: 0.92rem;
+            line-height: 1.55;
+            overflow-x: auto;
+            margin: 1rem 0;
+            white-space: pre;
+        }
+        .code .kw { color: #ff7b72; }
+        .code .fn { color: #d2a8ff; }
+        .code .str { color: #a5d6ff; }
+        .code .num { color: #79c0ff; }
+        .code .cm { color: #8b949e; font-style: italic; }
+        .code .hl { background: rgba(255,235,59,0.18); display: block; }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .panel {
+            background: #fafbfc;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            min-width: 0;
+        }
+        .panel h3 { margin-top: 0; }
+
+        .legend {
+            display: flex;
+            gap: 1.5rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+            font-size: 0.92rem;
+        }
+        .legend-item { display: flex; align-items: center; gap: 0.5rem; }
+        .legend-color { width: 20px; height: 14px; border-radius: 3px; }
+
+        .bar-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin: 0.5rem 0;
+        }
+        .bar-row .bar-label {
+            width: 170px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #0f1b2d;
+            flex-shrink: 0;
+        }
+        .bar-track {
+            flex: 1;
+            background: #f0f0f0;
+            border-radius: 4px;
+            height: 26px;
+            overflow: hidden;
+            min-width: 0;
+        }
+        .bar-fill {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 0.5rem;
+            color: white;
+            font-weight: bold;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            transition: width 0.6s ease;
+            white-space: nowrap;
+        }
+
+        .chip {
+            display: inline-block;
+            background: #e3f2fd;
+            color: #0f1b2d;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            margin: 0.15rem;
+        }
+
+        .search-track {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 0.8rem 0;
+        }
+        .cell {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            background: #eceff1;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #455a64;
+            transition: background 0.15s, transform 0.15s;
+        }
+        .cell.checking { background: #ffe082; transform: scale(1.12); }
+        .cell.checked { background: #cfd8dc; color: #90a4ae; }
+        .cell.found { background: #4caf50; color: white; transform: scale(1.12); }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+            font-size: 0.92rem;
+        }
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 0.55rem 0.7rem;
+            text-align: left;
+        }
+        th { background: #0f1b2d; color: white; }
+        tr:nth-child(even) td { background: #fafbfc; }
+        td code { background: #f0f0f0; padding: 0.1rem 0.35rem; border-radius: 4px; }
+
+        @media (max-width: 768px) {
+            .header { padding: 1.5rem 1rem 1rem; }
+            .header h1 { font-size: 1.4rem; }
+            .tabs { padding: 0 1rem; }
+            .content { padding: 0 1rem; }
+            .two-col { grid-template-columns: 1fr; }
+            input[type="range"] { width: 100%; }
+            .bar-row .bar-label { width: 110px; font-size: 0.78rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Tema 6: Optimización de Algoritmos</h1>
+        <p>Por qué Big O importa, profiling, estructuras de datos, funciones integradas y list comprehensions</p>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('tab1', event)">1. Escalabilidad</div>
+        <div class="tab" onclick="showTab('tab2', event)">2. List vs Set</div>
+        <div class="tab" onclick="showTab('tab3', event)">3. Profiling</div>
+        <div class="tab" onclick="showTab('tab4', event)">4. Built-ins</div>
+        <div class="tab" onclick="showTab('tab5', event)">5. List Comprehensions</div>
+        <div class="tab" onclick="showTab('tab6', event)">6. Optimización real</div>
+    </div>
+
+    <div class="content">
+
+        <!-- ==================== TAB 1: ESCALABILIDAD ==================== -->
+        <div id="tab1" class="section active">
+            <h2>Escalabilidad: por qué Big O importa</h2>
+            <p class="description">
+                La <strong>notación Big O</strong> describe cómo crece el número de operaciones de un algoritmo
+                cuando aumenta el tamaño de la entrada <em>n</em>. Con pocos datos casi todos los algoritmos
+                parecen igual de rápidos; el problema aparece cuando los datos crecen. Mueve el slider y observa
+                cómo unas curvas se mantienen planas y otras se disparan.
+            </p>
+
+            <div class="card">
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Tamaño de la entrada (n): <span id="scN">20</span></label>
+                        <input type="range" id="scSlider" min="10" max="10000" value="20" step="10" oninput="scUpdate()">
+                    </div>
+                    <div class="control-group">
+                        <label>Escala del eje Y:</label>
+                        <select id="scScale" onchange="scUpdate()">
+                            <option value="log" selected>Logarítmica</option>
+                            <option value="linear">Normal (lineal)</option>
+                        </select>
+                    </div>
+                    <button onclick="scUpdate()">Comparar crecimiento</button>
+                </div>
+
+                <div id="scChecks" class="legend"></div>
+                <canvas id="scCanvas" width="940" height="440"></canvas>
+                <p id="scNote" style="font-size:0.85rem;color:#777;margin:-0.3rem 0 0.6rem;font-style:italic"></p>
+                <div id="scTable"></div>
+            </div>
+
+            <div class="info-box">
+                Lo importante no es cuánto tarda un algoritmo <em>hoy</em>, con
+                los datos de prueba, sino <strong>cómo crece</strong> al aumentar los datos. Un algoritmo O(n²)
+                puede ir bien con 100 elementos y volverse inutilizable con 100.000. O(2ⁿ) y O(n!) son
+                inviables salvo para entradas diminutas.
+            </div>
+        </div>
+
+        <!-- ==================== TAB 2: LIST VS SET ==================== -->
+        <div id="tab2" class="section active" style="display:none">
+            <h2>Buscar en <code>list</code> vs buscar en <code>set</code></h2>
+            <p class="description">
+                Elegir bien la <strong>estructura de datos</strong> suele importar mucho más que micro-optimizar
+                líneas sueltas. Una <strong>lista</strong> guarda los elementos en orden y para saber si un valor
+                está dentro debe recorrerlos uno a uno: búsqueda secuencial <strong>O(n)</strong>. Un
+                <strong>conjunto</strong> (<code>set</code>) usa una tabla hash: calcula directamente dónde
+                debería estar el elemento, así que el acceso es <strong>O(1)</strong> en promedio.
+            </p>
+
+            <div class="card">
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Tamaño de la colección:</label>
+                        <select id="lsSize" onchange="lsReset()">
+                            <option value="10">10</option>
+                            <option value="100" selected>100</option>
+                            <option value="1000">1.000</option>
+                            <option value="100000">100.000</option>
+                            <option value="1000000">1.000.000</option>
+                        </select>
+                    </div>
+                    <button onclick="lsSearch(true)">Buscar elemento existente</button>
+                    <button onclick="lsSearch(false)">Buscar elemento inexistente</button>
+                    <button class="secondary" onclick="lsRepeat()">Repetir búsqueda 10.000 veces</button>
+                </div>
+
+                <div class="two-col">
+                    <div class="panel">
+                        <h3>🔢 Lista — búsqueda secuencial</h3>
+                        <div class="code">objetivo <span class="kw">in</span> lista   <span class="cm"># O(n)</span></div>
+                        <div id="lsListCells" class="search-track"></div>
+                        <p id="lsListMsg" style="font-size:0.88rem;color:#555;min-height:1.2em"></p>
+                    </div>
+                    <div class="panel">
+                        <h3>⚡ Set — acceso por hash</h3>
+                        <div class="code">objetivo <span class="kw">in</span> conjunto  <span class="cm"># O(1) promedio</span></div>
+                        <div id="lsSetCells" class="search-track"></div>
+                        <p id="lsSetMsg" style="font-size:0.88rem;color:#555;min-height:1.2em"></p>
+                    </div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-box bad">
+                        <div class="label">Tiempo lista (estimado)</div>
+                        <div class="value" id="lsTimeList">—</div>
+                    </div>
+                    <div class="stat-box good">
+                        <div class="label">Tiempo set (estimado)</div>
+                        <div class="value" id="lsTimeSet">—</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Set más rápido</div>
+                        <div class="value" id="lsSpeedup">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                Si vas a comprobar muchas veces si un elemento pertenece a una
+                colección, usa un <code>set</code> (o las claves de un <code>dict</code>), no una lista. La
+                diferencia no es de un 10 %: con un millón de elementos el set puede ser cientos de miles de
+                veces más rápido. La estructura de datos correcta vale más que mil micro-optimizaciones.
+            </div>
+        </div>
+
+        <!-- ==================== TAB 3: PROFILING ==================== -->
+        <div id="tab3" class="section active" style="display:none">
+            <h2>Profiling: medir antes de tocar</h2>
+            <p class="description">
+                <strong>Optimizar sin medir es perder el tiempo.</strong> Nuestra intuición sobre qué parte del
+                código es lenta suele estar equivocada. El <em>profiling</em> mide el tiempo real consumido por
+                cada parte del programa y nos dice exactamente dónde está el <strong>cuello de botella</strong>.
+            </p>
+
+            <div class="card">
+                <div class="two-col">
+                    <div class="panel">
+                        <h3>Función a analizar</h3>
+                        <div class="code" id="prCode"><span class="kw">def</span> <span class="fn">proceso</span>(datos):
+    <span class="fn">limpiar</span>(datos)
+    <span class="fn">transformar</span>(datos)
+    <span class="fn">buscar_duplicados</span>(datos)
+    <span class="fn">generar_resultado</span>(datos)</div>
+                        <p style="font-size:0.88rem;color:#555">
+                            Cuatro bloques. A simple vista, <code>transformar</code> parece el más "pesado"…
+                            pero no podemos saberlo sin medir.
+                        </p>
+                    </div>
+                    <div class="panel">
+                        <h3>Consumo de tiempo por bloque</h3>
+                        <div id="prBars"></div>
+                        <p id="prTotal" style="font-size:0.88rem;color:#555;margin-top:0.6rem"></p>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button onclick="prRun(false)">Ejecutar sin profiling</button>
+                    <button onclick="prRun(true)">Ejecutar con profiling</button>
+                    <button class="secondary" onclick="prSort()">Ordenar por tiempo total</button>
+                    <button class="green" onclick="prBottleneck()">Ver cuello de botella</button>
+                </div>
+                <p id="prMsg" style="min-height:1.4em;font-weight:600;color:#0f1b2d"></p>
+            </div>
+
+            <div class="info-box">
+                <strong>Comandos mágicos de IPython / Jupyter para medir:</strong><br><br>
+                Disponibles de serie en IPython:<br>
+                <span class="chip">%time</span> tiempo de una sola ejecución &nbsp;
+                <span class="chip">%timeit</span> promedio de muchas ejecuciones &nbsp;
+                <span class="chip">%prun</span> profiling por función<br><br>
+                Requieren extensiones instaladas (<code>line_profiler</code>, <code>memory_profiler</code>):<br>
+                <span class="chip">%lprun</span> profiling línea a línea &nbsp;
+                <span class="chip">%memit</span> pico de memoria &nbsp;
+                <span class="chip">%mprun</span> memoria línea a línea
+            </div>
+
+            <div class="warn-box">
+                Se optimiza el código que <em>realmente</em> consume tiempo, no
+                el que "parece feo" o el que más nos cuesta leer. Aquí el bloque lento es
+                <code>buscar_duplicados</code> (68 %), aunque a primera vista nadie lo habría señalado.
+            </div>
+        </div>
+
+        <!-- ==================== TAB 4: BUILT-INS ==================== -->
+        <div id="tab4" class="section active" style="display:none">
+            <h2>Funciones integradas: menos código, mejor rendimiento</h2>
+            <p class="description">
+                Python incluye <strong>funciones integradas</strong> (<em>built-ins</em>) para las operaciones más
+                comunes: <code>sum</code>, <code>max</code>, <code>min</code>, <code>all</code>, <code>any</code>,
+                <code>map</code>, <code>sorted</code>… Están implementadas internamente en <strong>C</strong>, así
+                que son más rápidas que un bucle <code>for</code> equivalente escrito en Python, y además dejan el
+                código más corto y legible.
+            </p>
+
+            <div class="card">
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Ejemplo:</label>
+                        <select id="biSelect" onchange="biRender()">
+                            <option value="sum">sum() — sumar elementos</option>
+                            <option value="max">max() — valor máximo</option>
+                            <option value="min">min() — valor mínimo</option>
+                            <option value="all">all() — ¿todos cumplen?</option>
+                            <option value="any">any() — ¿alguno cumple?</option>
+                            <option value="map">map() — transformar a mayúsculas</option>
+                            <option value="sorted">sorted() — ordenar</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="two-col">
+                    <div class="panel">
+                        <h3>❌ Versión manual (bucle <code>for</code>)</h3>
+                        <div class="code" id="biManual"></div>
+                    </div>
+                    <div class="panel">
+                        <h3>✅ Con función integrada</h3>
+                        <div class="code" id="biBuiltin"></div>
+                    </div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="label">Complejidad</div>
+                        <div class="value" id="biComplexity" style="font-size:1.2rem">—</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Legibilidad</div>
+                        <div class="value" id="biReadability" style="font-size:1.2rem">—</div>
+                    </div>
+                    <div class="stat-box good">
+                        <div class="label">Aceleración (orientativa)</div>
+                        <div class="value" id="biSpeed">—</div>
+                    </div>
+                </div>
+                <p style="font-size:0.85rem;color:#777;margin-top:0.6rem">
+                    Las cifras de velocidad son <strong>orientativas</strong>: el factor real
+                    depende del entorno (versión de Python, hardware) y del tamaño de los datos.
+                    Lo que no cambia es la tendencia: la built-in suele ganar.
+                </p>
+            </div>
+
+            <div class="card">
+                <h3>Caso concreto: pasar una lista de palabras a mayúsculas</h3>
+                <p class="description">Tres formas de hacer lo mismo. La built-in y la list comprehension ganan.</p>
+                <table>
+                    <tr><th>Forma</th><th>Código</th><th>Velocidad relativa</th><th>Legibilidad</th></tr>
+                    <tr>
+                        <td>Bucle <code>for</code></td>
+                        <td><code>for p in palabras: r.append(p.upper())</code></td>
+                        <td>1,0× (referencia)</td>
+                        <td>Media</td>
+                    </tr>
+                    <tr>
+                        <td><code>map()</code></td>
+                        <td><code>list(map(str.upper, palabras))</code></td>
+                        <td>≈ 1,6× más rápida</td>
+                        <td>Alta</td>
+                    </tr>
+                    <tr>
+                        <td>List comprehension</td>
+                        <td><code>[p.upper() for p in palabras]</code></td>
+                        <td>≈ 1,5× más rápida</td>
+                        <td>Muy alta</td>
+                    </tr>
+                </table>
+                <p style="font-size:0.85rem;color:#777;margin-top:0.6rem">
+                    Velocidades relativas <strong>orientativas</strong>, medidas sobre listas grandes;
+                    varían según el entorno y el tamaño de los datos.
+                </p>
+            </div>
+
+            <div class="info-box">
+                Las funciones integradas están implementadas en C; por eso son
+                rápidas. Antes de escribir un bucle, pregúntate si ya existe una built-in que haga ese trabajo:
+                el resultado será más corto, más legible y casi siempre más eficiente.
+            </div>
+        </div>
+
+        <!-- ==================== TAB 5: LIST COMPREHENSIONS ==================== -->
+        <div id="tab5" class="section active" style="display:none">
+            <h2>List comprehensions: transformar y filtrar</h2>
+            <p class="description">
+                Una <strong>list comprehension</strong> combina en una sola línea tres pasos: <strong>recorrer</strong>
+                una secuencia, <strong>filtrar</strong> con una condición y <strong>transformar</strong> cada
+                elemento. Es más conciso que un bucle <code>for</code> con <code>append</code> y suele ser algo más
+                rápido. Aquí lo vemos descompuesto pieza a pieza.
+            </p>
+
+            <div class="card">
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Tamaño del rango (1 … <span id="lcN">100</span>):</label>
+                        <input type="range" id="lcSlider" min="10" max="200" value="100" step="10" oninput="lcRender()">
+                    </div>
+                    <div class="control-group">
+                        <label>Filtro (<code>if</code>):</label>
+                        <select id="lcFilter" onchange="lcRender()">
+                            <option value="par">i es par</option>
+                            <option value="impar">i es impar</option>
+                            <option value="mult3">i múltiplo de 3</option>
+                            <option value="gt50">i mayor que 50</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Transformación:</label>
+                        <select id="lcTransform" onchange="lcRender()">
+                            <option value="id">identidad (i)</option>
+                            <option value="sq" selected>cuadrado (i ** 2)</option>
+                            <option value="cube">cubo (i ** 3)</option>
+                            <option value="text">texto ("n" + str(i))</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h3>Pipeline: Entrada → Filtro → Transformación → Salida</h3>
+                <div class="legend">
+                    <div class="legend-item"><span class="legend-color" style="background:#90caf9"></span>Recorre todos</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#ffcc80"></span>Pasa el filtro</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#a5d6a7"></span>Transformado → salida</div>
+                </div>
+                <canvas id="lcCanvas" width="940" height="230"></canvas>
+
+                <div class="controls">
+                    <button onclick="lcShowAppend()">Mostrar versión con append</button>
+                    <button class="green" onclick="lcShowComp()">Convertir a list comprehension</button>
+                </div>
+
+                <div class="code" id="lcCode"></div>
+
+                <h3>Lista de salida</h3>
+                <div id="lcOutput" style="font-family:'Courier New',monospace;font-size:0.9rem;background:#f5f5f5;padding:0.8rem;border-radius:6px;word-break:break-word"></div>
+                <p id="lcCount" style="font-size:0.88rem;color:#555;margin-top:0.5rem"></p>
+            </div>
+
+            <div class="card">
+                <h3>La misma sintaxis: set, dict y generadores</h3>
+                <p class="description">
+                    Los corchetes <code>[ ]</code> crean una lista. Cambiando el delimitador, la misma
+                    idea —recorrer, filtrar, transformar— construye otras estructuras.
+                </p>
+                <div class="two-col">
+                    <div class="panel">
+                        <h3>Set comprehension</h3>
+                        <div class="code"><span class="cm"># conjunto: sin duplicados</span>
+{x % <span class="num">10</span> <span class="kw">for</span> x <span class="kw">in</span> numeros}</div>
+                        <p style="font-size:0.9rem;color:#555;margin-top:0.5rem">
+                            Con llaves <code>{ }</code> se obtiene un <strong>set</strong>: elimina los
+                            valores repetidos automáticamente.
+                        </p>
+                    </div>
+                    <div class="panel">
+                        <h3>Dict comprehension</h3>
+                        <div class="code"><span class="cm"># diccionario clave: valor</span>
+{k: k ** <span class="num">2</span> <span class="kw">for</span> k <span class="kw">in</span> numeros}</div>
+                        <p style="font-size:0.9rem;color:#555;margin-top:0.5rem">
+                            Con llaves y pares <code>clave: valor</code> se construye un <strong>dict</strong>.
+                        </p>
+                    </div>
+                </div>
+                <div class="panel" style="margin-top:1rem">
+                    <h3>Expresión generadora — optimización de memoria</h3>
+                    <div class="code"><span class="cm"># paréntesis: NO construye la lista en memoria</span>
+total = <span class="fn">sum</span>(i ** <span class="num">2</span> <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1_000_000</span>))</div>
+                    <p style="font-size:0.9rem;color:#555;margin-top:0.5rem">
+                        Con paréntesis <code>( )</code> se obtiene un <strong>generador</strong>: produce los
+                        valores de uno en uno, sin almacenarlos todos. Una list comprehension crearía en
+                        memoria un millón de elementos; el generador apenas ocupa espacio. Es el
+                        compromiso <strong>tiempo–espacio</strong> aplicado: si solo vas a recorrer los
+                        valores una vez, usa un generador.
+                    </p>
+                </div>
+            </div>
+
+            <div class="info-box">
+                La list comprehension no es solo "código más corto": al
+                escribirla, el patrón <em>recorrer + filtrar + transformar</em> queda explícito y se lee de un
+                vistazo. Es la forma idiomática en Python de construir listas derivadas de otra secuencia.
+            </div>
+        </div>
+
+        <!-- ==================== TAB 6: OPTIMIZACIÓN REAL ==================== -->
+        <div id="tab6" class="section active" style="display:none">
+            <h2>Optimización real: de O(n²) a una solución razonada</h2>
+            <p class="description">
+                Una demostración completa del proceso: partimos de una <strong>solución ingenua</strong>, la
+                <strong>medimos</strong>, identificamos el <strong>problema</strong> y la <strong>mejoramos</strong>
+                con razonamiento matemático. <br><br>
+                <strong>El problema:</strong> contar cuántos productos <code>i * j</code> de dos números de cuatro
+                cifras (de 1000 a 9999) son múltiplos de 11.
+            </p>
+
+            <div class="card">
+                <h3>Versión ingenua: doble bucle anidado</h3>
+                <div class="code"><span class="kw">contador</span> = <span class="num">0</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1000</span>, <span class="num">10000</span>):
+    <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1000</span>, <span class="num">10000</span>):
+        <span class="kw">if</span> (i * j) % <span class="num">11</span> == <span class="num">0</span>:
+            contador += <span class="num">1</span></div>
+
+                <h3>Espacio de búsqueda: 9000 × 9000 combinaciones</h3>
+                <p class="description">Cada celda de esta cuadrícula representa un par (i, j). El grid completo
+                tiene <strong>81.000.000</strong> de celdas; aquí se dibuja una versión simplificada.</p>
+                <canvas id="opCanvas" width="940" height="320"></canvas>
+
+                <div class="controls">
+                    <button onclick="opRunNaive()">Ejecutar solución ingenua</button>
+                    <button class="secondary" onclick="opShowCombos()">Mostrar número de combinaciones</button>
+                    <button class="secondary" onclick="opDetectPattern()">Detectar patrón matemático</button>
+                    <button class="green" onclick="opOptimize()">Aplicar optimización</button>
+                    <button onclick="opCompare()">Comparar antes/después</button>
+                </div>
+
+                <!-- Área de resultados prominente: cada botón pinta aquí paneles
+                     visuales con cifras grandes y colores -->
+                <div id="opResult" style="margin-top:1rem">
+                    <div class="info-box" style="background:#eceff1;border-left-color:#90a4ae">
+                        Pulsa un botón para ver el resultado: cada paso de la optimización
+                        aparecerá aquí en paneles con sus cifras.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="opOptCard" style="display:none">
+                <h3>El patrón matemático</h3>
+                <div class="success-box">
+                    <code>i * j</code> es múltiplo de 11 si y solo si <strong>i es múltiplo de 11</strong> O
+                    <strong>j es múltiplo de 11</strong> (porque 11 es primo). Entonces no hace falta recorrer los
+                    81 millones de pares: basta <strong>contar</strong> y aplicar combinatoria.
+                </div>
+                <div class="code"><span class="cm"># Números de 4 cifras: 1000 … 9999  →  9000 valores</span>
+<span class="cm"># Múltiplos de 11 de 4 cifras: 1001 … 9999  →  819 valores</span>
+mult   = <span class="num">819</span>
+no_mult = <span class="num">9000</span> - <span class="num">819</span>   <span class="cm"># = 8181</span>
+
+<span class="cm"># Inclusión-exclusión: pares válidos = total - (ningún factor mult. de 11)</span>
+validos = <span class="num">9000</span>**<span class="num">2</span> - no_mult**<span class="num">2</span>
+<span class="cm"># = 81.000.000 - 8181**2 = 81.000.000 - 66.928.761 = 14.071.239</span></div>
+                <div class="stats">
+                    <div class="stat-box bad">
+                        <div class="label">Antes (ingenua)</div>
+                        <div class="value" style="font-size:1.15rem">81.000.000<br>comprobaciones</div>
+                    </div>
+                    <div class="stat-box good">
+                        <div class="label">Después (optimizada)</div>
+                        <div class="value" style="font-size:1.15rem">contar + fórmula<br>instantáneo</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Resultado (idéntico)</div>
+                        <div class="value">14.071.239</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                Esta demo reúne todo el tema. Big O nos avisa de que un doble
+                bucle es O(n²); el profiling confirmaría dónde se va el tiempo; entender la
+                <strong>estructura del problema</strong> (la propiedad de los números primos) permite sustituir
+                81 millones de operaciones por una fórmula. La mejor optimización casi nunca es escribir el mismo
+                algoritmo más rápido: es <strong>cambiar de algoritmo</strong>.
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==================== Utilidades generales ====================
+        function showTab(id, event) {
+            document.querySelectorAll('.section').forEach(s => {
+                s.classList.remove('active');
+                s.style.display = 'none';
+            });
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            const target = document.getElementById(id);
+            target.classList.add('active');
+            target.style.display = 'block';
+            event.target.classList.add('active');
+        }
+        function fmt(n) {
+            return n.toLocaleString('es-ES');
+        }
+
+        // ==================== TAB 1: ESCALABILIDAD ====================
+        // ln(Γ(x)) — aproximación de Lanczos, para dibujar el factorial como
+        // curva continua (evita el aspecto "escalonado" de un factorial entero).
+        function scLogGamma(x) {
+            const c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028,
+                       771.32342877765313, -176.61502916214059, 12.507343278686905,
+                       -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+            let a = c[0];
+            const t = x + 6.5;
+            for (let i = 1; i < 9; i++) a += c[i] / (x - 1 + i);
+            return 0.5 * Math.log(2 * Math.PI) + (x - 0.5) * Math.log(t) - t + Math.log(a);
+        }
+        function scFactorial(n) {   // n! continuo = Γ(n+1)
+            return Math.exp(scLogGamma(n + 1));
+        }
+        const SC_CURVES = [
+            { id: 'o1',    name: 'O(1)',       color: '#4caf50', f: n => 1,                 on: true },
+            { id: 'olog',  name: 'O(log n)',   color: '#26c6da', f: n => Math.log2(n),      on: true },
+            { id: 'on',    name: 'O(n)',       color: '#2196f3', f: n => n,                 on: true },
+            { id: 'onlog', name: 'O(n log n)', color: '#7e57c2', f: n => n * Math.log2(n),  on: true },
+            { id: 'on2',   name: 'O(n²)',      color: '#ff9800', f: n => n * n,             on: true },
+            { id: 'o2n',   name: 'O(2ⁿ)',      color: '#ef5350', f: n => Math.pow(2, n),    on: true },
+            { id: 'onf',   name: 'O(n!)',      color: '#8d6e63', f: n => scFactorial(n), on: true }
+        ];
+
+        function scBuildChecks() {
+            const box = document.getElementById('scChecks');
+            box.innerHTML = '';
+            SC_CURVES.forEach(c => {
+                const item = document.createElement('label');
+                item.className = 'legend-item';
+                item.style.cursor = 'pointer';
+                item.innerHTML = '<input type="checkbox" ' + (c.on ? 'checked' : '') +
+                    ' data-id="' + c.id + '"> <span class="legend-color" style="background:' +
+                    c.color + '"></span> ' + c.name;
+                item.querySelector('input').addEventListener('change', e => {
+                    c.on = e.target.checked;
+                    scUpdate();
+                });
+                box.appendChild(item);
+            });
+        }
+
+        function scUpdate() {
+            const n = parseInt(document.getElementById('scSlider').value);
+            document.getElementById('scN').textContent = fmt(n);
+            const logScale = document.getElementById('scScale').value === 'log';
+            const cv = document.getElementById('scCanvas');
+            const ctx = cv.getContext('2d');
+            const W = cv.width, H = cv.height;
+            const padL = 70, padR = 20, padT = 20, padB = 50;
+            ctx.clearRect(0, 0, W, H);
+
+            const active = SC_CURVES.filter(c => c.on);
+            // Curvas "moderadas" (orden de crecimiento decreciente): O(1), O(log n),
+            // O(n), O(n log n), O(n²). SOLO estas fijan el rango del eje Y.
+            // Las "explosivas" O(2ⁿ) y O(n!) NUNCA entran en el rango: se dibujan
+            // recortadas y se salen por el borde superior del área de dibujo.
+            const MODERATE = ['on2', 'onlog', 'on', 'olog', 'o1'];
+
+            // El rango del eje Y se calcula SOLO con las curvas moderadas
+            // activadas. modMax = 1.2 × (valor máx. en n de esas curvas).
+            let modMax = 1;
+            MODERATE.forEach(id => {
+                const c = SC_CURVES.find(x => x.id === id);
+                if (c && c.on) {
+                    let v = c.f(n);
+                    if (isFinite(v) && v > modMax) modMax = v;
+                }
+            });
+            modMax = modMax * 1.2;
+
+            const x2px = i => padL + (i / n) * (W - padL - padR);
+            const yToPx = v => {
+                if (logScale) {
+                    // escala log: el techo es log10(modMax). Las curvas
+                    // explosivas superan modMax y se recortan por arriba.
+                    const lv = Math.log10(Math.max(v, 1));
+                    const lmax = Math.log10(Math.max(modMax, 10));
+                    let py = H - padB - (lv / lmax) * (H - padT - padB);
+                    return py;
+                }
+                // lineal: el eje se capa a modMax; los valores mayores se
+                // recortan en el borde superior del área de dibujo.
+                const ratio = Math.min(v, modMax) / modMax;
+                return H - padB - ratio * (H - padT - padB);
+            };
+
+            // ejes
+            ctx.strokeStyle = '#bbb';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padL, padT); ctx.lineTo(padL, H - padB); ctx.lineTo(W - padR, H - padB);
+            ctx.stroke();
+            ctx.fillStyle = '#666';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('tamaño de la entrada  n  →', (W) / 2, H - 14);
+            ctx.save();
+            ctx.translate(16, H / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('número de operaciones' + (logScale ? '  (escala log)' : ''), 0, 0);
+            ctx.restore();
+
+            // marcas eje X
+            ctx.textAlign = 'center';
+            for (let k = 0; k <= 5; k++) {
+                const xv = Math.round((k / 5) * n);
+                const px = x2px(xv);
+                ctx.strokeStyle = '#eee';
+                ctx.beginPath(); ctx.moveTo(px, padT); ctx.lineTo(px, H - padB); ctx.stroke();
+                ctx.fillStyle = '#888';
+                ctx.fillText(fmt(xv), px, H - padB + 16);
+            }
+
+            // recortar el dibujo al área del gráfico para que las curvas que
+            // se disparan se "salgan por el techo" sin invadir el resto
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(padL, padT, W - padL - padR, H - padT - padB);
+            ctx.clip();
+
+            // curvas
+            const yTop = padT;       // borde superior del área de dibujo
+            // techo común: ningún valor por encima de modMax se grafica dentro
+            const ceiling = modMax;
+            // contador para escalonar etiquetas de curvas que se salen arriba
+            let escapedLabels = 0;
+            // posiciones ya ocupadas por etiquetas de curvas que sí caben,
+            // para que no se pisen cuando varias curvas terminan muy juntas
+            const placedLabels = [];
+            active.forEach(c => {
+                ctx.strokeStyle = c.color;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                let started = false;
+                const steps = 240;
+                let crossX = null;   // x donde la curva cruza el techo
+                let prevAbove = false;
+                for (let s = 0; s <= steps; s++) {
+                    const i = Math.max(1, (s / steps) * n);
+                    let v = c.f(i);
+                    if (!isFinite(v)) v = Number.MAX_VALUE;
+                    const px = x2px(i);
+                    const py = yToPx(v);
+                    // detectar el primer cruce del techo (vale para lineal y log)
+                    const above = v > ceiling;
+                    if (above && !prevAbove && crossX === null) crossX = px;
+                    prevAbove = above;
+                    if (!started) { ctx.moveTo(px, py); started = true; }
+                    else ctx.lineTo(px, py);
+                    // dejar de dibujar una vez la curva se ha salido por el techo:
+                    // el clip ya la recorta, pero así no añadimos segmentos inútiles
+                    if (above && crossX !== null && px > crossX + 4) break;
+                }
+                ctx.stroke();
+                // etiqueta de la curva
+                ctx.fillStyle = c.color;
+                ctx.font = 'bold 12px sans-serif';
+                let vEnd = c.f(n);
+                if (!isFinite(vEnd)) vEnd = Number.MAX_VALUE;
+                if (crossX !== null) {
+                    // se sale por arriba: etiqueta cerca del punto de cruce del techo
+                    ctx.textAlign = 'left';
+                    let lx = Math.min(crossX + 6, W - padR - 130);
+                    // escalonar verticalmente para no solapar O(2ⁿ) y O(n!)
+                    const ly = yTop + 14 + escapedLabels * 16;
+                    escapedLabels++;
+                    ctx.fillText(c.name + ' ↑ se dispara', lx, ly);
+                } else {
+                    // cabe en el gráfico: etiqueta al final de la curva.
+                    // Se alinea a la derecha con un margen interior para que
+                    // no la recorte el borde derecho del área de dibujo, y se
+                    // separa verticalmente del trazo para no solaparlo.
+                    const lyEnd = yToPx(vEnd);
+                    ctx.textAlign = 'right';
+                    const fh = 12;                 // alto aprox. de la fuente
+                    const sep = 8;                 // separación vertical del trazo
+                    const topLimit = padT + fh;    // baseline mínima legible
+                    const botLimit = H - padB - 4; // baseline máxima legible
+                    let ly;
+                    if (lyEnd <= topLimit + sep) {
+                        // la curva termina pegada al borde superior: la
+                        // etiqueta va JUSTO DEBAJO del punto final.
+                        ly = lyEnd + sep + fh;
+                    } else {
+                        // caso normal: la etiqueta va por encima del trazo.
+                        ly = lyEnd - sep;
+                    }
+                    ly = Math.max(topLimit, Math.min(botLimit, ly));
+                    // si esta etiqueta cae sobre otra ya colocada (típico en
+                    // escala lineal, donde O(n), O(log n) y O(1) casi coinciden)
+                    // se desplaza hacia arriba hasta dejar de solaparse
+                    let guard = 0;
+                    while (placedLabels.some(p => Math.abs(p - ly) < fh + 2) && guard < 12) {
+                        ly -= fh + 2;
+                        guard++;
+                    }
+                    ly = Math.max(topLimit, Math.min(botLimit, ly));
+                    placedLabels.push(ly);
+                    // margen interior frente al borde derecho del área
+                    ctx.fillText(c.name, W - padR - 6, ly);
+                }
+            });
+            ctx.restore();
+
+            // nota informativa bajo la gráfica (depende de escala + n)
+            const note = document.getElementById('scNote');
+            const bigN = n >= 500;
+            if (logScale) {
+                note.textContent = 'Escala logarítmica: se ven las cinco curvas moderadas (O(1), O(log n), O(n), O(n log n), O(n²)) separadas a cualquier valor de n; O(2ⁿ) y O(n!) se salen por arriba porque crecen demasiado para cualquier escala.';
+            } else if (bigN) {
+                note.textContent = 'En escala lineal y con n grande las curvas rápidas (O(n), O(log n), O(1)…) se ven planas pegadas al eje: es normal — cambia a la escala logarítmica para distinguirlas todas.';
+            } else {
+                note.textContent = 'Escala lineal: el eje Y se ajusta a las curvas moderadas. Las que se disparan (O(2ⁿ), O(n!)) se salen por arriba; usa la escala logarítmica para verlas todas.';
+            }
+
+            scBuildTable(n);
+        }
+
+        function scBuildTable(n) {
+            const opf = v => {
+                if (!isFinite(v) || v > 1e15) return '≈ ∞ (inviable)';
+                if (v < 1000) return fmt(Math.round(v));
+                return v.toExponential(2).replace('e+', ' × 10^');
+            };
+            let html = '<table><tr><th>Complejidad</th><th>Operaciones con n = ' +
+                fmt(n) + '</th><th>Veredicto</th></tr>';
+            SC_CURVES.forEach(c => {
+                let v = c.f(n);
+                let verdict, vc;
+                if (!isFinite(v) || v > 1e9) { verdict = 'Inviable'; vc = '#e53935'; }
+                else if (v > 1e6) { verdict = 'Lento'; vc = '#fb8c00'; }
+                else { verdict = 'Rápido'; vc = '#43a047'; }
+                html += '<tr><td><strong style="color:' + c.color + '">' + c.name +
+                    '</strong></td><td><code>' + opf(v) + '</code></td><td style="color:' +
+                    vc + ';font-weight:600">' + verdict + '</td></tr>';
+            });
+            html += '</table>';
+            document.getElementById('scTable').innerHTML = html;
+        }
+
+        // ==================== TAB 2: LIST VS SET ====================
+        function lsRenderCells() {
+            const listBox = document.getElementById('lsListCells');
+            const setBox = document.getElementById('lsSetCells');
+            const vals = [3, 8, 1, 9, 4, 7, 2, 6, 5, 0];
+            listBox.innerHTML = '';
+            setBox.innerHTML = '';
+            vals.forEach((v, idx) => {
+                const c1 = document.createElement('div');
+                c1.className = 'cell';
+                c1.textContent = v;
+                c1.dataset.idx = idx;
+                listBox.appendChild(c1);
+            });
+            vals.forEach((v) => {
+                const c2 = document.createElement('div');
+                c2.className = 'cell';
+                c2.textContent = v;
+                c2.dataset.val = v;
+                setBox.appendChild(c2);
+            });
+        }
+
+        function lsReset() {
+            lsRenderCells();
+            document.getElementById('lsListMsg').textContent = '';
+            document.getElementById('lsSetMsg').textContent = '';
+            document.getElementById('lsTimeList').textContent = '—';
+            document.getElementById('lsTimeSet').textContent = '—';
+            document.getElementById('lsSpeedup').textContent = '—';
+        }
+
+        function lsClearStates() {
+            document.querySelectorAll('#lsListCells .cell, #lsSetCells .cell').forEach(c => {
+                c.className = 'cell';
+            });
+        }
+
+        function lsSearch(existing) {
+            lsClearStates();
+            const size = parseInt(document.getElementById('lsSize').value);
+            const listCells = [...document.querySelectorAll('#lsListCells .cell')];
+            const setCells = [...document.querySelectorAll('#lsSetCells .cell')];
+            // objetivo: si existe, el penúltimo (caso peor visible); si no, ninguno
+            const targetIdx = existing ? listCells.length - 1 : -1;
+            const targetVal = existing ? listCells[targetIdx].textContent : '∅';
+
+            // Animación lista: recorrido secuencial
+            let i = 0;
+            const stepList = () => {
+                if (i > 0) listCells[i - 1].className = 'cell checked';
+                if (i < listCells.length) {
+                    listCells[i].className = 'cell checking';
+                    if (existing && i === targetIdx) {
+                        setTimeout(() => {
+                            listCells[i].className = 'cell found';
+                            document.getElementById('lsListMsg').textContent =
+                                '✔ Encontrado tras ' + (i + 1) + ' comparaciones (recorrido completo).';
+                        }, 160);
+                        return;
+                    }
+                    i++;
+                    setTimeout(stepList, 130);
+                } else {
+                    document.getElementById('lsListMsg').textContent =
+                        '✘ No está: la lista ha recorrido los ' + listCells.length +
+                        ' elementos sin éxito.';
+                }
+            };
+            document.getElementById('lsListMsg').textContent = 'Recorriendo la lista uno a uno…';
+            stepList();
+
+            // Animación set: acceso directo por hash
+            document.getElementById('lsSetMsg').textContent = 'Calculando hash del objetivo…';
+            setTimeout(() => {
+                if (existing) {
+                    const hit = setCells.find(c => c.textContent === targetVal);
+                    if (hit) hit.className = 'cell found';
+                    document.getElementById('lsSetMsg').textContent =
+                        '✔ El hash apunta directamente a la posición. 1 acceso.';
+                } else {
+                    document.getElementById('lsSetMsg').textContent =
+                        '✘ El hash apunta a una posición vacía. No está. 1 acceso.';
+                }
+            }, 420);
+
+            lsUpdateTimes(size, 1);
+        }
+
+        function lsRepeat() {
+            const size = parseInt(document.getElementById('lsSize').value);
+            lsUpdateTimes(size, 10000);
+            document.getElementById('lsListMsg').textContent =
+                '10.000 búsquedas: la lista repite el recorrido O(n) cada vez.';
+            document.getElementById('lsSetMsg').textContent =
+                '10.000 búsquedas: el set repite un acceso O(1) cada vez.';
+        }
+
+        function lsUpdateTimes(size, repeats) {
+            // Modelo realista: cada operación elemental ~ 12 ns en lista, ~ 35 ns acceso hash.
+            // Lista: en promedio recorre n/2 elementos. Set: coste casi constante.
+            const nsListOp = 12, nsSetOp = 40;
+            const tList = (size / 2) * nsListOp * repeats;   // ns
+            const tSet = nsSetOp * repeats;                  // ns
+            const human = ns => {
+                if (ns < 1000) return ns.toFixed(0) + ' ns';
+                if (ns < 1e6) return (ns / 1000).toFixed(1) + ' µs';
+                if (ns < 1e9) return (ns / 1e6).toFixed(1) + ' ms';
+                return (ns / 1e9).toFixed(2) + ' s';
+            };
+            document.getElementById('lsTimeList').textContent = human(tList);
+            document.getElementById('lsTimeSet').textContent = human(tSet);
+            const ratio = tList / tSet;
+            document.getElementById('lsSpeedup').textContent =
+                ratio >= 1 ? fmt(Math.round(ratio)) + '×' : '≈ 1×';
+        }
+
+        // ==================== TAB 3: PROFILING ====================
+        let PR_BLOCKS = [
+            { name: 'limpiar',            pct: 8,  color: '#90caf9' },
+            { name: 'transformar',        pct: 17, color: '#ffcc80' },
+            { name: 'buscar_duplicados',  pct: 68, color: '#ef9a9a' },
+            { name: 'generar_resultado',  pct: 7,  color: '#a5d6a7' }
+        ];
+        let prProfiled = false;
+
+        function prRenderBars() {
+            const box = document.getElementById('prBars');
+            box.innerHTML = '';
+            PR_BLOCKS.forEach(b => {
+                const row = document.createElement('div');
+                row.className = 'bar-row';
+                const label = document.createElement('div');
+                label.className = 'bar-label';
+                label.textContent = b.name;
+                const track = document.createElement('div');
+                track.className = 'bar-track';
+                const fill = document.createElement('div');
+                fill.className = 'bar-fill';
+                fill.style.background = b.color;
+                fill.style.color = '#333';
+                // etiqueta de porcentaje fuera de la barra (para barras estrechas)
+                const outLabel = document.createElement('span');
+                outLabel.style.fontWeight = 'bold';
+                outLabel.style.fontSize = '0.85rem';
+                outLabel.style.color = '#0f1b2d';
+                outLabel.style.flexShrink = '0';
+                outLabel.style.whiteSpace = 'nowrap';
+                if (prProfiled) {
+                    fill.style.width = b.pct + '%';
+                    // si la barra es demasiado estrecha para contener el texto,
+                    // se coloca el porcentaje fuera, a su derecha
+                    if (b.pct < 12) {
+                        fill.textContent = '';
+                        outLabel.textContent = b.pct + ' %';
+                    } else {
+                        fill.textContent = b.pct + ' %';
+                        outLabel.textContent = '';
+                    }
+                } else {
+                    fill.style.width = '0%';
+                    fill.textContent = '';
+                    outLabel.textContent = '';
+                }
+                track.appendChild(fill);
+                row.appendChild(label);
+                row.appendChild(track);
+                row.appendChild(outLabel);
+                box.appendChild(row);
+            });
+        }
+
+        function prRun(profiled) {
+            prProfiled = profiled;
+            prRenderBars();
+            if (profiled) {
+                document.getElementById('prTotal').textContent =
+                    'Tiempo total medido: 1,00 s — desglosado por bloque.';
+                document.getElementById('prMsg').textContent =
+                    'Con profiling activado vemos a dónde va realmente el tiempo.';
+                document.getElementById('prMsg').style.color = '#0f1b2d';
+            } else {
+                document.getElementById('prTotal').textContent =
+                    'Tiempo total: 1,00 s. ¿Qué bloque lo causa? Sin medir, no lo sabemos.';
+                document.getElementById('prMsg').textContent =
+                    'Sin profiling solo sabemos el tiempo total. Imposible saber dónde optimizar.';
+                document.getElementById('prMsg').style.color = '#fb8c00';
+            }
+        }
+
+        function prSort() {
+            prProfiled = true;
+            PR_BLOCKS.sort((a, b) => b.pct - a.pct);
+            prRenderBars();
+            document.getElementById('prTotal').textContent =
+                'Bloques ordenados de mayor a menor consumo de tiempo.';
+            document.getElementById('prMsg').textContent =
+                'Ordenado por tiempo: el primero de la lista es donde más se gana optimizando.';
+            document.getElementById('prMsg').style.color = '#0f1b2d';
+        }
+
+        function prBottleneck() {
+            prProfiled = true;
+            prRenderBars();
+            const bottleneck = PR_BLOCKS.reduce((a, b) => a.pct > b.pct ? a : b);
+            // resaltar la barra del cuello de botella
+            const rows = document.querySelectorAll('#prBars .bar-row');
+            rows.forEach(r => {
+                const isBn = r.querySelector('.bar-label').textContent === bottleneck.name;
+                r.querySelector('.bar-fill').style.outline = isBn ? '3px solid #e53935' : 'none';
+            });
+            document.getElementById('prMsg').innerHTML =
+                '🎯 Cuello de botella: <code>' + bottleneck.name + '</code> (' + bottleneck.pct +
+                ' %). Aunque "transformar" parecía el bloque pesado, el tiempo se va en buscar_duplicados.';
+            document.getElementById('prMsg').style.color = '#0f1b2d';
+        }
+
+        // ==================== TAB 4: BUILT-INS ====================
+        const BI_DATA = {
+            sum: {
+                manual: '<span class="kw">total</span> = <span class="num">0</span>\n<span class="kw">for</span> x <span class="kw">in</span> numeros:\n    total += x',
+                builtin: '<span class="kw">total</span> = <span class="fn">sum</span>(numeros)',
+                complexity: 'O(n)', read: 'Alta', speed: '≈ 2,5×'
+            },
+            max: {
+                manual: '<span class="kw">m</span> = numeros[<span class="num">0</span>]\n<span class="kw">for</span> x <span class="kw">in</span> numeros:\n    <span class="kw">if</span> x > m:\n        m = x',
+                builtin: '<span class="kw">m</span> = <span class="fn">max</span>(numeros)',
+                complexity: 'O(n)', read: 'Alta', speed: '≈ 2,3×'
+            },
+            min: {
+                manual: '<span class="kw">m</span> = numeros[<span class="num">0</span>]\n<span class="kw">for</span> x <span class="kw">in</span> numeros:\n    <span class="kw">if</span> x < m:\n        m = x',
+                builtin: '<span class="kw">m</span> = <span class="fn">min</span>(numeros)',
+                complexity: 'O(n)', read: 'Alta', speed: '≈ 2,3×'
+            },
+            all: {
+                manual: '<span class="kw">ok</span> = <span class="kw">True</span>\n<span class="kw">for</span> x <span class="kw">in</span> valores:\n    <span class="kw">if</span> <span class="kw">not</span> x:\n        ok = <span class="kw">False</span>\n        <span class="kw">break</span>',
+                builtin: '<span class="kw">ok</span> = <span class="fn">all</span>(valores)',
+                complexity: 'O(n)', read: 'Muy alta', speed: '≈ 2,0×'
+            },
+            any: {
+                manual: '<span class="kw">hay</span> = <span class="kw">False</span>\n<span class="kw">for</span> x <span class="kw">in</span> valores:\n    <span class="kw">if</span> x:\n        hay = <span class="kw">True</span>\n        <span class="kw">break</span>',
+                builtin: '<span class="kw">hay</span> = <span class="fn">any</span>(valores)',
+                complexity: 'O(n)', read: 'Muy alta', speed: '≈ 2,0×'
+            },
+            map: {
+                manual: '<span class="kw">r</span> = []\n<span class="kw">for</span> p <span class="kw">in</span> palabras:\n    r.<span class="fn">append</span>(p.<span class="fn">upper</span>())',
+                builtin: '<span class="kw">r</span> = <span class="fn">list</span>(<span class="fn">map</span>(<span class="kw">str</span>.upper, palabras))',
+                complexity: 'O(n)', read: 'Alta', speed: '≈ 1,6×'
+            },
+            sorted: {
+                manual: '<span class="cm"># ordenación burbuja "a mano"</span>\n<span class="kw">a</span> = numeros[:]\n<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(a)):\n    <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(a)-<span class="num">1</span>):\n        <span class="kw">if</span> a[j] > a[j+<span class="num">1</span>]:\n            a[j], a[j+<span class="num">1</span>] = a[j+<span class="num">1</span>], a[j]',
+                builtin: '<span class="kw">a</span> = <span class="fn">sorted</span>(numeros)',
+                complexity: 'O(n log n) vs O(n²) a mano', read: 'Muy alta', speed: '≈ 50× o más'
+            }
+        };
+
+        function biRender() {
+            const key = document.getElementById('biSelect').value;
+            const d = BI_DATA[key];
+            document.getElementById('biManual').innerHTML = d.manual;
+            document.getElementById('biBuiltin').innerHTML = d.builtin;
+            document.getElementById('biComplexity').textContent = d.complexity;
+            document.getElementById('biReadability').textContent = d.read;
+            document.getElementById('biSpeed').textContent = d.speed;
+        }
+
+        // ==================== TAB 5: LIST COMPREHENSIONS ====================
+        const LC_FILTERS = {
+            par:   { test: i => i % 2 === 0,  code: 'i % 2 == 0',  name: 'pares' },
+            impar: { test: i => i % 2 === 1,  code: 'i % 2 == 1',  name: 'impares' },
+            mult3: { test: i => i % 3 === 0,  code: 'i % 3 == 0',  name: 'múltiplos de 3' },
+            gt50:  { test: i => i > 50,       code: 'i > 50',      name: 'mayores que 50' }
+        };
+        const LC_TRANS = {
+            id:   { fn: i => i,           code: 'i',            label: 'i' },
+            sq:   { fn: i => i * i,       code: 'i ** 2',       label: 'i²' },
+            cube: { fn: i => i * i * i,   code: 'i ** 3',       label: 'i³' },
+            text: { fn: i => '"n' + i + '"', code: '"n" + str(i)', label: '"n"+i' }
+        };
+        let lcMode = 'comp'; // 'comp' o 'append'
+
+        function lcCompute() {
+            const n = parseInt(document.getElementById('lcSlider').value);
+            const filt = LC_FILTERS[document.getElementById('lcFilter').value];
+            const tr = LC_TRANS[document.getElementById('lcTransform').value];
+            const all = [], passed = [], out = [];
+            for (let i = 1; i < n; i++) {
+                all.push(i);
+                if (filt.test(i)) {
+                    passed.push(i);
+                    out.push(tr.fn(i));
+                }
+            }
+            return { n, filt, tr, all, passed, out };
+        }
+
+        function lcRender() {
+            const st = lcCompute();
+            document.getElementById('lcN').textContent = st.n;
+            lcDrawPipeline(st);
+            lcRenderCode(st);
+            lcRenderOutput(st);
+        }
+
+        function lcDrawPipeline(st) {
+            const cv = document.getElementById('lcCanvas');
+            const ctx = cv.getContext('2d');
+            const W = cv.width, H = cv.height;
+            ctx.clearRect(0, 0, W, H);
+            ctx.font = 'bold 13px sans-serif';
+            ctx.textAlign = 'center';
+
+            const stages = [
+                { title: 'ENTRADA', sub: 'range(1, ' + st.n + ')', count: st.all.length, color: '#90caf9' },
+                { title: 'FILTRO', sub: 'if ' + st.filt.code, count: st.passed.length, color: '#ffcc80' },
+                { title: 'TRANSFORMACIÓN', sub: st.tr.code, count: st.out.length, color: '#a5d6a7' },
+                { title: 'SALIDA', sub: 'lista resultante', count: st.out.length, color: '#a5d6a7' }
+            ];
+            const boxW = 190, boxH = 110, gap = (W - boxW * 4) / 5;
+            stages.forEach((s, i) => {
+                const x = gap + i * (boxW + gap);
+                const y = 50;
+                ctx.fillStyle = s.color;
+                ctx.strokeStyle = '#90a4ae';
+                ctx.lineWidth = 1.5;
+                roundRect(ctx, x, y, boxW, boxH, 10);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = '#0f1b2d';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.fillText(s.title, x + boxW / 2, y + 28);
+                ctx.font = '13px "Courier New", monospace';
+                ctx.fillText(s.sub, x + boxW / 2, y + 56);
+                ctx.font = 'bold 20px sans-serif';
+                ctx.fillStyle = '#1565c0';
+                ctx.fillText(s.count + ' elem.', x + boxW / 2, y + 90);
+                // flecha
+                if (i < 3) {
+                    const ax = x + boxW, ay = y + boxH / 2;
+                    ctx.strokeStyle = '#607d8b';
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.moveTo(ax, ay);
+                    ctx.lineTo(ax + gap, ay);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(ax + gap, ay);
+                    ctx.lineTo(ax + gap - 9, ay - 6);
+                    ctx.lineTo(ax + gap - 9, ay + 6);
+                    ctx.closePath();
+                    ctx.fillStyle = '#607d8b';
+                    ctx.fill();
+                }
+            });
+            ctx.fillStyle = '#666';
+            ctx.font = '12px sans-serif';
+            ctx.fillText('Recorre los ' + st.all.length + ' valores  →  ' + st.passed.length +
+                ' pasan el filtro  →  se transforman  →  ' + st.out.length + ' en la salida',
+                W / 2, H - 24);
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        }
+
+        function lcRenderCode(st) {
+            let code;
+            if (lcMode === 'append') {
+                code = '<span class="kw">resultado</span> = []\n' +
+                    '<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">' + st.n + '</span>):\n' +
+                    '    <span class="kw">if</span> ' + st.filt.code + ':\n' +
+                    '        resultado.<span class="fn">append</span>(' + st.tr.code + ')';
+            } else {
+                code = '<span class="kw">resultado</span> = [' + st.tr.code +
+                    ' <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">' + st.n + '</span>) <span class="kw">if</span> ' +
+                    st.filt.code + ']';
+            }
+            document.getElementById('lcCode').innerHTML = code;
+        }
+
+        function lcRenderOutput(st) {
+            const out = st.out;
+            const shown = out.slice(0, 40);
+            let txt = '[' + shown.join(', ');
+            if (out.length > 40) txt += ', … (' + (out.length - 40) + ' más)';
+            txt += ']';
+            document.getElementById('lcOutput').textContent = txt;
+            document.getElementById('lcCount').textContent =
+                'La salida contiene ' + out.length + ' elementos (' +
+                st.filt.name + ', transformados con ' + st.tr.code + ').';
+        }
+
+        function lcShowAppend() {
+            lcMode = 'append';
+            lcRenderCode(lcCompute());
+        }
+        function lcShowComp() {
+            lcMode = 'comp';
+            lcRenderCode(lcCompute());
+        }
+
+        // ==================== TAB 6: OPTIMIZACIÓN REAL ====================
+        function opDrawGrid(highlightMult) {
+            const cv = document.getElementById('opCanvas');
+            const ctx = cv.getContext('2d');
+            const W = cv.width, H = cv.height;
+            ctx.clearRect(0, 0, W, H);
+            const cols = 45, rows = 15;
+            const cellW = (W - 90) / cols;
+            const cellH = (H - 70) / rows;
+            const ox = 70, oy = 20;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    // cada 11ª columna o fila representa "múltiplo de 11"
+                    const isMultI = (r % 11 === 5);
+                    const isMultJ = (c % 11 === 5);
+                    let fill = '#eceff1';
+                    if (highlightMult && (isMultI || isMultJ)) fill = '#a5d6a7';
+                    ctx.fillStyle = fill;
+                    ctx.fillRect(ox + c * cellW + 0.5, oy + r * cellH + 0.5,
+                        cellW - 1, cellH - 1);
+                }
+            }
+            ctx.fillStyle = '#666';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('j  (1000 … 9999)  →', ox, H - 34);
+            ctx.save();
+            ctx.translate(20, oy + (H - 70) / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.textAlign = 'center';
+            ctx.fillText('i  (1000 … 9999)', 0, 0);
+            ctx.restore();
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#455a64';
+            ctx.font = 'bold 13px sans-serif';
+            const caption = highlightMult
+                ? 'Verde = el par cumple porque i o j es múltiplo de 11. Basta contarlos, no recorrer celda a celda.'
+                : 'Cuadrícula conceptual: 9000 filas × 9000 columnas = 81.000.000 de pares (i, j).';
+            ctx.fillText(caption, W / 2, H - 12);
+        }
+
+        // tiempo estimado de la solución ingenua (cacheado tras la 1ª medición)
+        let opNaiveSecs = null;
+
+        function opSetResult(html) {
+            document.getElementById('opResult').innerHTML = html;
+        }
+
+        // mide un fragmento real de iteraciones y extrapola a los 81M
+        function opEstimateNaiveSecs() {
+            if (opNaiveSecs !== null) return opNaiveSecs;
+            const SAMPLE = 2000000;
+            const t0 = performance.now();
+            let acc = 0;
+            for (let k = 0; k < SAMPLE; k++) {
+                if ((k * 7919) % 11 === 0) acc++;
+            }
+            const t1 = performance.now();
+            const perOp = (t1 - t0) / SAMPLE;             // ms por comprobación
+            opNaiveSecs = (perOp * 81000000) / 1000;      // estimación 81M en s
+            return opNaiveSecs;
+        }
+
+        function opRunNaive() {
+            // NO ejecutamos 81M de iteraciones reales: medimos un fragmento y estimamos.
+            const secs = opEstimateNaiveSecs();
+            opSetResult(
+                '<div class="warn-box" style="background:#ffebee;border-left-color:#e53935">' +
+                '⏱ <strong>Solución ingenua ejecutada.</strong> Recorre el doble bucle ' +
+                'comprobando <code>(i*j) % 11</code> para cada par. No se ejecutan los 81M ' +
+                'en el navegador: se ha medido un fragmento de 2.000.000 de iteraciones y ' +
+                'extrapolado.</div>' +
+                '<div class="stats">' +
+                '<div class="stat-box bad"><div class="label">Operaciones</div>' +
+                '<div class="value">81.000.000</div></div>' +
+                '<div class="stat-box bad"><div class="label">Complejidad</div>' +
+                '<div class="value">O(n²)</div></div>' +
+                '<div class="stat-box bad"><div class="label">Tiempo estimado</div>' +
+                '<div class="value">≈ ' + secs.toFixed(2) + ' s</div></div>' +
+                '</div>' +
+                '<div class="warn-box" style="background:#ffebee;border-left-color:#e53935">' +
+                'Es <strong>O(n²)</strong>: si los números tuvieran una cifra más (5 dígitos), ' +
+                'serían 90.000² = 8.100.000.000 de pares y tardaría <strong>100 veces más</strong>.' +
+                '</div>');
+        }
+
+        function opShowCombos() {
+            opSetResult(
+                '<div class="info-box">📊 <strong>Tamaño del espacio de búsqueda.</strong> ' +
+                'Los números de 4 cifras van del 1000 al 9999. La solución ingenua prueba ' +
+                'todos los pares posibles (i, j).</div>' +
+                '<div class="stats">' +
+                '<div class="stat-box"><div class="label">Números de 4 cifras (i)</div>' +
+                '<div class="value">9.000</div></div>' +
+                '<div class="stat-box"><div class="label">Números de 4 cifras (j)</div>' +
+                '<div class="value">9.000</div></div>' +
+                '<div class="stat-box bad"><div class="label">Pares (i, j) a comprobar</div>' +
+                '<div class="value">81.000.000</div></div>' +
+                '</div>' +
+                '<div class="info-box">9.000 × 9.000 = <strong>81.000.000</strong> de ' +
+                'combinaciones. Cada celda de la cuadrícula de arriba es uno de esos pares.</div>');
+        }
+
+        function opDetectPattern() {
+            opDrawGrid(true);
+            opSetResult(
+                '<div class="info-box"><strong>🔍 Patrón matemático detectado.</strong><br><br>' +
+                'Como <strong>11 es un número primo</strong>, el producto <code>i * j</code> ' +
+                'es múltiplo de 11 <strong>si y solo si</strong> al menos uno de los factores ' +
+                'lo es:<br><br>' +
+                '<code>(i · j) múltiplo de 11&nbsp; ⟺ &nbsp;i múltiplo de 11&nbsp; O &nbsp;j múltiplo de 11</code>' +
+                '<br><br>No hace falta calcular el producto ni mirar los 81M de pares: basta ' +
+                'saber, para cada número de 4 cifras, si es múltiplo de 11.</div>' +
+                '<div class="stats">' +
+                '<div class="stat-box"><div class="label">Números de 4 cifras</div>' +
+                '<div class="value">9.000</div></div>' +
+                '<div class="stat-box good"><div class="label">Múltiplos de 11 (1001…9999)</div>' +
+                '<div class="value">819</div></div>' +
+                '<div class="stat-box"><div class="label">No múltiplos de 11</div>' +
+                '<div class="value">8.181</div></div>' +
+                '</div>');
+        }
+
+        function opOptimize() {
+            opDrawGrid(true);
+            document.getElementById('opOptCard').style.display = 'block';
+            const mult = 819, total = 9000;
+            const noMult = total - mult;            // 8181
+            const validos = total * total - noMult * noMult;   // 14.071.239
+            opSetResult(
+                '<div class="success-box">✅ <strong>Optimización aplicada.</strong> ' +
+                'Contamos los 819 múltiplos de 11 de 4 cifras y aplicamos inclusión-exclusión: ' +
+                'pares válidos = 9000² − 8181² = total − (ningún factor múltiplo de 11).</div>' +
+                '<div class="stats">' +
+                '<div class="stat-box good"><div class="label">Operaciones</div>' +
+                '<div class="value">≈ 9.000</div></div>' +
+                '<div class="stat-box good"><div class="label">Complejidad</div>' +
+                '<div class="value">O(n)</div></div>' +
+                '<div class="stat-box good"><div class="label">Resultado</div>' +
+                '<div class="value">' + fmt(validos) + '</div></div>' +
+                '<div class="stat-box good"><div class="label">Tiempo</div>' +
+                '<div class="value">instantáneo</div></div>' +
+                '</div>' +
+                '<div class="success-box">Contar los múltiplos recorriendo los 9.000 números es ' +
+                '<strong>O(n)</strong>; si en su lugar se calcula cuántos hay mediante división ' +
+                'entera, ese conteo pasa a ser <strong>O(1)</strong> para el rango dado. En ambos ' +
+                'casos se recorren <strong>cero pares</strong>: ahí está la mejora.</div>');
+        }
+
+        function opCompare() {
+            document.getElementById('opOptCard').style.display = 'block';
+            const secs = opEstimateNaiveSecs();
+            // factor de aceleración: 81M comprobaciones frente a ~9000 operaciones
+            const factor = Math.round(81000000 / 9000);
+            opSetResult(
+                '<div class="info-box"><strong>⚖ Comparativa antes / después.</strong> ' +
+                'El mismo problema, dos algoritmos. El resultado es idéntico; el coste, no.</div>' +
+                '<div class="two-col">' +
+                '<div class="panel" style="background:#ffebee;border-color:#e53935">' +
+                '<h3 style="color:#c62828">❌ ANTES — fuerza bruta</h3>' +
+                '<div style="font-size:2.2rem;font-weight:bold;color:#c62828;line-height:1.1">81.000.000</div>' +
+                '<div style="color:#666;font-weight:600;margin-bottom:0.6rem">comprobaciones (i·j)%11</div>' +
+                '<p style="font-size:0.95rem;color:#555">Complejidad <strong>O(n²)</strong> — ' +
+                'doble bucle anidado.<br>Tiempo estimado ≈ <strong>' + secs.toFixed(2) + ' s</strong>.</p>' +
+                '</div>' +
+                '<div class="panel" style="background:#e8f5e9;border-color:#4caf50">' +
+                '<h3 style="color:#2e7d32">✅ DESPUÉS — razonamiento matemático</h3>' +
+                '<div style="font-size:2.2rem;font-weight:bold;color:#2e7d32;line-height:1.1">≈ 9.000</div>' +
+                '<div style="color:#666;font-weight:600;margin-bottom:0.6rem">operaciones (contar + fórmula)</div>' +
+                '<p style="font-size:0.95rem;color:#555">Complejidad <strong>O(n)</strong> — recorrer ' +
+                'los 9.000 números una vez para contar múltiplos (O(1) si se cuentan con división ' +
+                'entera).<br>Tiempo ≈ <strong>instantáneo</strong>.</p>' +
+                '</div>' +
+                '</div>' +
+                '<div class="stats">' +
+                '<div class="stat-box"><div class="label">Resultado (idéntico)</div>' +
+                '<div class="value">14.071.239</div></div>' +
+                '<div class="stat-box good"><div class="label">Factor de aceleración</div>' +
+                '<div class="value" style="color:#2e7d32">≈ ' + fmt(factor) + '×</div></div>' +
+                '</div>' +
+                '<div class="success-box">La fuerza bruta recorre 81.000.000 pares, por eso es ' +
+                '<strong>O(n²)</strong>. La versión optimizada evita recorrer pares. Si contamos los ' +
+                'múltiplos recorriendo los 9.000 números, el coste baja a <strong>O(n)</strong>. Si ' +
+                'además calculamos cuántos múltiplos hay mediante división entera, el cálculo pasa a ' +
+                'ser <strong>constante</strong> para el rango dado. En ambos casos, la mejora ' +
+                'conceptual es la misma: <strong>dejamos de comprobar pares y usamos la estructura ' +
+                'matemática del problema.</strong></div>');
+        }
+
+        // ==================== INICIALIZACIÓN ====================
+        scBuildChecks();
+        scUpdate();
+        lsReset();
+        prRenderBars();
+        biRender();
+        lcRender();
+        opDrawGrid(false);
+    </script>
+</body>
+</html>
