@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo Interactiva: Aprendizaje por Refuerzo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #333; }
+
+  .header { background: #0f1b2d; color: white; padding: 2rem 2rem 1.5rem; }
+  .header h1 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+  .header p { color: #90a4ae; font-size: 0.95rem; }
+
+  .tabs { display: flex; gap: 0; background: #1a2940; padding: 0 2rem;
+    overflow-x: auto; border-bottom: 1px solid #0f1b2d; }
+  .tab { padding: 0.8rem 1.4rem; cursor: pointer; color: #90a4ae;
+    border-bottom: 3px solid transparent; transition: all 0.2s;
+    font-weight: 600; font-size: 0.92rem; white-space: nowrap; }
+  .tab:hover { color: #fff; }
+  .tab.active { color: #fff; border-bottom-color: #2196f3; }
+
+  .content { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .card { background: white; border-radius: 12px; padding: 1.5rem;
+    margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+  h2 { color: #0f1b2d; margin-bottom: 1rem; font-size: 1.5rem; }
+  h3 { color: #1a2940; margin-top: 1.2rem; margin-bottom: 0.8rem; font-size: 1.1rem; }
+  p { margin-bottom: 0.8rem; line-height: 1.6; }
+
+  .info-box { background: #e3f2fd; border-left: 4px solid #2196f3;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+    font-size: 0.95rem; line-height: 1.5; }
+  .info-box strong { color: #0f1b2d; }
+  .warn-box { background: #fff3e0; border-left: 4px solid #ff9800;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+    font-size: 0.95rem; line-height: 1.5; }
+  .success-box { background: #e8f5e9; border-left: 4px solid #4caf50;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+    font-size: 0.95rem; line-height: 1.5; }
+
+  canvas { border: 1px solid #ddd; border-radius: 8px; display: block;
+    margin: 1rem auto; background: white; max-width: 100%; }
+
+  .controls { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1.5rem 0;
+    align-items: center; justify-content: center; }
+  .control-group { display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-start; }
+  .control-group label { font-weight: 600; font-size: 0.88rem; color: #0f1b2d; }
+  input[type="range"] { width: 220px; cursor: pointer; }
+
+  button { padding: 0.65rem 1.3rem; background: #2196f3; color: white;
+    border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
+    font-size: 0.9rem; transition: all 0.2s; }
+  button:hover { background: #1976d2; }
+  button:active { transform: scale(0.98); }
+  button.green { background: #4caf50; } button.green:hover { background: #388e3c; }
+  button.orange { background: #fb8c00; } button.orange:hover { background: #ef6c00; }
+  button.red { background: #e53935; } button.red:hover { background: #c62828; }
+  button.gray { background: #607d8b; } button.gray:hover { background: #455a64; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem; margin: 1.5rem 0; }
+  .stat-box { background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    padding: 0.9rem; border-radius: 8px; border-left: 4px solid #2196f3;
+    text-align: center; }
+  .stat-box .label { font-size: 0.82rem; color: #666; font-weight: 600;
+    margin-bottom: 0.25rem; }
+  .stat-box .value { font-size: 1.4rem; color: #0f1b2d; font-weight: bold; }
+  .stat-box.good { background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%); border-left-color: #4caf50; }
+  .stat-box.bad { background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%); border-left-color: #e53935; }
+  .stat-box.warn { background: linear-gradient(135deg, #fff3e0 0%, #fff8e1 100%); border-left-color: #fb8c00; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1rem 0; }
+  .panel { background: #fafbfc; border: 1px solid #e0e0e0; border-radius: 8px;
+    padding: 1rem; min-width: 0; }
+  .panel h3 { margin-top: 0; }
+
+  .formula { background: #fafbfc; border: 1px solid #e0e0e0; border-radius: 8px;
+    padding: 0.9rem; text-align: center; font-family: 'Cambria Math', Georgia, serif;
+    font-size: 1.05rem; margin: 0.8rem 0; }
+
+  .code { background: #0f1b2d; color: #e0e0e0; padding: 1rem 1.2rem; border-radius: 8px;
+    font-family: 'Courier New', Menlo, monospace; font-size: 0.88rem; line-height: 1.55;
+    overflow-x: auto; margin: 1rem 0; white-space: pre; }
+  .code .kw { color: #ff7b72; }
+  .code .fn { color: #d2a8ff; }
+  .code .str { color: #a5d6ff; }
+  .code .num { color: #79c0ff; }
+  .code .cm { color: #8b949e; font-style: italic; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.92rem; }
+  th, td { border: 1px solid #e0e0e0; padding: 0.55rem 0.7rem; text-align: left; }
+  th { background: #0f1b2d; color: white; }
+  tr:nth-child(even) td { background: #fafbfc; }
+
+  .grid-cells { display: grid; gap: 4px; margin: 1rem auto;
+    background: #0f1b2d; padding: 4px; border-radius: 8px; width: fit-content; }
+  .cell { width: 60px; height: 60px; display: flex; align-items: center;
+    justify-content: center; background: #fafbfc; border-radius: 4px;
+    font-size: 1.1rem; font-weight: bold; color: #1a2940; transition: background 0.2s; }
+  .cell.start { background: #e3f2fd; }
+  .cell.goal { background: #e8f5e9; color: #2e7d32; }
+  .cell.hole { background: #37474f; color: white; }
+  .cell.agent { background: #fb8c00; color: white; transform: scale(1.05); }
+  .cell.agent2 { background: #8e24aa; color: white; transform: scale(1.05); }
+  .cell .arrow { font-size: 1.4rem; color: #2196f3; }
+
+  .description { color: #666; font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.6; }
+
+  @media (max-width: 768px) {
+    .header { padding: 1.5rem 1rem 1rem; }
+    .header h1 { font-size: 1.4rem; }
+    .tabs { padding: 0 1rem; }
+    .content { padding: 0 1rem; }
+    .two-col { grid-template-columns: 1fr; }
+    input[type="range"] { width: 100%; }
+    .cell { width: 48px; height: 48px; font-size: 0.95rem; }
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>Tema 7: Aprendizaje por Refuerzo</h1>
+    <p>Bucle agente-entorno, ε-greedy, MDP, Q-learning, SARSA, Monte Carlo y multi-agente</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('tab1', event)">1. Bucle agente-entorno</div>
+    <div class="tab" onclick="showTab('tab2', event)">2. ε-greedy (bandido)</div>
+    <div class="tab" onclick="showTab('tab3', event)">3. Gridworld MDP</div>
+    <div class="tab" onclick="showTab('tab4', event)">4. Q-learning vs SARSA</div>
+    <div class="tab" onclick="showTab('tab5', event)">5. Monte Carlo</div>
+    <div class="tab" onclick="showTab('tab6', event)">6. Multi-agente</div>
+  </div>
+
+  <div class="content">
+
+  <!-- =============== TAB 1: BUCLE =============== -->
+  <div class="section active" id="tab1">
+    <div class="card">
+      <h2>El bucle agente–entorno</h2>
+      <p class="description">El refuerzo se reduce a un bucle de interacción. El agente observa un estado,
+        elige una acción, el entorno responde con un nuevo estado y una recompensa numérica.
+        Pulsa <strong>«Paso»</strong> para avanzar manualmente o <strong>«Auto»</strong> para verlo correr.</p>
+
+      <canvas id="loopCanvas" width="800" height="380"></canvas>
+
+      <div class="controls">
+        <button onclick="loopStep()">Paso</button>
+        <button class="green" onclick="loopAuto()" id="loopAutoBtn">Auto</button>
+        <button class="gray" onclick="loopReset()">Reiniciar</button>
+      </div>
+      <div class="stats">
+        <div class="stat-box"><div class="label">Paso t</div><div class="value" id="loopT">0</div></div>
+        <div class="stat-box"><div class="label">Estado sₜ</div><div class="value" id="loopS">—</div></div>
+        <div class="stat-box"><div class="label">Acción aₜ</div><div class="value" id="loopA">—</div></div>
+        <div class="stat-box good"><div class="label">Recompensa</div><div class="value" id="loopR">—</div></div>
+        <div class="stat-box warn"><div class="label">Acumulada</div><div class="value" id="loopAcc">0</div></div>
+      </div>
+
+      <div class="info-box">
+        <strong>Las tres señales del bucle:</strong> el agente envía la acción <em>aₜ</em>,
+        el entorno responde con el estado siguiente <em>sₜ₊₁</em> y la recompensa <em>rₜ₊₁</em>.
+        El ciclo continúa hasta llegar a un estado terminal (un episodio).
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== TAB 2: EPSILON-GREEDY =============== -->
+  <div class="section" id="tab2">
+    <div class="card">
+      <h2>ε-greedy: el dilema exploración–explotación</h2>
+      <p class="description">Simulamos un <em>bandido multibrazo</em>: 10 acciones con recompensas medias
+        distintas (desconocidas para el agente). Mueve <strong>ε</strong> para ver cómo afecta el
+        equilibrio entre <strong>explorar</strong> (probar acciones nuevas) y <strong>explotar</strong>
+        (elegir la mejor conocida).</p>
+
+      <div class="controls">
+        <div class="control-group">
+          <label>ε (exploración): <span id="banEpsVal">0.10</span></label>
+          <input type="range" id="banEps" min="0" max="1" step="0.01" value="0.10" oninput="banUpdate()">
+        </div>
+        <div class="control-group">
+          <label>Pasos: <span id="banStepsVal">500</span></label>
+          <input type="range" id="banSteps" min="100" max="2000" step="50" value="500" oninput="banUpdate()">
+        </div>
+        <button onclick="banReseed()">Nueva semilla</button>
+      </div>
+
+      <canvas id="banCanvas" width="900" height="420"></canvas>
+
+      <div class="stats">
+        <div class="stat-box good"><div class="label">Recompensa media</div><div class="value" id="banAvg">—</div></div>
+        <div class="stat-box"><div class="label">Mejor acción</div><div class="value" id="banBest">—</div></div>
+        <div class="stat-box warn"><div class="label">% acción óptima</div><div class="value" id="banOpt">—</div></div>
+        <div class="stat-box bad"><div class="label">% exploración real</div><div class="value" id="banExp">—</div></div>
+      </div>
+
+      <div class="info-box">
+        <strong>Receta práctica:</strong> empezar con ε alto (≈1) para explorar mucho al principio
+        y decrecerlo gradualmente (×0.995 por episodio, p. ej.) hasta un mínimo (0.01 – 0.05).
+        Con ε=0 el agente nunca descubre acciones mejores que la primera que pareció buena;
+        con ε=1 explora siempre y nunca aprovecha lo aprendido.
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== TAB 3: GRIDWORLD MDP =============== -->
+  <div class="section" id="tab3">
+    <div class="card">
+      <h2>Gridworld como Proceso de Decisión de Markov</h2>
+      <p class="description">Una cuadrícula 4×4 con celdas de inicio (S), meta (G, +1) y agujeros (H, fin de episodio).
+        Pulsa <strong>«Entrenar»</strong> para ejecutar varios episodios de Q-learning y ver cómo emerge la política óptima.
+        Cada celda muestra la <em>acción de mayor Q</em> aprendida.</p>
+
+      <div class="controls">
+        <div class="control-group">
+          <label>γ (descuento): <span id="mdpGammaVal">0.95</span></label>
+          <input type="range" id="mdpGamma" min="0.5" max="0.99" step="0.01" value="0.95" oninput="mdpUpdateLabels()">
+        </div>
+        <div class="control-group">
+          <label>Episodios: <span id="mdpEpsVal">500</span></label>
+          <input type="range" id="mdpEps" min="50" max="2000" step="50" value="500" oninput="mdpUpdateLabels()">
+        </div>
+        <button class="green" onclick="mdpTrain()">Entrenar</button>
+        <button class="orange" onclick="mdpPlay()">Reproducir agente</button>
+        <button class="gray" onclick="mdpReset()">Reiniciar Q</button>
+      </div>
+
+      <div id="mdpGrid"></div>
+
+      <div class="stats">
+        <div class="stat-box"><div class="label">Episodio</div><div class="value" id="mdpEp">0</div></div>
+        <div class="stat-box good"><div class="label">Recompensa media</div><div class="value" id="mdpRew">0.00</div></div>
+        <div class="stat-box warn"><div class="label">Éxitos (últimos 50)</div><div class="value" id="mdpSucc">0%</div></div>
+      </div>
+
+      <div class="info-box">
+        <strong>Lectura:</strong> al principio la tabla Q está vacía y las celdas no terminales muestran
+        la letra del mapa (S/F). Tras unos cientos de episodios aparecen flechas (la acción de mayor Q):
+        el agente aprende a esquivar los agujeros y dirigirse a la meta.
+        Sube γ para que valore más las recompensas lejanas (más planificación a largo plazo).
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== TAB 4: Q vs SARSA =============== -->
+  <div class="section" id="tab4">
+    <div class="card">
+      <h2>Q-learning vs SARSA</h2>
+      <p class="description">Dos algoritmos casi idénticos con un comportamiento muy distinto en entornos con riesgo.
+        Q-learning aprende la política <em>óptima absoluta</em>; SARSA aprende la mejor política <em>teniendo
+        en cuenta la exploración</em>. Esta demo entrena ambos sobre un mini-cliff y dibuja la recompensa por episodio.</p>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3 style="color:#fb8c00;">Q-Learning (off-policy)</h3>
+          <div class="formula">Q(s,a) ← Q(s,a) + α [r + γ <strong>max<sub>a'</sub></strong> Q(s',a') − Q(s,a)]</div>
+          <p style="font-size:0.92rem;">Usa el <strong>máximo</strong> Q del siguiente estado: aprende sobre la mejor acción posible,
+          aunque la política exploradora haga otra cosa.</p>
+        </div>
+        <div class="panel">
+          <h3 style="color:#2196f3;">SARSA (on-policy)</h3>
+          <div class="formula">Q(s,a) ← Q(s,a) + α [r + γ <strong>Q(s', a')</strong> − Q(s,a)]</div>
+          <p style="font-size:0.92rem;">Usa la <strong>acción real</strong> a' que se va a tomar a continuación según la política
+          ε-greedy: tiene en cuenta el riesgo de la exploración.</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="control-group">
+          <label>ε (exploración fija): <span id="cliffEpsVal">0.10</span></label>
+          <input type="range" id="cliffEps" min="0" max="0.5" step="0.01" value="0.10" oninput="cliffUpdate()">
+        </div>
+        <div class="control-group">
+          <label>Episodios: <span id="cliffNEpVal">300</span></label>
+          <input type="range" id="cliffNEp" min="100" max="800" step="50" value="300" oninput="cliffUpdate()">
+        </div>
+        <button class="green" onclick="cliffRun()">Entrenar ambos</button>
+      </div>
+
+      <canvas id="cliffCanvas" width="900" height="380"></canvas>
+
+      <div class="stats">
+        <div class="stat-box warn"><div class="label">Q-learning final</div><div class="value" id="cliffQ">—</div></div>
+        <div class="stat-box"><div class="label">SARSA final</div><div class="value" id="cliffS">—</div></div>
+      </div>
+
+      <div class="info-box">
+        <strong>Lo que vais a ver:</strong> con ε pequeño los dos rinden parecido. Al subir ε,
+        Q-learning sigue aprendiendo el camino óptimo (más corto) pero cae más al precipicio durante el
+        entrenamiento; SARSA prefiere un camino más largo y seguro porque sabe que el agente
+        va a explorar.
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== TAB 5: MONTE CARLO =============== -->
+  <div class="section" id="tab5">
+    <div class="card">
+      <h2>Convergencia de Monte Carlo</h2>
+      <p class="description">Monte Carlo estima el valor de un estado promediando las recompensas obtenidas
+        al final de muchos episodios. La <strong>ley de los grandes números</strong> garantiza que la media converge
+        al valor verdadero. Esta demo muestra cómo la media va estabilizándose conforme aumentan los episodios.</p>
+
+      <div class="controls">
+        <div class="control-group">
+          <label>Valor real V(s): <span id="mcTrueVal">5.0</span></label>
+          <input type="range" id="mcTrue" min="-5" max="10" step="0.5" value="5.0" oninput="mcUpdate()">
+        </div>
+        <div class="control-group">
+          <label>Desv. típica σ: <span id="mcSigmaVal">3.0</span></label>
+          <input type="range" id="mcSigma" min="0.5" max="6" step="0.5" value="3.0" oninput="mcUpdate()">
+        </div>
+        <div class="control-group">
+          <label>Episodios: <span id="mcNVal">200</span></label>
+          <input type="range" id="mcN" min="10" max="1000" step="10" value="200" oninput="mcUpdate()">
+        </div>
+        <button onclick="mcReseed()">Nueva semilla</button>
+      </div>
+
+      <canvas id="mcCanvas" width="900" height="380"></canvas>
+
+      <div class="stats">
+        <div class="stat-box"><div class="label">Episodios</div><div class="value" id="mcEp">200</div></div>
+        <div class="stat-box good"><div class="label">Media estimada</div><div class="value" id="mcEst">—</div></div>
+        <div class="stat-box warn"><div class="label">Error |V̂−V|</div><div class="value" id="mcErr">—</div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3 style="color:#8e24aa;">Monte Carlo</h3>
+          <p style="font-size:0.92rem;">Espera al <strong>final</strong> del episodio para actualizar.
+          Sin sesgo, pero varianza alta. Solo funciona en entornos episódicos.</p>
+        </div>
+        <div class="panel">
+          <h3 style="color:#43a047;">Diferencia temporal (TD)</h3>
+          <p style="font-size:0.92rem;">Actualiza en <strong>cada paso</strong> usando la propia predicción del
+          futuro. Algo de sesgo, mucha menos varianza, y aprende online.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== TAB 6: MULTI-AGENTE =============== -->
+  <div class="section" id="tab6">
+    <div class="card">
+      <h2>Aprendizaje multi-agente</h2>
+      <p class="description">¿Puedo aprender premiando y castigando las decisiones tomadas por agentes en
+        entornos multi-agente? <strong>Sí</strong>, y a ese campo se le llama <em>MARL</em>. Aquí dos agentes
+        Q-learning recorren el mismo tablero: en modo <strong>cooperativo</strong> deben llegar juntos a la meta;
+        en modo <strong>competitivo</strong>, solo uno puede ganar.</p>
+
+      <div class="controls">
+        <div class="control-group">
+          <label>Modo</label>
+          <select id="marlMode" onchange="marlReset()">
+            <option value="coop" selected>Cooperativo (recompensa común)</option>
+            <option value="compete">Competitivo (suma cero)</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Episodios a entrenar: <span id="marlNVal">2000</span></label>
+          <input type="range" id="marlN" min="500" max="5000" step="100" value="2000" oninput="marlUpdate()">
+        </div>
+        <button class="green" onclick="marlTrain()">Entrenar</button>
+        <button class="orange" onclick="marlPlay()">Simular un episodio</button>
+        <button class="gray" onclick="marlReset()">Reiniciar</button>
+      </div>
+
+      <div id="marlGrid"></div>
+
+      <canvas id="marlCanvas" width="900" height="280"></canvas>
+
+      <div class="stats">
+        <div class="stat-box"><div class="label">Episodios</div><div class="value" id="marlEp">0</div></div>
+        <div class="stat-box good"><div class="label">Recompensa A1</div><div class="value" id="marlR1">—</div></div>
+        <div class="stat-box warn"><div class="label">Recompensa A2</div><div class="value" id="marlR2">—</div></div>
+        <div class="stat-box bad"><div class="label">Volatilidad reciente A1</div><div class="value" id="marlNS">—</div></div>
+      </div>
+
+      <div class="info-box">
+        <strong>Retos del MARL que se observan:</strong> en modo cooperativo los dos agentes convergen porque
+        la recompensa común alinea sus incentivos. En modo competitivo aparece la <em>no-estacionariedad</em>:
+        cada agente cambia conforme el otro aprende, lo que rompe la propiedad de Markov y produce
+        oscilaciones típicas de los juegos de suma cero.
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <script>
+  // ============== Utilidades generales ==============
+  function showTab(id, event) {
+    document.querySelectorAll('.section').forEach(s => { s.classList.remove('active'); });
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+  // PRNG sencilla con semilla
+  function mulberry32(seed) {
+    return function() {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      let t = seed;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function randn(rng) {
+    let u = 1 - rng(); let v = rng();
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  }
+
+  // ============== TAB 1: BUCLE AGENTE-ENTORNO ==============
+  const loopState = { t: 0, s: 'S₀', a: null, r: null, acc: 0, phase: 'idle', running: false };
+  function loopDraw() {
+    const c = document.getElementById('loopCanvas');
+    const ctx = c.getContext('2d');
+    const W = c.width, H = c.height;
+    ctx.clearRect(0, 0, W, H);
+    // Cajas
+    ctx.lineWidth = 3;
+    // AGENTE
+    ctx.fillStyle = '#e3f2fd'; ctx.strokeStyle = '#2196f3';
+    roundRect(ctx, 80, 140, 220, 110, 16, true, true);
+    ctx.fillStyle = '#0f1b2d'; ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'center'; ctx.fillText('AGENTE', 190, 200);
+    // ENTORNO
+    ctx.fillStyle = '#e8f5e9'; ctx.strokeStyle = '#43a047';
+    roundRect(ctx, 500, 140, 220, 110, 16, true, true);
+    ctx.fillStyle = '#0f1b2d'; ctx.fillText('ENTORNO', 610, 200);
+
+    // Flechas
+    // acción (agente → entorno)
+    drawArrow(ctx, 305, 195, 495, 195,
+              loopState.phase === 'action' ? '#2196f3' : '#bdbdbd', 3);
+    ctx.fillStyle = loopState.phase === 'action' ? '#2196f3' : '#666';
+    ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('acción aₜ', 400, 185);
+
+    // estado (entorno → agente)
+    drawArrow(ctx, 495, 230, 305, 230,
+              loopState.phase === 'state' ? '#43a047' : '#bdbdbd', 3);
+    ctx.fillStyle = loopState.phase === 'state' ? '#43a047' : '#666';
+    ctx.fillText('estado sₜ₊₁', 400, 260);
+
+    // recompensa (arco superior)
+    ctx.strokeStyle = loopState.phase === 'reward' ? '#fb8c00' : '#bdbdbd';
+    ctx.lineWidth = 3; ctx.beginPath();
+    ctx.moveTo(495, 175);
+    ctx.bezierCurveTo(450, 60, 350, 60, 305, 175);
+    ctx.stroke();
+    // punta
+    drawArrowHead(ctx, 320, 110, 305, 175, ctx.strokeStyle);
+    ctx.fillStyle = loopState.phase === 'reward' ? '#fb8c00' : '#666';
+    ctx.fillText('recompensa rₜ₊₁', 400, 50);
+
+    // Fase actual abajo
+    ctx.fillStyle = '#0f1b2d'; ctx.font = '14px sans-serif';
+    const msgs = { idle: 'Pulsa «Paso» o «Auto» para iniciar el bucle',
+                   action: '→ Agente envía acción al entorno',
+                   reward: '↩ Entorno entrega recompensa',
+                   state: '← Entorno entrega nuevo estado' };
+    ctx.fillText(msgs[loopState.phase] || '', 400, 320);
+  }
+  function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+    if (fill) ctx.fill(); if (stroke) ctx.stroke();
+  }
+  function drawArrow(ctx, x1, y1, x2, y2, color, lw) {
+    ctx.strokeStyle = color; ctx.lineWidth = lw;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    drawArrowHead(ctx, x1, y1, x2, y2, color);
+  }
+  function drawArrowHead(ctx, x1, y1, x2, y2, color) {
+    const ang = Math.atan2(y2 - y1, x2 - x1);
+    const len = 12;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - len * Math.cos(ang - 0.3), y2 - len * Math.sin(ang - 0.3));
+    ctx.lineTo(x2 - len * Math.cos(ang + 0.3), y2 - len * Math.sin(ang + 0.3));
+    ctx.closePath(); ctx.fill();
+  }
+  function loopStep() {
+    loopState.t++;
+    const acts = ['↑','↓','←','→'];
+    loopState.a = acts[Math.floor(Math.random() * 4)];
+    loopState.s = 'S' + loopState.t;
+    // P(+1)=0.3, P(−0.1)=0.3, P(0)=0.4 con un único sorteo
+    const u = Math.random();
+    loopState.r = u < 0.3 ? '+1' : (u < 0.6 ? '−0.1' : '0');
+    if (loopState.r === '+1') loopState.acc += 1;
+    if (loopState.r === '−0.1') loopState.acc -= 0.1;
+    document.getElementById('loopT').textContent = loopState.t;
+    document.getElementById('loopS').textContent = loopState.s;
+    document.getElementById('loopA').textContent = loopState.a;
+    document.getElementById('loopR').textContent = loopState.r;
+    document.getElementById('loopAcc').textContent = loopState.acc.toFixed(1);
+    // animación de fases
+    loopState.phase = 'action';
+    loopDraw();
+    setTimeout(() => { loopState.phase = 'reward'; loopDraw(); }, 350);
+    setTimeout(() => { loopState.phase = 'state'; loopDraw(); }, 700);
+    setTimeout(() => { loopState.phase = 'idle'; loopDraw(); }, 1050);
+  }
+  function loopReset() {
+    loopState.t = 0; loopState.acc = 0; loopState.s = 'S₀';
+    loopState.a = null; loopState.r = null; loopState.phase = 'idle';
+    ['loopT','loopS','loopA','loopR','loopAcc'].forEach((id, i) =>
+      document.getElementById(id).textContent = ['0','—','—','—','0'][i]);
+    loopState.s = 'S₀';
+    document.getElementById('loopS').textContent = 'S₀';
+    document.getElementById('loopAcc').textContent = '0';
+    if (loopState.running) loopAuto();
+    loopDraw();
+  }
+  function loopAuto() {
+    const btn = document.getElementById('loopAutoBtn');
+    if (loopState.running) {
+      clearInterval(loopState.interval);
+      loopState.running = false;
+      btn.textContent = 'Auto';
+      btn.classList.add('green'); btn.classList.remove('red');
+    } else {
+      loopState.running = true;
+      btn.textContent = 'Parar';
+      btn.classList.remove('green'); btn.classList.add('red');
+      loopState.interval = setInterval(loopStep, 1200);
+    }
+  }
+  loopDraw();
+
+  // ============== TAB 2: BANDIDO MULTIBRAZO ==============
+  const banState = { seed: 7, trueMeans: [] };
+  function banInit() {
+    const rng = mulberry32(banState.seed);
+    banState.trueMeans = [];
+    for (let i = 0; i < 10; i++) banState.trueMeans.push(randn(rng));
+  }
+  function banReseed() { banState.seed = Math.floor(Math.random() * 99999); banInit(); banUpdate(); }
+  function banSimulate(eps, steps) {
+    const rng = mulberry32(banState.seed + 1);
+    const N = banState.trueMeans.length;
+    const q = new Array(N).fill(0);
+    const counts = new Array(N).fill(0);
+    const rewards = new Array(steps);
+    const meanCurve = new Array(steps);
+    let optActions = 0;
+    let exploreActions = 0;
+    const optimal = banState.trueMeans.indexOf(Math.max(...banState.trueMeans));
+    let acc = 0;
+    for (let t = 0; t < steps; t++) {
+      let a;
+      if (rng() < eps) { a = Math.floor(rng() * N); exploreActions++; }
+      else {
+        let best = 0, bv = -Infinity;
+        for (let i = 0; i < N; i++) if (q[i] > bv) { bv = q[i]; best = i; }
+        a = best;
+      }
+      if (a === optimal) optActions++;
+      const r = banState.trueMeans[a] + randn(rng);
+      counts[a]++;
+      q[a] += (r - q[a]) / counts[a];
+      rewards[t] = r;
+      acc += r;
+      meanCurve[t] = acc / (t + 1);
+    }
+    return { meanCurve, q, optActions, exploreActions, optimal };
+  }
+  function banUpdate() {
+    const eps = parseFloat(document.getElementById('banEps').value);
+    const steps = parseInt(document.getElementById('banSteps').value);
+    document.getElementById('banEpsVal').textContent = eps.toFixed(2);
+    document.getElementById('banStepsVal').textContent = steps;
+    if (banState.trueMeans.length === 0) banInit();
+    const result = banSimulate(eps, steps);
+    banDraw(result, eps, steps);
+    document.getElementById('banAvg').textContent = result.meanCurve[steps-1].toFixed(3);
+    document.getElementById('banBest').textContent = 'a' + result.optimal +
+      ' (μ=' + banState.trueMeans[result.optimal].toFixed(2) + ')';
+    document.getElementById('banOpt').textContent = (100 * result.optActions / steps).toFixed(0) + '%';
+    document.getElementById('banExp').textContent = (100 * result.exploreActions / steps).toFixed(0) + '%';
+  }
+  function banDraw(result, eps, steps) {
+    const c = document.getElementById('banCanvas');
+    const ctx = c.getContext('2d');
+    const W = c.width, H = c.height;
+    ctx.clearRect(0, 0, W, H);
+    // ejes
+    const padL = 60, padR = 30, padT = 30, padB = 50;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    const opt = banState.trueMeans[result.optimal];
+    const ymin = Math.min(0, opt - 2), ymax = Math.max(opt + 0.5, 1);
+    ctx.strokeStyle = '#bdbdbd'; ctx.lineWidth = 1;
+    // grilla y
+    ctx.fillStyle = '#666'; ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+      const y = padT + plotH * i / 4;
+      const v = ymax - (ymax - ymin) * i / 4;
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y);
+      ctx.strokeStyle = '#eee'; ctx.stroke();
+      ctx.fillText(v.toFixed(1), padL - 6, y + 4);
+    }
+    // óptimo
+    const yOpt = padT + plotH * (ymax - opt) / (ymax - ymin);
+    ctx.strokeStyle = '#bdbdbd'; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(padL, yOpt); ctx.lineTo(W - padR, yOpt); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#666'; ctx.textAlign = 'left';
+    ctx.fillText('óptimo', W - padR - 50, yOpt - 6);
+    // curva
+    ctx.strokeStyle = '#2196f3'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (let t = 0; t < steps; t++) {
+      const x = padL + plotW * t / (steps - 1);
+      const y = padT + plotH * (ymax - result.meanCurve[t]) / (ymax - ymin);
+      if (t === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    // ejes
+    ctx.strokeStyle = '#666'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + plotH);
+    ctx.lineTo(W - padR, padT + plotH); ctx.stroke();
+    ctx.fillStyle = '#0f1b2d'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Pasos de tiempo', padL + plotW / 2, H - 12);
+    ctx.save();
+    ctx.translate(15, padT + plotH / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Recompensa media acumulada', 0, 0);
+    ctx.restore();
+    // título
+    ctx.font = 'bold 14px sans-serif';
+    ctx.fillText('ε = ' + eps.toFixed(2) + '  ·  Bandido de 10 brazos', W / 2, 18);
+  }
+  banInit(); banUpdate();
+
+  // ============== TAB 3: GRIDWORLD ==============
+  const MDP = {
+    rows: 4, cols: 4,
+    map: ['SFFF','FHFH','FFFH','HFFG'],
+    Q: null, ep: 0, recHist: [], successHist: []
+  };
+  function mdpReset() {
+    MDP.Q = []; MDP.ep = 0; MDP.recHist = []; MDP.successHist = [];
+    MDP.eps = 1.0;
+    for (let i = 0; i < 16; i++) MDP.Q.push([0,0,0,0]);
+    mdpRender();
+    document.getElementById('mdpEp').textContent = 0;
+    document.getElementById('mdpRew').textContent = '0.00';
+    document.getElementById('mdpSucc').textContent = '0%';
+    const st = document.getElementById('mdpStatus');
+    if (st) st.textContent = '';
+  }
+  function mdpStateCh(s) { return MDP.map[Math.floor(s/4)][s%4]; }
+  function mdpStep(s, a) {
+    let r = Math.floor(s / 4), c = s % 4;
+    if (a === 0) c = Math.max(0, c - 1);
+    if (a === 1) r = Math.min(3, r + 1);
+    if (a === 2) c = Math.min(3, c + 1);
+    if (a === 3) r = Math.max(0, r - 1);
+    const sn = r * 4 + c;
+    const ch = mdpStateCh(sn);
+    // Pequeña penalización por paso: hace que Q valore caminos cortos
+    // y rompe el problema de Q-tabla todo a cero antes de encontrar la meta.
+    if (ch === 'H') return { sn, r: -1.0, done: true };
+    if (ch === 'G') return { sn, r:  1.0, done: true };
+    return { sn, r: -0.01, done: false };
+  }
+  function mdpTrain() {
+    if (!MDP.Q) mdpReset();
+    const gamma = parseFloat(document.getElementById('mdpGamma').value);
+    const nEp = parseInt(document.getElementById('mdpEps').value);
+    const alpha = 0.2;
+    // eps continúa decreciendo desde donde se quedó la sesión anterior
+    let eps = MDP.eps !== undefined ? MDP.eps : 1.0;
+    for (let e = 0; e < nEp; e++) {
+      let s = 0; let total = 0; let done = false; let steps = 0;
+      while (!done && steps < 100) {
+        let a;
+        if (Math.random() < eps) a = Math.floor(Math.random() * 4);
+        else { let best = 0, bv = -Infinity;
+          for (let i = 0; i < 4; i++) if (MDP.Q[s][i] > bv) { bv = MDP.Q[s][i]; best = i; }
+          a = best; }
+        const res = mdpStep(s, a);
+        const target = res.done ? res.r : res.r + gamma * Math.max(...MDP.Q[res.sn]);
+        MDP.Q[s][a] += alpha * (target - MDP.Q[s][a]);
+        s = res.sn; total += res.r; done = res.done; steps++;
+      }
+      MDP.recHist.push(total);
+      MDP.successHist.push(total > 0 ? 1 : 0);
+      eps = Math.max(0.05, eps * 0.995);
+      MDP.ep++;
+    }
+    MDP.eps = eps;
+    const last = MDP.recHist.slice(-50);
+    const lastS = MDP.successHist.slice(-50);
+    document.getElementById('mdpEp').textContent = MDP.ep;
+    document.getElementById('mdpRew').textContent =
+      (last.reduce((a,b)=>a+b,0) / Math.max(1,last.length)).toFixed(2);
+    document.getElementById('mdpSucc').textContent =
+      (100 * lastS.reduce((a,b)=>a+b,0) / Math.max(1,lastS.length)).toFixed(0) + '%';
+    mdpRender();
+  }
+  function mdpBuildGridIfNeeded() {
+    const grid = document.getElementById('mdpGrid');
+    grid.className = 'grid-cells';
+    grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+    if (grid.children.length === 16) return;
+    grid.innerHTML = '';
+    for (let i = 0; i < 16; i++) {
+      const d = document.createElement('div');
+      d.className = 'cell';
+      grid.appendChild(d);
+    }
+  }
+  function mdpRender(agentPos = -1) {
+    mdpBuildGridIfNeeded();
+    const grid = document.getElementById('mdpGrid');
+    const cells = grid.children;
+    const arrows = ['←','↓','→','↑'];
+    for (let s = 0; s < 16; s++) {
+      const r = Math.floor(s / 4), c = s % 4;
+      const ch = MDP.map[r][c];
+      const d = cells[s];
+      d.className = 'cell';
+      if (ch === 'H') d.classList.add('hole');
+      if (ch === 'G') d.classList.add('goal');
+      if (ch === 'S') d.classList.add('start');
+      if (s === agentPos) d.classList.add('agent');
+      d.innerHTML = '';
+      if (s === agentPos) {
+        d.textContent = '●';
+      } else if (ch === 'H' || ch === 'G') {
+        d.textContent = ch;
+      } else if (MDP.Q && Math.max(...MDP.Q[s]) - Math.min(...MDP.Q[s]) > 1e-6) {
+        let best = 0, bv = -Infinity;
+        for (let i = 0; i < 4; i++) if (MDP.Q[s][i] > bv) { bv = MDP.Q[s][i]; best = i; }
+        const sp = document.createElement('span'); sp.className = 'arrow';
+        sp.textContent = arrows[best]; d.appendChild(sp);
+      } else {
+        d.textContent = ch;
+      }
+    }
+  }
+  function mdpUpdateLabels() {
+    document.getElementById('mdpGammaVal').textContent =
+      parseFloat(document.getElementById('mdpGamma').value).toFixed(2);
+    document.getElementById('mdpEpsVal').textContent =
+      document.getElementById('mdpEps').value;
+  }
+  function mdpSetStatus(msg) {
+    let st = document.getElementById('mdpStatus');
+    if (!st) {
+      st = document.createElement('div');
+      st.id = 'mdpStatus';
+      st.style.cssText = 'text-align:center;margin:0.6rem 0 0.2rem;font-size:0.95rem;color:#0f1b2d;font-weight:600;';
+      document.getElementById('mdpGrid').insertAdjacentElement('afterend', st);
+    }
+    st.textContent = msg;
+  }
+  let mdpPlaying = false;
+  async function mdpPlay() {
+    if (!MDP.Q) return;
+    if (mdpPlaying) return;
+    mdpPlaying = true;
+    try {
+      // Comprueba si la política ha aprendido algo
+      let learned = false;
+      for (let i = 0; i < 16 && !learned; i++) {
+        if (MDP.Q[i] && (Math.max(...MDP.Q[i]) - Math.min(...MDP.Q[i])) > 1e-3) learned = true;
+      }
+      if (!learned) {
+        mdpSetStatus('La tabla Q está vacía: pulsa «Entrenar» primero.');
+        mdpPlaying = false;
+        return;
+      }
+      let s = 0; let total = 0; let steps = 0; let lastS = -1; let stuck = 0;
+      mdpSetStatus('Inicio en S (0,0). Siguiendo la política aprendida…');
+      mdpRender(s);
+      await new Promise(r => setTimeout(r, 700));
+      while (steps < 40) {
+        let best = 0, bv = -Infinity;
+        for (let i = 0; i < 4; i++) if (MDP.Q[s][i] > bv) { bv = MDP.Q[s][i]; best = i; }
+        const res = mdpStep(s, best);
+        // Detección de bucle: el agente no avanza
+        if (res.sn === s) { stuck++; } else { stuck = 0; }
+        if (stuck >= 2) {
+          mdpRender(s);
+          mdpSetStatus('⚠ Agente bloqueado contra un muro tras ' + (steps + 1) + ' pasos · entrena más episodios.');
+          break;
+        }
+        lastS = s; s = res.sn; total += res.r; steps++;
+        mdpRender(s);
+        if (res.done) {
+          const ch = mdpStateCh(s);
+          const msg = ch === 'G'
+            ? '✅ Meta alcanzada en ' + steps + ' pasos (recompensa total ' + total.toFixed(2) + ')'
+            : '❌ Cayó en hoyo en el paso ' + steps;
+          mdpSetStatus(msg);
+          break;
+        }
+        await new Promise(r => setTimeout(r, 700));
+      }
+      if (steps >= 40) mdpSetStatus('⏱ Se alcanzó el límite de pasos sin terminar el episodio.');
+    } finally { mdpPlaying = false; }
+  }
+  mdpReset(); mdpUpdateLabels();
+
+  // ============== TAB 4: Q-LEARNING VS SARSA EN CLIFF ==============
+  // Cliff: 4 filas x 12 columnas. Inicio (3,0), meta (3,11), entre medio precipicio (3,1..10): -100 + reset
+  const CLIFF = { rows: 4, cols: 12 };
+  function cliffStep(s, a, rng) {
+    let r = Math.floor(s / CLIFF.cols), c = s % CLIFF.cols;
+    if (a === 0) c = Math.max(0, c - 1);
+    if (a === 1) r = Math.min(CLIFF.rows - 1, r + 1);
+    if (a === 2) c = Math.min(CLIFF.cols - 1, c + 1);
+    if (a === 3) r = Math.max(0, r - 1);
+    const sn = r * CLIFF.cols + c;
+    if (r === CLIFF.rows - 1 && c > 0 && c < CLIFF.cols - 1) {
+      return { sn: (CLIFF.rows - 1) * CLIFF.cols + 0, r: -100, done: false };
+    }
+    if (r === CLIFF.rows - 1 && c === CLIFF.cols - 1) return { sn, r: 0, done: true };
+    return { sn, r: -1, done: false };
+  }
+  function cliffTrain(algo, nEp, eps, alpha, gamma) {
+    const rng = mulberry32(42);
+    const nS = CLIFF.rows * CLIFF.cols;
+    const Q = []; for (let i = 0; i < nS; i++) Q.push([0,0,0,0]);
+    const rewards = [];
+    for (let ep = 0; ep < nEp; ep++) {
+      let s = (CLIFF.rows - 1) * CLIFF.cols;  // (3,0)
+      let total = 0; let done = false; let steps = 0;
+      let a;
+      const pickA = (st) => {
+        if (rng() < eps) return Math.floor(rng() * 4);
+        let best = 0, bv = -Infinity;
+        for (let i = 0; i < 4; i++) if (Q[st][i] > bv) { bv = Q[st][i]; best = i; }
+        return best;
+      };
+      a = pickA(s);
+      while (!done && steps < 200) {
+        const res = cliffStep(s, a, rng);
+        let target, aNext;
+        if (algo === 'q') {
+          // off-policy: target con el max sobre Q(s', ·)
+          target = res.r + gamma * Math.max(...Q[res.sn]);
+        } else {
+          // on-policy: muestreamos a' UNA vez con la política actual
+          // y la usamos tanto para el target como para el siguiente paso
+          aNext = pickA(res.sn);
+          target = res.r + gamma * Q[res.sn][aNext];
+        }
+        Q[s][a] += alpha * (target - Q[s][a]);
+        s = res.sn;
+        // Q-learning vuelve a muestrear; SARSA reutiliza la a' usada en el target
+        a = (algo === 'sarsa') ? aNext : pickA(s);
+        total += res.r; done = res.done; steps++;
+      }
+      rewards.push(total);
+    }
+    return rewards;
+  }
+  function cliffUpdate() {
+    document.getElementById('cliffEpsVal').textContent =
+      parseFloat(document.getElementById('cliffEps').value).toFixed(2);
+    document.getElementById('cliffNEpVal').textContent =
+      document.getElementById('cliffNEp').value;
+  }
+  function cliffRun() {
+    const eps = parseFloat(document.getElementById('cliffEps').value);
+    const nEp = parseInt(document.getElementById('cliffNEp').value);
+    const qRew = cliffTrain('q', nEp, eps, 0.5, 1.0);
+    const sRew = cliffTrain('sarsa', nEp, eps, 0.5, 1.0);
+    cliffDraw(qRew, sRew);
+    const last = a => a.slice(-Math.min(50, a.length)).reduce((x,y)=>x+y,0)/Math.min(50, a.length);
+    document.getElementById('cliffQ').textContent = last(qRew).toFixed(1);
+    document.getElementById('cliffS').textContent = last(sRew).toFixed(1);
+  }
+  function smooth(arr, w) {
+    const out = []; const half = Math.floor(w/2);
+    for (let i = 0; i < arr.length; i++) {
+      const a = Math.max(0, i - half), b = Math.min(arr.length, i + half + 1);
+      let s = 0; for (let j = a; j < b; j++) s += arr[j];
+      out.push(s / (b - a));
+    }
+    return out;
+  }
+  function cliffDraw(qRew, sRew) {
+    const c = document.getElementById('cliffCanvas');
+    const ctx = c.getContext('2d');
+    const W = c.width, H = c.height;
+    ctx.clearRect(0, 0, W, H);
+    const padL = 60, padR = 30, padT = 30, padB = 50;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    const qSm = smooth(qRew, 25), sSm = smooth(sRew, 25);
+    const all = qSm.concat(sSm);
+    const ymin = Math.min(...all), ymax = Math.max(...all);
+    // ejes y grilla
+    ctx.fillStyle = '#666'; ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+      const y = padT + plotH * i / 4;
+      const v = ymax - (ymax - ymin) * i / 4;
+      ctx.strokeStyle = '#eee'; ctx.beginPath();
+      ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+      ctx.fillText(v.toFixed(0), padL - 6, y + 4);
+    }
+    function drawCurve(arr, color, lw) {
+      ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.beginPath();
+      for (let t = 0; t < arr.length; t++) {
+        const x = padL + plotW * t / (arr.length - 1);
+        const y = padT + plotH * (ymax - arr[t]) / (ymax - ymin);
+        if (t === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    drawCurve(qSm, '#fb8c00', 2.5);
+    drawCurve(sSm, '#2196f3', 2.5);
+    // ejes
+    ctx.strokeStyle = '#666'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + plotH);
+    ctx.lineTo(W - padR, padT + plotH); ctx.stroke();
+    ctx.fillStyle = '#0f1b2d'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Episodio', padL + plotW / 2, H - 12);
+    ctx.save();
+    ctx.translate(15, padT + plotH / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Recompensa por episodio (suavizada)', 0, 0);
+    ctx.restore();
+    // leyenda
+    ctx.fillStyle = '#fb8c00'; ctx.fillRect(W - padR - 200, padT + 8, 18, 4);
+    ctx.fillStyle = '#0f1b2d'; ctx.textAlign = 'left'; ctx.font = '12px sans-serif';
+    ctx.fillText('Q-learning', W - padR - 175, padT + 13);
+    ctx.fillStyle = '#2196f3'; ctx.fillRect(W - padR - 100, padT + 8, 18, 4);
+    ctx.fillStyle = '#0f1b2d';
+    ctx.fillText('SARSA', W - padR - 75, padT + 13);
+  }
+  cliffUpdate(); cliffRun();
+
+  // ============== TAB 5: MONTE CARLO ==============
+  const MC = { seed: 11 };
+  function mcReseed() { MC.seed = Math.floor(Math.random() * 99999); mcUpdate(); }
+  function mcUpdate() {
+    const trueV = parseFloat(document.getElementById('mcTrue').value);
+    const sigma = parseFloat(document.getElementById('mcSigma').value);
+    const N = parseInt(document.getElementById('mcN').value);
+    document.getElementById('mcTrueVal').textContent = trueV.toFixed(1);
+    document.getElementById('mcSigmaVal').textContent = sigma.toFixed(1);
+    document.getElementById('mcNVal').textContent = N;
+    document.getElementById('mcEp').textContent = N;
+    const rng = mulberry32(MC.seed);
+    const rewards = [], means = [];
+    let acc = 0;
+    for (let i = 0; i < N; i++) {
+      const r = trueV + sigma * randn(rng);
+      rewards.push(r);
+      acc += r; means.push(acc / (i + 1));
+    }
+    mcDraw(rewards, means, trueV);
+    const est = means[N - 1];
+    document.getElementById('mcEst').textContent = est.toFixed(3);
+    document.getElementById('mcErr').textContent = Math.abs(est - trueV).toFixed(3);
+  }
+  function mcDraw(rewards, means, trueV) {
+    const c = document.getElementById('mcCanvas');
+    const ctx = c.getContext('2d');
+    const W = c.width, H = c.height;
+    ctx.clearRect(0, 0, W, H);
+    const padL = 60, padR = 30, padT = 30, padB = 50;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    const all = rewards.concat([trueV]);
+    const ymin = Math.min(...all) - 1, ymax = Math.max(...all) + 1;
+    const yfun = v => padT + plotH * (ymax - v) / (ymax - ymin);
+    // grilla
+    ctx.fillStyle = '#666'; ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+      const y = padT + plotH * i / 4;
+      const v = ymax - (ymax - ymin) * i / 4;
+      ctx.strokeStyle = '#eee'; ctx.beginPath();
+      ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+      ctx.fillText(v.toFixed(1), padL - 6, y + 4);
+    }
+    // barras de recompensas
+    const N = rewards.length;
+    const bw = plotW / N;
+    for (let i = 0; i < N; i++) {
+      const x = padL + i * bw;
+      const r = rewards[i];
+      const y0 = yfun(0);
+      const y1 = yfun(r);
+      ctx.fillStyle = 'rgba(33, 150, 243, 0.35)';
+      ctx.fillRect(x, Math.min(y0, y1), Math.max(1, bw - 0.4), Math.abs(y1 - y0));
+    }
+    // true value
+    ctx.strokeStyle = '#43a047'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+    const yT = yfun(trueV);
+    ctx.beginPath(); ctx.moveTo(padL, yT); ctx.lineTo(W - padR, yT); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#43a047'; ctx.textAlign = 'left'; ctx.font = '12px sans-serif';
+    ctx.fillText('V real = ' + trueV.toFixed(1), W - padR - 80, yT - 6);
+    // media corriente
+    ctx.strokeStyle = '#fb8c00'; ctx.lineWidth = 2.8; ctx.beginPath();
+    for (let i = 0; i < N; i++) {
+      const x = padL + (i + 0.5) * bw;
+      const y = yfun(means[i]);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    // ejes
+    ctx.strokeStyle = '#666'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + plotH);
+    ctx.lineTo(W - padR, padT + plotH); ctx.stroke();
+    ctx.fillStyle = '#0f1b2d'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Episodio', padL + plotW / 2, H - 12);
+    ctx.save(); ctx.translate(15, padT + plotH / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Recompensa por episodio', 0, 0); ctx.restore();
+    // leyenda
+    ctx.fillStyle = '#fb8c00'; ctx.fillRect(W - padR - 200, padT + 8, 18, 4);
+    ctx.fillStyle = '#0f1b2d'; ctx.textAlign = 'left'; ctx.font = '12px sans-serif';
+    ctx.fillText('Media corriente', W - padR - 175, padT + 13);
+  }
+  mcUpdate();
+
+  // ============== TAB 6: MULTI-AGENTE ==============
+  const MARL = { N: 4, Q1: null, Q2: null, ep: 0, r1: 0, r2: 0, nsRatio: 0, hist1: [], hist2: [] };
+  function marlReset() {
+    MARL.Q1 = []; MARL.Q2 = []; MARL.ep = 0;
+    MARL.r1 = 0; MARL.r2 = 0; MARL.hist1 = []; MARL.hist2 = []; MARL.nsRatio = 0;
+    for (let i = 0; i < MARL.N * MARL.N; i++) { MARL.Q1.push([0,0,0,0]); MARL.Q2.push([0,0,0,0]); }
+    marlRender();
+    document.getElementById('marlEp').textContent = 0;
+    document.getElementById('marlR1').textContent = '—';
+    document.getElementById('marlR2').textContent = '—';
+    document.getElementById('marlNS').textContent = '—';
+    marlDrawCurve();
+  }
+  function marlStep(s, a) {
+    let r = Math.floor(s / MARL.N), c = s % MARL.N;
+    if (a === 0) c = Math.max(0, c - 1);
+    if (a === 1) r = Math.min(MARL.N - 1, r + 1);
+    if (a === 2) c = Math.min(MARL.N - 1, c + 1);
+    if (a === 3) r = Math.max(0, r - 1);
+    return r * MARL.N + c;
+  }
+  function marlReward(s1, s2, mode) {
+    const goal = MARL.N * MARL.N - 1;
+    if (mode === 'coop') {
+      if (s1 === goal && s2 === goal) return [1, 1];
+      return [0, 0];
+    } else {
+      // Suma cero: el que llega primero a la meta gana +1, el otro pierde −1.
+      // Si ambos llegan a la vez es un empate (0, 0): la suma sigue siendo 0.
+      if (s1 === goal && s2 !== goal) return [1, -1];
+      if (s2 === goal && s1 !== goal) return [-1, 1];
+      if (s1 === goal && s2 === goal) return [0, 0];
+      return [0, 0];
+    }
+  }
+  function marlPickA(Q, s, eps) {
+    if (Math.random() < eps) return Math.floor(Math.random() * 4);
+    let best = 0, bv = -Infinity;
+    for (let i = 0; i < 4; i++) if (Q[s][i] > bv) { bv = Q[s][i]; best = i; }
+    return best;
+  }
+  function marlTrain() {
+    if (!MARL.Q1) marlReset();
+    const nEp = parseInt(document.getElementById('marlN').value);
+    const mode = document.getElementById('marlMode').value;
+    const alpha = 0.1, gamma = 0.95;
+    let eps = 1.0;
+    const goal = MARL.N * MARL.N - 1;
+    for (let e = 0; e < nEp; e++) {
+      let s1 = 0, s2 = MARL.N - 1;
+      let total1 = 0, total2 = 0;
+      for (let step = 0; step < 50; step++) {
+        const a1 = marlPickA(MARL.Q1, s1, eps);
+        const a2 = marlPickA(MARL.Q2, s2, eps);
+        const s1n = marlStep(s1, a1), s2n = marlStep(s2, a2);
+        const [r1, r2] = marlReward(s1n, s2n, mode);
+        const target1 = r1 + gamma * Math.max(...MARL.Q1[s1n]);
+        const target2 = r2 + gamma * Math.max(...MARL.Q2[s2n]);
+        MARL.Q1[s1][a1] += alpha * (target1 - MARL.Q1[s1][a1]);
+        MARL.Q2[s2][a2] += alpha * (target2 - MARL.Q2[s2][a2]);
+        s1 = s1n; s2 = s2n;
+        total1 += r1; total2 += r2;
+        if (r1 !== 0 || r2 !== 0) break;
+      }
+      MARL.hist1.push(total1); MARL.hist2.push(total2);
+      eps = Math.max(0.05, eps * 0.999);
+      MARL.ep++;
+    }
+    // métricas
+    const w = Math.min(100, MARL.hist1.length);
+    MARL.r1 = MARL.hist1.slice(-w).reduce((a,b)=>a+b,0) / w;
+    MARL.r2 = MARL.hist2.slice(-w).reduce((a,b)=>a+b,0) / w;
+    // Volatilidad reciente: diferencia absoluta media entre recompensas
+    // consecutivas del agente 1 en los últimos episodios. Es un proxy
+    // observable de inestabilidad (un valor alto sugiere que el problema
+    // visto por A1 no es estacionario porque A2 también está cambiando).
+    const diffs = [];
+    for (let i = 1; i < Math.min(50, MARL.hist1.length); i++)
+      diffs.push(Math.abs(MARL.hist1[MARL.hist1.length - i] - MARL.hist1[MARL.hist1.length - i - 1]));
+    MARL.nsRatio = diffs.length > 0 ? diffs.reduce((a,b)=>a+b,0) / diffs.length : 0;
+    document.getElementById('marlEp').textContent = MARL.ep;
+    document.getElementById('marlR1').textContent = MARL.r1.toFixed(2);
+    document.getElementById('marlR2').textContent = MARL.r2.toFixed(2);
+    document.getElementById('marlNS').textContent = MARL.nsRatio.toFixed(2);
+    marlDrawCurve();
+  }
+  function marlRender(p1 = 0, p2 = MARL.N - 1) {
+    const grid = document.getElementById('marlGrid');
+    grid.className = 'grid-cells';
+    grid.style.gridTemplateColumns = 'repeat(' + MARL.N + ', 1fr)';
+    grid.innerHTML = '';
+    const arrows = ['←','↓','→','↑'];
+    const goal = MARL.N * MARL.N - 1;
+    for (let i = 0; i < MARL.N * MARL.N; i++) {
+      const d = document.createElement('div');
+      d.className = 'cell';
+      if (i === goal) d.classList.add('goal');
+      if (i === p1 && i === p2) { d.style.background = 'linear-gradient(45deg, #fb8c00 50%, #8e24aa 50%)';
+        d.style.color = 'white'; d.textContent = '◆'; }
+      else if (i === p1) { d.classList.add('agent'); d.textContent = 'A1'; }
+      else if (i === p2) { d.classList.add('agent2'); d.textContent = 'A2'; }
+      else if (i === goal) { d.textContent = 'G'; }
+      else if (MARL.Q1 && Math.max(...MARL.Q1[i]) > 0.001) {
+        let best = 0, bv = -Infinity;
+        for (let k = 0; k < 4; k++) if (MARL.Q1[i][k] > bv) { bv = MARL.Q1[i][k]; best = k; }
+        d.textContent = arrows[best];
+        d.style.color = '#fb8c00';
+      }
+      grid.appendChild(d);
+    }
+  }
+  async function marlPlay() {
+    if (!MARL.Q1) return;
+    let s1 = 0, s2 = MARL.N - 1;
+    const goal = MARL.N * MARL.N - 1;
+    for (let step = 0; step < 20; step++) {
+      marlRender(s1, s2);
+      await new Promise(r => setTimeout(r, 450));
+      const a1 = marlPickA(MARL.Q1, s1, 0);
+      const a2 = marlPickA(MARL.Q2, s2, 0);
+      s1 = marlStep(s1, a1); s2 = marlStep(s2, a2);
+      if (s1 === goal && s2 === goal) { marlRender(s1, s2); break; }
+      if (document.getElementById('marlMode').value === 'compete' &&
+          (s1 === goal || s2 === goal)) { marlRender(s1, s2); break; }
+    }
+  }
+  function marlUpdate() {
+    document.getElementById('marlNVal').textContent =
+      document.getElementById('marlN').value;
+  }
+  function marlDrawCurve() {
+    const c = document.getElementById('marlCanvas');
+    const ctx = c.getContext('2d');
+    const W = c.width, H = c.height;
+    ctx.clearRect(0, 0, W, H);
+    if (!MARL.hist1 || MARL.hist1.length === 0) {
+      ctx.fillStyle = '#999'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('Pulsa «Entrenar» para ver las curvas de aprendizaje', W/2, H/2);
+      return;
+    }
+    const padL = 55, padR = 30, padT = 25, padB = 40;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    const sm1 = smooth(MARL.hist1, 25), sm2 = smooth(MARL.hist2, 25);
+    const all = sm1.concat(sm2);
+    const ymin = Math.min(...all, -0.1), ymax = Math.max(...all, 0.1);
+    ctx.fillStyle = '#666'; ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+      const y = padT + plotH * i / 4;
+      const v = ymax - (ymax - ymin) * i / 4;
+      ctx.strokeStyle = '#eee'; ctx.beginPath();
+      ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+      ctx.fillText(v.toFixed(2), padL - 6, y + 4);
+    }
+    function dc(arr, color) {
+      ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.beginPath();
+      for (let t = 0; t < arr.length; t++) {
+        const x = padL + plotW * t / (arr.length - 1);
+        const y = padT + plotH * (ymax - arr[t]) / (ymax - ymin);
+        if (t === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    dc(sm1, '#fb8c00'); dc(sm2, '#8e24aa');
+    ctx.strokeStyle = '#666'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + plotH);
+    ctx.lineTo(W - padR, padT + plotH); ctx.stroke();
+    ctx.fillStyle = '#0f1b2d'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Episodio', padL + plotW / 2, H - 10);
+    ctx.fillStyle = '#fb8c00'; ctx.fillRect(W - padR - 180, padT + 8, 18, 4);
+    ctx.fillStyle = '#0f1b2d'; ctx.textAlign = 'left';
+    ctx.fillText('Agente 1', W - padR - 158, padT + 13);
+    ctx.fillStyle = '#8e24aa'; ctx.fillRect(W - padR - 90, padT + 8, 18, 4);
+    ctx.fillStyle = '#0f1b2d';
+    ctx.fillText('Agente 2', W - padR - 68, padT + 13);
+  }
+  marlReset(); marlUpdate();
+  </script>
+
+</body>
+</html>
