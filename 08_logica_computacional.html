@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller: Lógica Computacional Aplicada al Aprendizaje Relacional</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #333; }
+
+  .header { background: #0f1b2d; color: white; padding: 2rem 2rem 1.5rem; }
+  .header .back { color: #90a4ae; text-decoration: none; font-size: 0.88rem; }
+  .header .back:hover { color: #fff; }
+  .header h1 { font-size: 1.8rem; margin: 0.3rem 0; }
+  .header p { color: #90a4ae; font-size: 0.95rem; }
+
+  .tabs { display: flex; gap: 0; background: #1a2940; padding: 0 2rem;
+    overflow-x: auto; border-bottom: 1px solid #0f1b2d; }
+  .tab { padding: 0.8rem 1.4rem; cursor: pointer; color: #90a4ae;
+    border-bottom: 3px solid transparent; transition: all 0.2s;
+    font-weight: 600; font-size: 0.92rem; white-space: nowrap; }
+  .tab:hover { color: #fff; }
+  .tab.active { color: #fff; border-bottom-color: #2196f3; }
+
+  .content { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .card { background: white; border-radius: 12px; padding: 1.5rem;
+    margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+  h2 { color: #0f1b2d; margin-bottom: 1rem; font-size: 1.5rem; }
+  h3 { color: #1a2940; margin-top: 1.2rem; margin-bottom: 0.8rem; font-size: 1.1rem; }
+  p { margin-bottom: 0.8rem; line-height: 1.6; }
+
+  .info-box { background: #e3f2fd; border-left: 4px solid #2196f3;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+    font-size: 0.95rem; line-height: 1.5; }
+  .info-box strong { color: #0f1b2d; }
+  .warn-box { background: #fff3e0; border-left: 4px solid #ff9800;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+    font-size: 0.95rem; line-height: 1.5; }
+  .success-box { background: #e8f5e9; border-left: 4px solid #4caf50;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+    font-size: 0.95rem; line-height: 1.5; }
+  .danger-box { background: #ffebee; border-left: 4px solid #e53935;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+    font-size: 0.95rem; line-height: 1.5; }
+
+  canvas { border: 1px solid #ddd; border-radius: 8px; display: block;
+    margin: 1rem auto; background: white; max-width: 100%; }
+
+  .controls { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1.5rem 0;
+    align-items: center; justify-content: center; }
+  button { padding: 0.65rem 1.3rem; background: #2196f3; color: white;
+    border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
+    font-size: 0.9rem; transition: all 0.2s; }
+  button:hover { background: #1976d2; }
+  button:active { transform: scale(0.98); }
+  button.green { background: #4caf50; } button.green:hover { background: #388e3c; }
+  button.orange { background: #fb8c00; } button.orange:hover { background: #ef6c00; }
+  button.red { background: #e53935; } button.red:hover { background: #c62828; }
+  button.gray { background: #607d8b; } button.gray:hover { background: #455a64; }
+  button.small { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+
+  select, input[type="text"] {
+    padding: 0.55rem 0.85rem; border: 1px solid #cfd8dc; border-radius: 6px;
+    font-size: 0.95rem; font-family: inherit; background: white;
+    max-width: 100%;
+  }
+  select { white-space: normal; }
+  button[disabled] { opacity: 0.55; cursor: not-allowed; }
+  input[type="text"].mono {
+    font-family: 'Menlo', 'Courier New', monospace; font-size: 0.95rem;
+    padding: 0.6rem 0.9rem;
+  }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1rem 0; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin: 1rem 0; }
+  .panel { background: #fafbfc; border: 1px solid #e0e0e0; border-radius: 8px;
+    padding: 1rem; min-width: 0; }
+  .panel h3 { margin-top: 0; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem; margin: 1.5rem 0; }
+  .stat-box { background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    padding: 0.9rem; border-radius: 8px; border-left: 4px solid #2196f3;
+    text-align: center; }
+  .stat-box .label { font-size: 0.82rem; color: #666; font-weight: 600;
+    margin-bottom: 0.25rem; }
+  .stat-box .value { font-size: 1.4rem; color: #0f1b2d; font-weight: bold; }
+  .stat-box.good { background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%); border-left-color: #4caf50; }
+  .stat-box.bad { background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%); border-left-color: #e53935; }
+  .stat-box.warn { background: linear-gradient(135deg, #fff3e0 0%, #fff8e1 100%); border-left-color: #fb8c00; }
+
+  .code { background: #0f1b2d; color: #e0e0e0; padding: 1rem 1.2rem; border-radius: 8px;
+    font-family: 'Menlo', 'Courier New', monospace; font-size: 0.88rem; line-height: 1.55;
+    overflow-x: auto; margin: 1rem 0; white-space: pre; }
+  .code .kw { color: #ff7b72; } .code .fn { color: #d2a8ff; }
+  .code .str { color: #a5d6ff; } .code .num { color: #79c0ff; }
+  .code .cm { color: #8b949e; font-style: italic; }
+  .code .var { color: #ffa657; font-weight: bold; }
+
+  .fact-list, .rule-list {
+    background: #fafbfc; border: 1px solid #e0e0e0; border-radius: 8px;
+    padding: 0.8rem 1rem; max-height: 320px; overflow-y: auto;
+    font-family: 'Menlo', 'Courier New', monospace; font-size: 0.9rem;
+  }
+  .fact-list .fact, .rule-list .rule {
+    padding: 0.25rem 0.4rem; margin: 0.15rem 0; border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .fact-list .fact.match { background: #c8e6c9; color: #1b5e20; font-weight: 600; }
+  .fact-list .fact.fail { background: #ffe0e0; color: #b71c1c; opacity: 0.5; }
+  .rule-list .rule.win { background: #c8e6c9; color: #1b5e20; font-weight: 600; }
+  .rule-list .rule.fail { background: #ffe0e0; color: #b71c1c; }
+
+  .badge {
+    display: inline-block; padding: 0.15rem 0.55rem; border-radius: 12px;
+    font-size: 0.78rem; font-weight: 700; margin-right: 0.25rem;
+  }
+  .badge.pos { background: #e8f5e9; color: #2e7d32; }
+  .badge.neg { background: #ffebee; color: #c62828; }
+  .badge.cov { background: #e3f2fd; color: #1565c0; }
+
+  .kb-display {
+    background: #0f1b2d; color: #e0e0e0; padding: 1rem 1.2rem; border-radius: 8px;
+    font-family: 'Menlo', 'Courier New', monospace; font-size: 0.85rem; line-height: 1.4;
+    white-space: pre; overflow-x: auto;
+  }
+  .kb-display .pred { color: #d2a8ff; }
+  .kb-display .arg  { color: #a5d6ff; }
+  .kb-display .cmt  { color: #8b949e; font-style: italic; }
+
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.92rem; }
+  th, td { border: 1px solid #e0e0e0; padding: 0.55rem 0.7rem; text-align: left; }
+  th { background: #0f1b2d; color: white; }
+  tr:nth-child(even) td { background: #fafbfc; }
+
+  .description { color: #666; font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.6; }
+
+  @media (max-width: 768px) {
+    .header { padding: 1.5rem 1rem 1rem; }
+    .header h1 { font-size: 1.4rem; }
+    .tabs { padding: 0 1rem; }
+    .content { padding: 0 1rem; }
+    .two-col, .three-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <a class="back" href="index.html">← Volver al inicio</a>
+    <h1>Taller: Lógica computacional aplicada al aprendizaje relacional</h1>
+    <p>Tabular vs relacional, hechos, consultas, reglas y aprendizaje inductivo. Demos del profesor.</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('tab1', event)">1. Tabular vs relacional</div>
+    <div class="tab" onclick="showTab('tab2', event)">2. Hechos &amp; predicados</div>
+    <div class="tab" onclick="showTab('tab3', event)">3. Consultas &amp; unificación</div>
+    <div class="tab" onclick="showTab('tab4', event)">4. Reglas e inferencia</div>
+    <div class="tab" onclick="showTab('tab5', event)">5. Conjunción y negación</div>
+    <div class="tab" onclick="showTab('tab6', event)">6. Aprender una regla (ILP)</div>
+  </div>
+
+  <div class="content">
+
+  <!-- ============================================================
+       TAB 1: TABULAR vs RELACIONAL
+  ============================================================ -->
+  <div class="section active" id="tab1">
+    <div class="card">
+      <h2>¿Por qué necesitamos lógica en aprendizaje automático?</h2>
+      <p class="description">Hasta ahora todos los algoritmos del cuatrimestre han trabajado con
+        <strong>datos tabulares</strong>: filas independientes con atributos numéricos. Pero hay
+        problemas donde la información clave no son los atributos de una entidad, sino las
+        <strong>relaciones</strong> entre entidades.</p>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3>Enfoque tabular</h3>
+          <table>
+            <thead><tr><th>cliente</th><th>edad</th><th>gasto</th><th>visitas</th><th>compra</th></tr></thead>
+            <tbody>
+              <tr><td>c1</td><td>25</td><td>80</td><td>4</td><td>sí</td></tr>
+              <tr><td>c2</td><td>51</td><td>20</td><td>1</td><td>no</td></tr>
+              <tr><td>c3</td><td>37</td><td>120</td><td>8</td><td>sí</td></tr>
+            </tbody>
+          </table>
+          <p style="font-size:0.9rem;color:#666;">Cada fila es independiente. Si nos importa
+            <em>qué productos concretos</em> compró cada cliente, no caben en la tabla sin
+            multiplicarla o introducir joins.</p>
+        </div>
+        <div class="panel">
+          <h3>Enfoque relacional</h3>
+          <canvas id="relCanvas" width="500" height="280"></canvas>
+          <p style="font-size:0.9rem;color:#666;text-align:center;">Lo importante son las
+            <strong>aristas</strong>: quién compra qué. La estructura del grafo es el dato.</p>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <strong>Idea de fondo:</strong> cuando la información esencial está en las relaciones y
+        no en las celdas, la representación tabular es una mala elección. La lógica
+        computacional nos da un lenguaje natural para describir esas relaciones y razonar
+        sobre ellas.
+      </div>
+
+      <h3>Dominios con datos inherentemente relacionales</h3>
+      <div class="three-col">
+        <div class="panel" style="border-left:4px solid #2196f3;">
+          <strong style="color:#1565c0;">Comercio</strong>
+          <p style="font-size:0.88rem;margin-top:0.4rem;">Clientes ↔ productos ↔ categorías.</p>
+        </div>
+        <div class="panel" style="border-left:4px solid #fb8c00;">
+          <strong style="color:#e65100;">Redes sociales</strong>
+          <p style="font-size:0.88rem;margin-top:0.4rem;">Usuarios siguen, responden, comparten.</p>
+        </div>
+        <div class="panel" style="border-left:4px solid #43a047;">
+          <strong style="color:#1b5e20;">Bioinformática</strong>
+          <p style="font-size:0.88rem;margin-top:0.4rem;">Moléculas con átomos y enlaces.</p>
+        </div>
+        <div class="panel" style="border-left:4px solid #8e24aa;">
+          <strong style="color:#4a148c;">Sanidad</strong>
+          <p style="font-size:0.88rem;margin-top:0.4rem;">Pacientes ↔ síntomas ↔ tratamientos.</p>
+        </div>
+        <div class="panel" style="border-left:4px solid #0097a7;">
+          <strong style="color:#006064;">Publicaciones</strong>
+          <p style="font-size:0.88rem;margin-top:0.4rem;">Autores co-publican con autores.</p>
+        </div>
+        <div class="panel" style="border-left:4px solid #e53935;">
+          <strong style="color:#b71c1c;">IoT</strong>
+          <p style="font-size:0.88rem;margin-top:0.4rem;">Dispositivos generan eventos en ubicaciones.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       TAB 2: HECHOS Y PREDICADOS
+  ============================================================ -->
+  <div class="section" id="tab2">
+    <div class="card">
+      <h2>Hechos y predicados</h2>
+      <p class="description">Un <strong>hecho</strong> es una afirmación que damos por cierta sobre el
+        mundo. Tiene la forma <code>predicado(arg1, arg2, ..., argN)</code>. El número de
+        argumentos se llama <strong>aridad</strong>.</p>
+
+      <div class="info-box">
+        <strong>Anatomía de <code>compra(ana, portatil)</code>:</strong>
+        nombre del predicado <em>compra</em>, dos argumentos (<em>ana</em> y <em>portatil</em>),
+        aridad <strong>2</strong>.
+      </div>
+
+      <h3>Constructor de base de conocimiento</h3>
+      <p class="description">Edita un hecho y pulsa "Añadir". Se irá construyendo la KB del taller.</p>
+
+      <div class="controls" style="justify-content:flex-start;">
+        <select id="kb2Pred">
+          <option value="cliente">cliente</option>
+          <option value="producto">producto</option>
+          <option value="categoria">categoria</option>
+          <option value="compra">compra</option>
+        </select>
+        <input type="text" class="mono" id="kb2A1" placeholder="arg1" style="width:130px;">
+        <input type="text" class="mono" id="kb2A2" placeholder="arg2 (binario)" style="width:160px;">
+        <button onclick="kb2Add()">Añadir hecho</button>
+        <button class="gray small" onclick="kb2LoadDemo()">Cargar KB del taller</button>
+        <button class="red small" onclick="kb2Reset()">Vaciar</button>
+      </div>
+
+      <h3>Base de conocimiento actual</h3>
+      <div id="kb2Display" class="kb-display" style="min-height:250px;"></div>
+
+      <div class="stats" id="kb2Stats"></div>
+
+      <div class="warn-box">
+        <strong>Cuidado con el orden de los argumentos:</strong>
+        <code>compra(ana, portatil)</code> y <code>compra(portatil, ana)</code> son hechos
+        <em>distintos</em>. Cada posición codifica un rol.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       TAB 3: CONSULTAS Y UNIFICACIÓN
+  ============================================================ -->
+  <div class="section" id="tab3">
+    <div class="card">
+      <h2>Consultas y unificación</h2>
+      <p class="description">Una consulta pregunta a la KB. Si todos los argumentos son
+        constantes, la respuesta es <em>true/false</em>. Si hay <strong>variables</strong>
+        (mayúscula inicial), el sistema enumera todos los valores que las hacen ciertas
+        — este proceso se llama <strong>unificación</strong>.</p>
+
+      <div class="controls" style="justify-content:flex-start;">
+        <input type="text" class="mono" id="q3Input" value="compra(ana, X)"
+               style="width:350px;" onkeydown="if(event.key==='Enter')runQuery3()">
+        <button onclick="runQuery3()">Ejecutar consulta</button>
+      </div>
+      <p style="font-size:0.9rem;color:#666;">
+        Prueba: <code>compra(ana, X)</code>, <code>compra(X, raton)</code>,
+        <code>compra(X, Y)</code>, <code>categoria(P, informatica)</code>, <code>cliente(luis)</code>.
+      </p>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3>Base de hechos</h3>
+          <div id="kb3List" class="fact-list" style="max-height:400px;"></div>
+        </div>
+        <div class="panel">
+          <h3>Resultados de la consulta</h3>
+          <div id="q3Result" class="kb-display" style="min-height:140px;"></div>
+
+          <div class="info-box" style="margin-top:1rem;">
+            <strong>Cómo funciona la unificación:</strong>
+            <ol style="margin-left:1.3rem;margin-top:0.4rem;">
+              <li>El nombre del predicado debe coincidir.</li>
+              <li>La aridad debe coincidir.</li>
+              <li>Los argumentos no-variables deben ser iguales.</li>
+              <li>Las variables se enlazan con el valor de la posición correspondiente.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="success-box">
+        <strong>La consulta es reversible</strong>: la misma relación se puede recorrer en
+        cualquier dirección. <code>compra(ana, X)</code> pregunta «qué compró Ana»,
+        <code>compra(X, raton)</code> pregunta «quién compró ratón». No hace falta escribir
+        funciones distintas: la consulta es declarativa.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       TAB 4: REGLAS E INFERENCIA
+  ============================================================ -->
+  <div class="section" id="tab4">
+    <div class="card">
+      <h2>Reglas e inferencia</h2>
+      <p class="description">Una <strong>regla</strong> tiene la forma
+        <code>conclusión :- condición<sub>1</sub>, condición<sub>2</sub>, ..., condición<sub>k</sub></code>.
+        Se lee: <em>la conclusión es cierta si todas las condiciones lo son</em>. Las reglas
+        permiten derivar conocimiento nuevo a partir de los hechos.</p>
+
+      <h3>Elige una regla y lánzala sobre la KB</h3>
+
+      <div class="controls" style="justify-content:flex-start;">
+        <select id="r4Sel" onchange="r4Update()">
+          <option value="cli_inf">cliente_informatica(C) :- compra(C, P), categoria(P, informatica).</option>
+          <option value="recomendar">recomendar(C, P2) :- compra(C, P1), similar(P1, P2).</option>
+          <option value="comparten">comparten_producto(C1, C2) :- compra(C1, P), compra(C2, P), C1≠C2.</option>
+          <option value="potencial">potencial(C, P2) :- compra(C, P1), similar(P1, P2), no compra(C, P2).</option>
+        </select>
+        <button onclick="r4Run()">Aplicar regla</button>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3>Regla seleccionada</h3>
+          <pre id="r4Code" class="code"></pre>
+          <h3>Lectura en lenguaje natural</h3>
+          <p id="r4Nl" style="font-size:0.95rem;color:#1a2940;"></p>
+        </div>
+        <div class="panel">
+          <h3>Conclusiones derivadas</h3>
+          <div id="r4Out" class="kb-display" style="min-height:200px;"></div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <strong>Lo que ganamos con las reglas:</strong> la base pasa de ser pasiva a tener
+        razonamiento. <code>cliente_informatica(ana)</code>, por ejemplo, no aparece como hecho
+        explícito en ningún sitio — pero el sistema lo deriva porque Ana ha comprado un producto
+        de la categoría informática.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       TAB 5: CONJUNCIÓN, VARIABLES, NEGACIÓN
+  ============================================================ -->
+  <div class="section" id="tab5">
+    <div class="card">
+      <h2>Conjunción, variables compartidas y negación</h2>
+      <p class="description">Tres herramientas amplían enormemente la potencia expresiva de
+        las reglas. Vamos una por una con ejemplos sobre la KB del taller.</p>
+
+      <h3>5.1 Conjunción (AND)</h3>
+      <pre class="code">cliente_interesante(C) :- compra(C, portatil), compra(C, raton).</pre>
+      <p class="description">El cliente tiene que cumplir <strong>las dos</strong> condiciones a la vez.
+        ¿Quién aparece?</p>
+      <button onclick="run51()">Calcular</button>
+      <div id="r51Out" class="kb-display" style="min-height:50px;margin-top:0.6rem;"></div>
+
+      <h3>5.2 Variables compartidas</h3>
+      <pre class="code">comparten(C1, C2) :- compra(C1, <span class="var">P</span>), compra(C2, <span class="var">P</span>), C1 ≠ C2.</pre>
+      <p class="description">La <strong>misma</strong> letra <code>P</code> en dos condiciones
+        obliga a que sea el mismo producto. Sin <code>C1 ≠ C2</code>, el sistema también responde
+        que cada cliente "comparte producto consigo mismo".</p>
+      <div class="controls" style="justify-content:flex-start;">
+        <label style="font-weight:600;color:#0f1b2d;">
+          <input type="checkbox" id="r52Diff" checked> añadir C1 ≠ C2
+        </label>
+        <button onclick="run52()">Calcular</button>
+      </div>
+      <div id="r52Out" class="kb-display" style="min-height:80px;margin-top:0.6rem;"></div>
+
+      <h3>5.3 Negación como fallo</h3>
+      <pre class="code">no_ha_comprado(C, P) :- cliente(C), producto(P), <span class="kw">not</span> compra(C, P).</pre>
+      <p class="description"><code>not P</code> significa <strong>"no consta P"</strong>, no <em>"P es falso en el mundo"</em>.
+        Esto se conoce como <em>negación como fallo</em>.</p>
+      <button onclick="run53()">Calcular</button>
+      <div id="r53Out" class="kb-display" style="min-height:80px;margin-top:0.6rem;"></div>
+
+      <div class="danger-box">
+        <strong>Atención (mundo cerrado vs mundo abierto):</strong>
+        que algo no aparezca en la KB no implica que sea falso en el mundo real.
+        Si la base es incompleta, una consulta con negación puede ser engañosa.
+        Esta es una de las limitaciones del razonamiento lógico que reaparecerá en el Tema 8.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       TAB 6: APRENDER UNA REGLA (mini ILP)
+  ============================================================ -->
+  <div class="section" id="tab6">
+    <div class="card">
+      <h2>Aprender una regla desde ejemplos</h2>
+      <p class="description">El gran giro: en lugar de escribir las reglas a mano, le damos al sistema
+        <strong>ejemplos positivos y negativos</strong> de la relación que queremos modelar y
+        le pedimos que <em>encuentre</em> una regla que los explique. Esto se llama
+        <strong>Programación Lógica Inductiva</strong> (ILP).</p>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3>Ejemplos del problema</h3>
+          <div style="margin-bottom:0.5rem;"><span class="badge pos">+</span><strong>posible_rec(ana, monitor)</strong></div>
+          <div style="margin-bottom:0.5rem;"><span class="badge pos">+</span><strong>posible_rec(ana, teclado)</strong></div>
+          <div style="margin-bottom:0.5rem;"><span class="badge pos">+</span><strong>posible_rec(marta, portatil)</strong></div>
+          <div style="margin-bottom:0.5rem;"><span class="badge pos">+</span><strong>posible_rec(marta, teclado)</strong></div>
+          <div style="margin-bottom:0.5rem;"><span class="badge neg">−</span><strong>posible_rec(luis, monitor)</strong></div>
+          <div style="margin-bottom:0.5rem;"><span class="badge neg">−</span><strong>posible_rec(ana, portatil)</strong></div>
+          <div style="margin-bottom:0.5rem;"><span class="badge neg">−</span><strong>posible_rec(marta, raton)</strong></div>
+
+          <h3 style="margin-top:1rem;">Conocimiento previo</h3>
+          <p style="font-size:0.88rem;color:#555;">
+            compra(·, ·), similar(·, ·), categoria(·, ·) — la KB del taller.
+          </p>
+        </div>
+        <div class="panel">
+          <h3>Espacio de hipótesis</h3>
+          <p class="description">El algoritmo prueba todas estas reglas candidatas y se queda con
+            la que <strong>cubre todos los positivos y ningún negativo</strong>.</p>
+          <div id="r6List" class="rule-list" style="max-height:340px;"></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="green" id="r6Btn" onclick="runILP()">Buscar la regla</button>
+        <button class="gray" onclick="resetILP()">Reiniciar</button>
+      </div>
+
+      <div id="r6Result" class="info-box" style="display:none;"></div>
+
+      <div class="success-box">
+        <strong>El resultado es interpretable:</strong> la regla aprendida se lee directamente.
+        No es una caja negra; es una afirmación lógica que un humano puede revisar.
+        Esto es lo que diferencia el aprendizaje relacional del ML clásico basado en pesos
+        numéricos.
+      </div>
+
+      <div class="info-box">
+        <strong>Lo que viene en el Tema 8:</strong> formalizaremos qué es la programación
+        lógica inductiva, veremos sus aplicaciones (descubrimiento científico, robótica, juegos,
+        minería de datos) y discutiremos sus limitaciones reales. Este taller queda como
+        andamiaje conceptual.
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <script>
+  // ============================================================
+  // utilidades
+  // ============================================================
+  // Escapa caracteres especiales antes de insertar texto en innerHTML,
+  // para que entradas del usuario (argumentos, consultas) no rompan el
+  // marcado ni inyecten HTML.
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  // ============================================================
+  // navegación tabs
+  // ============================================================
+  function showTab(id, ev) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (ev && ev.currentTarget) ev.currentTarget.classList.add('active');
+    // dispara render-on-show donde haga falta
+    if (id === 'tab1' && !window._tab1Drawn) { drawRelGraph(); window._tab1Drawn = true; }
+    if (id === 'tab2' && !window._tab2Drawn) { kb2LoadDemo(); window._tab2Drawn = true; }
+    if (id === 'tab3' && !window._tab3Drawn) { renderKB3(); window._tab3Drawn = true; }
+    if (id === 'tab4' && !window._tab4Drawn) { r4Update(); window._tab4Drawn = true; }
+    if (id === 'tab6' && !window._tab6Drawn) { resetILP(); window._tab6Drawn = true; }
+  }
+
+  // ============================================================
+  // KB compartida por todos los tabs
+  // ============================================================
+  const SHARED_KB = {
+    cliente:   [['ana'], ['luis'], ['marta']],
+    producto:  [['portatil'], ['raton'], ['teclado'], ['monitor']],
+    categoria: [['portatil','informatica'], ['raton','informatica'],
+                ['teclado','informatica'], ['monitor','informatica']],
+    compra:    [['ana','portatil'], ['ana','raton'],
+                ['luis','teclado'],
+                ['marta','monitor'], ['marta','raton']],
+    similar:   [['portatil','monitor'], ['monitor','portatil'],
+                ['raton','teclado'],    ['teclado','raton'],
+                ['monitor','raton'],    ['raton','monitor']],
+  };
+
+  // ============================================================
+  // TAB 1: grafo relacional
+  // ============================================================
+  function drawRelGraph() {
+    const c = document.getElementById('relCanvas'); if (!c) return;
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, c.width, c.height);
+
+    const clientes = [{n:'Ana',x:80,y:60},{n:'Luis',x:250,y:60},{n:'Marta',x:420,y:60}];
+    const productos = [
+      {n:'portátil',x:60,y:220},{n:'ratón',x:200,y:220},
+      {n:'teclado',x:330,y:220},{n:'monitor',x:450,y:220}];
+    const edges = [
+      ['Ana','portátil'],['Ana','ratón'],
+      ['Luis','teclado'],
+      ['Marta','monitor'],['Marta','ratón']];
+    const coord = {};
+    [...clientes, ...productos].forEach(o => coord[o.n] = [o.x, o.y]);
+
+    ctx.strokeStyle = '#90a4ae'; ctx.lineWidth = 1.5;
+    edges.forEach(([a,b]) => {
+      const [x1,y1] = coord[a], [x2,y2] = coord[b];
+      ctx.beginPath();
+      ctx.moveTo(x1, y1+25);
+      ctx.lineTo(x2, y2-25);
+      ctx.stroke();
+    });
+
+    function drawNode(o, fill, stroke) {
+      ctx.fillStyle = fill; ctx.strokeStyle = stroke; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(o.x, o.y, 25, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = 'white'; ctx.font = 'bold 12px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(o.n, o.x, o.y);
+    }
+    clientes.forEach(o => drawNode(o, '#2196f3', '#0f1b2d'));
+    productos.forEach(o => drawNode(o, '#fb8c00', '#7c2d12'));
+
+    ctx.fillStyle = '#0f1b2d'; ctx.font = '11px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('● clientes', 20, 270);
+    ctx.fillStyle = '#fb8c00';
+    ctx.fillText('● productos', 130, 270);
+    ctx.fillStyle = '#666';
+    ctx.fillText('— compra(c, p)', 260, 270);
+  }
+
+  // ============================================================
+  // TAB 2: constructor de KB
+  // ============================================================
+  const KB2 = { cliente: [], producto: [], categoria: [], compra: [] };
+
+  function kb2Add() {
+    const pred = document.getElementById('kb2Pred').value;
+    const a1 = document.getElementById('kb2A1').value.trim();
+    const a2 = document.getElementById('kb2A2').value.trim();
+    if (!a1) { alert('Falta el primer argumento'); return; }
+    const binary = (pred === 'categoria' || pred === 'compra');
+    if (binary && !a2) { alert('Este predicado es binario: necesita dos argumentos'); return; }
+    const tup = binary ? [a1, a2] : [a1];
+    // dedup
+    if (KB2[pred].some(t => t.join('|') === tup.join('|'))) {
+      alert('Ese hecho ya está en la KB');
+      return;
+    }
+    KB2[pred].push(tup);
+    document.getElementById('kb2A1').value = '';
+    document.getElementById('kb2A2').value = '';
+    kb2Render();
+  }
+  function kb2Reset() {
+    Object.keys(KB2).forEach(k => KB2[k] = []);
+    kb2Render();
+  }
+  function kb2LoadDemo() {
+    KB2.cliente   = SHARED_KB.cliente.map(t => [...t]);
+    KB2.producto  = SHARED_KB.producto.map(t => [...t]);
+    KB2.categoria = SHARED_KB.categoria.map(t => [...t]);
+    KB2.compra    = SHARED_KB.compra.map(t => [...t]);
+    kb2Render();
+  }
+  function kb2Render() {
+    const el = document.getElementById('kb2Display');
+    let s = '';
+    const blocks = [
+      ['cliente',   '% predicado unario  cliente/1'],
+      ['producto',  '% predicado unario  producto/1'],
+      ['categoria', '% predicado binario categoria/2'],
+      ['compra',    '% predicado binario compra/2'],
+    ];
+    blocks.forEach(([k, cmt]) => {
+      if (KB2[k].length === 0) return;
+      s += `<span class="cmt">${esc(cmt)}</span>\n`;
+      KB2[k].forEach(t => {
+        s += `<span class="pred">${esc(k)}</span>(`
+           + t.map(a => `<span class="arg">${esc(a)}</span>`).join(', ')
+           + ').\n';
+      });
+      s += '\n';
+    });
+    if (!s) s = '<span class="cmt">% (KB vacía — añade hechos o carga la del taller)</span>';
+    el.innerHTML = s;
+    // stats
+    const total = Object.values(KB2).reduce((s,a) => s+a.length, 0);
+    document.getElementById('kb2Stats').innerHTML = `
+      <div class="stat-box"><div class="label">Predicados con hechos</div>
+        <div class="value">${Object.values(KB2).filter(a => a.length).length}</div></div>
+      <div class="stat-box good"><div class="label">Total de hechos</div>
+        <div class="value">${total}</div></div>
+      <div class="stat-box warn"><div class="label">Aridad máxima</div>
+        <div class="value">2</div></div>
+    `;
+  }
+
+  // ============================================================
+  // TAB 3: consultas con unificación
+  // ============================================================
+  function renderKB3() {
+    const facts = [];
+    ['cliente','producto','categoria','compra'].forEach(p => {
+      SHARED_KB[p].forEach(t => facts.push({pred:p, args:t}));
+    });
+    const el = document.getElementById('kb3List');
+    el.innerHTML = facts.map((f,i) =>
+      `<div class="fact" data-i="${i}">${esc(f.pred)}(${esc(f.args.join(', '))})</div>`
+    ).join('');
+    el._facts = facts;
+  }
+
+  // parser muy simple: pred(arg, Var, ...) — variables = mayúscula inicial
+  function parseGoal(q) {
+    q = q.trim().replace(/\.$/, '');
+    const m = q.match(/^([a-z_][a-zA-Z0-9_]*)\s*\(([^)]*)\)$/);
+    if (!m) return null;
+    const pred = m[1];
+    const args = m[2].split(',').map(s => s.trim()).filter(s => s.length);
+    return { pred, args };
+  }
+  function isVar(t) { return /^[A-Z_][A-Za-z0-9_]*$/.test(t); }
+
+  function runQuery3() {
+    const inp = document.getElementById('q3Input').value;
+    const goal = parseGoal(inp);
+    const out = document.getElementById('q3Result');
+    const listEl = document.getElementById('kb3List');
+    Array.from(listEl.children).forEach(el => el.classList.remove('match','fail'));
+    if (!goal) {
+      out.innerHTML = '<span class="cmt">% formato inválido. Usa: pred(arg1, arg2).</span>';
+      return;
+    }
+    const facts = listEl._facts || [];
+    const solutions = [];
+    facts.forEach((f, i) => {
+      const el = listEl.children[i];
+      if (f.pred !== goal.pred || f.args.length !== goal.args.length) {
+        el.classList.add('fail');
+        return;
+      }
+      const binding = {};
+      let ok = true;
+      for (let k = 0; k < goal.args.length; k++) {
+        const g = goal.args[k], v = f.args[k];
+        if (isVar(g)) {
+          if (binding[g] !== undefined && binding[g] !== v) { ok = false; break; }
+          binding[g] = v;
+        } else if (g !== v) { ok = false; break; }
+      }
+      if (ok) { el.classList.add('match'); solutions.push(binding); }
+      else el.classList.add('fail');
+    });
+    let s = `<span class="cmt">% ?- ${esc(inp)}</span>\n`;
+    if (solutions.length === 0) {
+      s += '<span style="color:#ef9a9a;">false   <span class="cmt">% no hay soluciones</span></span>';
+    } else if (Object.keys(solutions[0]).length === 0) {
+      s += '<span style="color:#a5d6a7;font-weight:bold;">true   <span class="cmt">% se ha probado</span></span>';
+    } else {
+      solutions.forEach(b => {
+        const parts = Object.entries(b).map(([k,v]) =>
+          `<span class="var">${esc(k)}</span> = <span class="arg">${esc(v)}</span>`).join(', ');
+        s += `<span style="color:#a5d6a7;">${parts}</span>\n`;
+      });
+      s += `<span class="cmt">% ${solutions.length} solución(es)</span>`;
+    }
+    out.innerHTML = s;
+  }
+
+  // ============================================================
+  // TAB 4: motor simple de reglas
+  // ============================================================
+  const RULES_4 = {
+    cli_inf: {
+      code: 'cliente_informatica(C) :-\n    compra(C, P),\n    categoria(P, informatica).',
+      nl:  'Un cliente C es "de informática" si ha comprado al menos un producto P de la categoría informática.',
+      run: () => {
+        const out = new Set();
+        SHARED_KB.compra.forEach(([c,p]) => {
+          if (SHARED_KB.categoria.some(([q,cat]) => q===p && cat==='informatica')) out.add(c);
+        });
+        return [...out].sort().map(c => `cliente_informatica(${c})`);
+      }
+    },
+    recomendar: {
+      code: 'recomendar(C, P2) :-\n    compra(C, P1),\n    similar(P1, P2).',
+      nl:  'Recomienda P2 a C si C ha comprado un producto P1 similar a P2.',
+      run: () => {
+        const out = new Set();
+        SHARED_KB.compra.forEach(([c,p1]) => {
+          SHARED_KB.similar.forEach(([q,p2]) => {
+            if (q===p1) out.add(`recomendar(${c}, ${p2})`);
+          });
+        });
+        return [...out].sort();
+      }
+    },
+    comparten: {
+      code: 'comparten_producto(C1, C2) :-\n    compra(C1, P),\n    compra(C2, P),\n    C1 ≠ C2.',
+      nl:  'Dos clientes distintos C1 y C2 comparten producto si existe un P comprado por ambos.',
+      run: () => {
+        const out = new Set();
+        SHARED_KB.compra.forEach(([c1,p]) => {
+          SHARED_KB.compra.forEach(([c2,q]) => {
+            if (c1!==c2 && p===q) out.add(`comparten_producto(${c1}, ${c2}) — vía ${p}`);
+          });
+        });
+        return [...out].sort();
+      }
+    },
+    potencial: {
+      code: 'potencial(C, P2) :-\n    compra(C, P1),\n    similar(P1, P2),\n    not compra(C, P2).',
+      nl:  'P2 es un producto potencial para C si C ha comprado algo similar y todavía no tiene P2.',
+      run: () => {
+        const out = new Set();
+        SHARED_KB.compra.forEach(([c,p1]) => {
+          SHARED_KB.similar.forEach(([q,p2]) => {
+            if (q===p1 && !SHARED_KB.compra.some(([cc,pp]) => cc===c && pp===p2)) {
+              out.add(`potencial(${c}, ${p2})`);
+            }
+          });
+        });
+        return [...out].sort();
+      }
+    },
+  };
+
+  function r4Update() {
+    const k = document.getElementById('r4Sel').value;
+    const r = RULES_4[k];
+    document.getElementById('r4Code').textContent = r.code;
+    document.getElementById('r4Nl').textContent = r.nl;
+    document.getElementById('r4Out').innerHTML =
+      '<span class="cmt">% pulsa "Aplicar regla" para ver las conclusiones</span>';
+  }
+  function r4Run() {
+    const k = document.getElementById('r4Sel').value;
+    const out = document.getElementById('r4Out');
+    const sols = RULES_4[k].run();
+    if (!sols.length) {
+      out.innerHTML = '<span class="cmt">% no se derivan conclusiones</span>';
+      return;
+    }
+    out.innerHTML = `<span class="cmt">% ${sols.length} hecho(s) derivado(s):</span>\n`
+      + sols.map(s => `<span style="color:#a5d6a7;">${s}</span>`).join('\n');
+  }
+
+  // ============================================================
+  // TAB 5: conjunción, variables compartidas, negación
+  // ============================================================
+  function run51() {
+    const conP = new Set(SHARED_KB.compra.filter(([_,p]) => p==='portatil').map(t=>t[0]));
+    const conR = new Set(SHARED_KB.compra.filter(([_,p]) => p==='raton').map(t=>t[0]));
+    const out = [...conP].filter(c => conR.has(c)).sort();
+    const el = document.getElementById('r51Out');
+    if (!out.length) el.innerHTML = '<span class="cmt">% nadie</span>';
+    else el.innerHTML = `<span class="cmt">% conjunción AND →</span>\n` +
+      out.map(c => `<span style="color:#a5d6a7;">cliente_interesante(${c})</span>`).join('\n');
+  }
+  function run52() {
+    const diff = document.getElementById('r52Diff').checked;
+    const out = new Set();
+    SHARED_KB.compra.forEach(([c1,p]) => {
+      SHARED_KB.compra.forEach(([c2,q]) => {
+        if (p===q && (!diff || c1!==c2)) out.add(`(${c1}, ${c2}) — vía ${p}`);
+      });
+    });
+    const el = document.getElementById('r52Out');
+    el.innerHTML = `<span class="cmt">% ${diff ? "con C1 ≠ C2" : "SIN C1 ≠ C2"} → ${out.size} solución(es)</span>\n` +
+      [...out].sort().map(s => `<span style="color:#a5d6a7;">comparten${s}</span>`).join('\n');
+  }
+  function run53() {
+    const clientes = SHARED_KB.cliente.map(t=>t[0]);
+    const productos = SHARED_KB.producto.map(t=>t[0]);
+    const compras = new Set(SHARED_KB.compra.map(t => t.join('|')));
+    const out = [];
+    clientes.forEach(c => productos.forEach(p => {
+      if (!compras.has(`${c}|${p}`)) out.push(`no_ha_comprado(${c}, ${p})`);
+    }));
+    const el = document.getElementById('r53Out');
+    el.innerHTML = `<span class="cmt">% negación como fallo → ${out.length} hechos derivados</span>\n` +
+      out.slice(0, 12).map(s => `<span style="color:#a5d6a7;">${s}</span>`).join('\n') +
+      (out.length > 12 ? `\n<span class="cmt">  ... y ${out.length-12} más</span>` : '');
+  }
+
+  // ============================================================
+  // TAB 6: mini ILP
+  // ============================================================
+  const POS_6 = [
+    ['ana','monitor'], ['ana','teclado'],
+    ['marta','portatil'], ['marta','teclado'],
+  ];
+  const NEG_6 = [
+    ['luis','monitor'], ['ana','portatil'], ['marta','raton'],
+  ];
+  const CANDIDATES_6 = [
+    {
+      id: 'A',
+      label: 'A. posible_rec(C, P) :- producto(P).',
+      check: (c, p) => SHARED_KB.producto.some(([q]) => q===p),
+    },
+    {
+      id: 'B',
+      label: 'B. posible_rec(C, P) :- categoria(P, informatica).',
+      check: (c, p) => SHARED_KB.categoria.some(([q,cat]) => q===p && cat==='informatica'),
+    },
+    {
+      id: 'C',
+      label: 'C. posible_rec(C, P2) :- compra(C, P1), similar(P1, P2).',
+      check: (c, p2) => SHARED_KB.compra.some(([cc,p1]) =>
+              cc===c && SHARED_KB.similar.some(([q,p3]) => q===p1 && p3===p2)),
+    },
+    {
+      id: 'D',
+      label: 'D. posible_rec(C, P2) :- compra(C, P1), similar(P1, P2), no compra(C, P2).',
+      check: (c, p2) => CANDIDATES_6[2].check(c, p2) &&
+              !SHARED_KB.compra.some(([cc,pp]) => cc===c && pp===p2),
+    },
+  ];
+
+  function resetILP() {
+    const el = document.getElementById('r6List');
+    el.innerHTML = CANDIDATES_6.map(r =>
+      `<div class="rule" data-id="${r.id}">${r.label}</div>`).join('');
+    document.getElementById('r6Result').style.display = 'none';
+  }
+  let ilpRunning = false;
+  async function runILP() {
+    if (ilpRunning) return;             // evita ejecuciones simultáneas
+    ilpRunning = true;
+    const btn = document.getElementById('r6Btn');
+    if (btn) btn.disabled = true;
+    try {
+      const el = document.getElementById('r6List');
+      const ruleEls = el.querySelectorAll('.rule');
+      ruleEls.forEach(r => r.classList.remove('win','fail'));
+      let winner = null;
+      for (let i = 0; i < CANDIDATES_6.length; i++) {
+        const r = CANDIDATES_6[i];
+        const posOK = POS_6.filter(([c,p]) => r.check(c,p)).length;
+        const negOK = NEG_6.filter(([c,p]) => r.check(c,p)).length;
+        const allPos = posOK === POS_6.length;
+        const noNeg = negOK === 0;
+        const ok = allPos && noNeg;
+        const li = ruleEls[i];
+        await new Promise(res => setTimeout(res, 400));
+        li.innerHTML = `${esc(r.label)}<br><span style="font-size:0.8rem;font-weight:400;">
+          <span class="badge cov">+ ${posOK}/${POS_6.length}</span>
+          <span class="badge cov">− ${negOK}/${NEG_6.length}</span>
+          ${ok ? '✅ correcta' : '❌ rechazada'}</span>`;
+        li.classList.add(ok ? 'win' : 'fail');
+        if (ok && !winner) winner = r;
+      }
+      const res = document.getElementById('r6Result');
+      res.style.display = 'block';
+      if (winner) {
+        res.innerHTML = `<strong>Regla aprendida: ${esc(winner.id)}</strong><br>
+          <code style="font-size:0.9rem;">${esc(winner.label.replace(/^[A-Z]\. /, ''))}</code><br>
+          Cubre los ${POS_6.length} ejemplos positivos sin cubrir ninguno de los ${NEG_6.length} negativos.
+          Esta es la salida típica de un sistema ILP sobre este mini-problema.`;
+      } else {
+        res.innerHTML = '<strong>Ninguno de los candidatos cumple.</strong> Habría que ampliar el espacio de hipótesis.';
+      }
+    } finally {
+      ilpRunning = false;
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  // arranque
+  window.addEventListener('DOMContentLoaded', () => {
+    drawRelGraph(); window._tab1Drawn = true;
+  });
+  </script>
+</body>
+</html>
