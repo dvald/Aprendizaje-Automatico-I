@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tema 8: Aprendizaje relacional (PLI / ILP)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f7fa; color: #333; }
+
+  .header { background: #0f1b2d; color: white; padding: 2rem 2rem 1.5rem; position: relative; }
+  .header h1 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+  .header p { color: #90a4ae; font-size: 0.95rem; max-width: 820px; }
+  .back { color: #90a4ae; text-decoration: none; font-size: 0.85rem; display: inline-block;
+    margin-bottom: 0.8rem; }
+  .back:hover { color: #fff; }
+
+  .tabs { display: flex; gap: 0; background: #1a2940; padding: 0 2rem;
+    overflow-x: auto; border-bottom: 1px solid #0f1b2d; }
+  .tab { padding: 0.8rem 1.2rem; cursor: pointer; color: #90a4ae;
+    border-bottom: 3px solid transparent; transition: all 0.2s;
+    font-weight: 600; font-size: 0.9rem; white-space: nowrap; }
+  .tab:hover { color: #fff; }
+  .tab.active { color: #fff; border-bottom-color: #2196f3; }
+
+  .content { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .card { background: white; border-radius: 12px; padding: 1.5rem;
+    margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+  h2 { color: #0f1b2d; margin-bottom: 1rem; font-size: 1.45rem; }
+  h3 { color: #1a2940; margin-top: 1.1rem; margin-bottom: 0.7rem; font-size: 1.08rem; }
+  p { margin-bottom: 0.8rem; line-height: 1.6; }
+
+  .info-box { background: #e3f2fd; border-left: 4px solid #2196f3;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+    font-size: 0.95rem; line-height: 1.5; }
+  .info-box strong { color: #0f1b2d; }
+  .warn-box { background: #fff3e0; border-left: 4px solid #ff9800;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+    font-size: 0.95rem; line-height: 1.5; }
+  .success-box { background: #e8f5e9; border-left: 4px solid #4caf50;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+    font-size: 0.95rem; line-height: 1.5; }
+
+  pre, code { font-family: 'Menlo', 'Consolas', monospace; }
+  .code { background: #1e1e2e; color: #e8e8f0; border-radius: 8px; padding: 1rem 1.1rem;
+    font-size: 0.9rem; line-height: 1.5; overflow-x: auto; margin: 0.8rem 0; white-space: pre; }
+  .code .cm { color: #7cb342; }
+  .code .kw { color: #8ab4f8; }
+  .code .ok { color: #66bb6a; }
+  .code .no { color: #ef5350; }
+
+  button { padding: 0.6rem 1.1rem; background: #2196f3; color: white;
+    border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
+    font-size: 0.88rem; transition: all 0.2s; margin: 0.2rem; }
+  button:hover { background: #1976d2; }
+  button:active { transform: scale(0.98); }
+  button.ghost { background: #eceff1; color: #37474f; }
+  button.ghost:hover { background: #cfd8dc; }
+  button.green { background: #43a047; } button.green:hover { background: #388e3c; }
+
+  .out { background: #0f1b2d; color: #cfe8ff; border-radius: 8px; padding: 0.9rem 1.1rem;
+    font-family: 'Menlo', monospace; font-size: 0.9rem; line-height: 1.55; margin-top: 0.8rem;
+    min-height: 2.2rem; white-space: pre-wrap; }
+  .out .g { color: #69f0ae; } .out .r { color: #ff8a80; } .out .y { color: #ffd54f; }
+  .out .d { color: #90a4ae; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.6rem 0; }
+  .chip { padding: 0.35rem 0.7rem; border-radius: 16px; font-size: 0.85rem; cursor: pointer;
+    border: 2px solid #b0bec5; background: #fff; user-select: none; font-family: Menlo, monospace;}
+  .chip.pos { border-color: #43a047; background: #e8f5e9; color: #1b5e20; }
+  .chip.neg { border-color: #e53935; background: #ffebee; color: #b71c1c; }
+  .chip.off { opacity: 0.5; }
+
+  table { border-collapse: collapse; width: 100%; margin: 0.8rem 0; font-size: 0.92rem; }
+  th, td { border: 1px solid #cfd8dc; padding: 0.55rem 0.7rem; text-align: left; }
+  th { background: #0f1b2d; color: white; }
+  td.h { background: #f4f7fb; font-weight: 600; color: #0f1b2d; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  svg { max-width: 100%; height: auto; display: block; margin: 0.5rem auto; }
+  .lbl { font-size: 0.82rem; color: #607d8b; }
+  @media (max-width: 820px) {
+    .header h1 { font-size: 1.35rem; }
+    .two-col { grid-template-columns: 1fr; }
+    .tabs { padding: 0 1rem; } .content { padding: 0 1rem; }
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <a class="back" href="index.html">← Volver al inicio</a>
+    <h1>Tema 8: Aprendizaje relacional (PLI / ILP)</h1>
+    <p>¿Se puede programar en lógica de primer orden? Sí: con Prolog se programa y se razona, y
+       con la programación lógica inductiva una máquina <em>aprende</em> el propio programa.
+       Cada pestaña es una demo de un concepto del tema.</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('t1', event)">1. Prolog: hechos, reglas, consultas</div>
+    <div class="tab" onclick="showTab('t2', event)">2. Unificación &amp; backtracking</div>
+    <div class="tab" onclick="showTab('t3', event)">3. Deducción ↔ Inducción</div>
+    <div class="tab" onclick="showTab('t4', event)">4. Definición de la PLI</div>
+    <div class="tab" onclick="showTab('t5', event)">5. Aprender una regla (ILP)</div>
+    <div class="tab" onclick="showTab('t6', event)">6. ML tabular vs relacional</div>
+  </div>
+
+  <div class="content">
+
+  <!-- ============ TAB 1 ============ -->
+  <div class="section active" id="t1">
+    <div class="card">
+      <h2>1. Programar en lógica de primer orden: Prolog</h2>
+      <p>Un programa Prolog es una <strong>teoría lógica</strong>: un conjunto de
+         <strong>hechos</strong> y <strong>reglas</strong>. No escribimos el «cómo»; declaramos
+         lo que es verdad y el motor deduce las respuestas a nuestras <strong>consultas</strong>.</p>
+      <div class="code"><span class="cm">% --- HECHOS (conocimiento previo B) ---</span>
+padre(juan, ana).   padre(ana, luis).   padre(ana, sara).
+padre(luis, mia).   padre(pedro, marta).
+
+<span class="cm">% --- REGLAS ---</span>
+abuelo(X, Z)     <span class="kw">:-</span> padre(X, Y), padre(Y, Z).
+antepasado(X, Z) <span class="kw">:-</span> padre(X, Z).
+antepasado(X, Z) <span class="kw">:-</span> padre(X, Y), antepasado(Y, Z).</div>
+
+      <h3>Prueba una consulta</h3>
+      <p class="lbl">La variable <code>N</code> es un hueco: el motor devuelve todos los valores que la hacen cierta.</p>
+      <div>
+        <button onclick="q1('abuelo(juan, N)')">?- abuelo(juan, N).</button>
+        <button onclick="q1('abuelo(A, mia)')">?- abuelo(A, mia).</button>
+        <button onclick="q1('antepasado(juan, N)')">?- antepasado(juan, N).</button>
+        <button onclick="q1('padre(P, sara)')">?- padre(P, sara).</button>
+        <button class="ghost" onclick="q1('abuelo(juan, ana)')">?- abuelo(juan, ana).</button>
+      </div>
+      <div class="out" id="out1"><span class="d">Pulsa una consulta…</span></div>
+      <div class="info-box"><strong>Idea.</strong> La misma relación se consulta en cualquier
+        dirección (reversibilidad), y la recursión de <code>antepasado/2</code> recorre el árbol
+        a cualquier profundidad sin un solo bucle.</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 2 ============ -->
+  <div class="section" id="t2">
+    <div class="card">
+      <h2>2. Razonamiento automático: unificación + backtracking</h2>
+      <p>Para responder <code>?- abuelo(ana, N)</code> el motor busca un <code>Y</code> tal que
+         <code>padre(ana, Y)</code> y <code>padre(Y, N)</code>. Aquí <code>padre(ana, Y)</code>
+         tiene <strong>dos</strong> candidatos (<code>luis</code> y <code>sara</code>): prueba el
+         primero y, si la segunda meta falla, <strong>retrocede</strong> (backtracking) y prueba
+         el siguiente.</p>
+      <button onclick="t2step()">▶ Paso siguiente</button>
+      <button class="ghost" onclick="t2reset()">↺ Reiniciar</button>
+      <div id="t2tree"></div>
+      <div class="out" id="out2"><span class="d">Pulsa «Paso siguiente»…</span></div>
+      <div class="info-box"><strong>Unificación</strong>: emparejar términos haciendo iguales
+        las variables (<code>Y = luis</code>). <strong>Resolución</strong>: encadenar cláusulas
+        hasta vaciar el objetivo. La búsqueda y el «deshacer» son automáticos.</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 3 ============ -->
+  <div class="section" id="t3">
+    <div class="card">
+      <h2>3. Deducción ↔ Inducción</h2>
+      <p>Prolog <strong>deduce</strong> hechos a partir de reglas (de lo general a lo
+         particular). La programación lógica inductiva <strong>invierte la flecha</strong>:
+         aprende las reglas a partir de los ejemplos (de lo particular a lo general).</p>
+      <div style="text-align:center; margin:0.5rem 0;">
+        <button onclick="t3toggle()" id="t3btn">Ver: DEDUCCIÓN (Prolog) ▶</button>
+      </div>
+      <div id="t3box"></div>
+      <div class="warn-box"><strong>«Inductivo»</strong> aquí es inducción <em>filosófica</em>
+        (proponer una teoría que explica los hechos observados), no inducción matemática. La
+        hipótesis es una conjetura razonable a la luz de los datos.</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 4 ============ -->
+  <div class="section" id="t4">
+    <div class="card">
+      <h2>4. Definición de la PLI: ¿la hipótesis es válida?</h2>
+      <p>Dados el conocimiento previo <strong>B</strong>, los positivos <strong>E⁺</strong> y los
+         negativos <strong>E⁻</strong>, una hipótesis <strong>H</strong> es válida si
+         <code>B ∧ H ⊨ E⁺</code> (cubre todos los positivos) y <code>B ∧ H ⊭ E⁻</code>
+         (no cubre ningún negativo). Elige una regla candidata y compruébalo.</p>
+      <div class="two-col">
+        <div>
+          <h3 style="color:#43a047">E⁺ (deben cubrirse)</h3>
+          <div class="code">abuelo(juan, luis)
+abuelo(juan, sara)
+abuelo(ana, mia)</div>
+          <h3 style="color:#e53935">E⁻ (no deben cubrirse)</h3>
+          <div class="code">abuelo(juan, ana)
+abuelo(ana, luis)
+abuelo(juan, mia)</div>
+        </div>
+        <div>
+          <h3>Regla candidata H</h3>
+          <button onclick="t4check(0)">abuelo(X,Y) :- true.</button>
+          <button onclick="t4check(1)">:- padre(X,Z).</button>
+          <button onclick="t4check(2)">:- padre(Z,Y).</button>
+          <button class="green" onclick="t4check(3)">:- padre(X,Z), padre(Z,Y).</button>
+          <button onclick="t4check(4)">:- padre(X,Y).</button>
+          <div class="out" id="out4"><span class="d">Elige una regla candidata…</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 5 ============ -->
+  <div class="section" id="t5">
+    <div class="card">
+      <h2>5. Aprender una regla por cubrimiento (mini-ILP)</h2>
+      <p>El algoritmo parte de la regla vacía y <strong>añade condiciones</strong> del
+         <em>background</em> hasta no cubrir ningún negativo. Activa/desactiva ejemplos
+         (clic) y pulsa <strong>Aprender</strong> para ver cómo cambia la regla descubierta.</p>
+      <h3 style="color:#43a047">Ejemplos positivos</h3>
+      <div class="chips" id="pos5"></div>
+      <h3 style="color:#e53935">Ejemplos negativos</h3>
+      <div class="chips" id="neg5"></div>
+      <div style="margin-top:0.6rem">
+        <button class="green" onclick="t5learn()">⚙ Aprender regla</button>
+        <button class="ghost" onclick="t5reset()">↺ Reiniciar ejemplos</button>
+      </div>
+      <div class="out" id="out5"><span class="d">Pulsa «Aprender regla»…</span></div>
+      <div class="info-box"><strong>Background B:</strong>
+        <code>padre(juan,ana), padre(ana,luis), padre(ana,sara), padre(luis,mia),
+        padre(pedro,marta)</code>. La búsqueda es de lo general a lo específico (estilo FOIL).</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 6 ============ -->
+  <div class="section" id="t6">
+    <div class="card">
+      <h2>6. ML tabular (T1-T7) vs aprendizaje relacional (T8)</h2>
+      <p>No compiten: se complementan. Se elige según la naturaleza del problema.</p>
+      <table>
+        <tr><th>Criterio</th><th>ML tabular</th><th>ILP / relacional</th></tr>
+        <tr><td class="h">Dato natural</td><td>tabla (X, y)</td><td>hechos y relaciones</td></tr>
+        <tr><td class="h">Nº de ejemplos</td><td>muchos</td><td>pocos (a veces 1)</td></tr>
+        <tr><td class="h">Conocimiento previo</td><td>implícito / difícil</td><td>explícito y central</td></tr>
+        <tr><td class="h">Modelo resultante</td><td>pesos / caja negra</td><td>reglas legibles</td></tr>
+        <tr><td class="h">Ruido / probabilidad</td><td>fuerte</td><td>débil</td></tr>
+        <tr><td class="h">Interpretabilidad</td><td>baja</td><td>alta</td></tr>
+      </table>
+      <div class="success-box"><strong>Criterio de elección.</strong> Usa aprendizaje relacional
+        cuando la estructura relacional, la escasez de datos o la necesidad de explicar las
+        decisiones dejan corto al ML tabular. A menudo lo mejor es combinarlos
+        (aprendizaje neuro-simbólico).</div>
+      <h3>¿Qué enfoque encaja mejor?</h3>
+      <div id="t6q"></div>
+    </div>
+  </div>
+
+  </div>
+
+<script>
+/* ====== Motor relacional mínimo (compartido) ====== */
+const FATHER = [
+  ["juan","ana"],["ana","luis"],["ana","sara"],["luis","mia"],["pedro","marta"]
+];
+const PEOPLE = [...new Set(FATHER.flat())].sort();
+
+function isVar(t){ return /^[A-Z]/.test(t); }
+
+// resuelve una conjunción de literales padre(a,b) sobre FATHER, devolviendo
+// la lista de sustituciones completas (cada una es {Var:valor})
+function solve(goals, sub){
+  if(goals.length===0) return [sub];
+  const [pred,a,b] = goals[0];
+  let res=[];
+  for(const [fa,fb] of FATHER){
+    let s = Object.assign({},sub), ok=true;
+    for(const [term,val] of [[a,fa],[b,fb]]){
+      if(isVar(term)){
+        if(term in s){ if(s[term]!==val){ok=false;break;} }
+        else s[term]=val;
+      } else if(term!==val){ ok=false; break; }
+    }
+    if(ok) res=res.concat(solve(goals.slice(1), s));
+  }
+  return res;
+}
+
+// ¿la regla (lista de literales con vars X,Y,Z...) cubre el par (x,y)?
+function covers(rule, x, y){
+  if(rule.length===0) return true;
+  return solve(rule, {X:x, Y:y}).length>0;
+}
+
+/* ====== Tabs ====== */
+function showTab(id, ev){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  ev.currentTarget.classList.add('active');
+}
+
+/* ====== TAB 1: consultas ====== */
+function q1(query){
+  const out=document.getElementById('out1');
+  const m = query.match(/^(\w+)\(([^,]+),\s*([^)]+)\)$/);
+  const pred=m[1], a=m[2].trim(), b=m[3].trim();
+  let sols=[];
+  if(pred==='padre'){
+    sols = solve([['padre',a,b]], {}).map(s=>({[a]:s[a]||a,[b]:s[b]||b}));
+  } else if(pred==='abuelo'){
+    const r=[['padre','X','Z'],['padre','Z','Y']];
+    sols = solveNamed(r, a, b);
+  } else if(pred==='antepasado'){
+    sols = antepasado(a,b);
+  }
+  // formatear: qué variables hay
+  const vars=[a,b].filter(isVar);
+  if(sols.length===0){ out.innerHTML='<span class="r">false.</span>'; return; }
+  if(vars.length===0){ out.innerHTML='<span class="g">true.</span>'; return; }
+  let lines = sols.map(s=>vars.map(v=>v+' = '+s[v]).join(', '));
+  // dedup
+  lines=[...new Set(lines)];
+  out.innerHTML = lines.map(l=>'<span class="g">'+l+'</span>').join(' ;\n')+' .';
+}
+// resuelve regla de 2 literales con cabeza (a,b) que pueden ser const o var
+function solveNamed(rule, a, b){
+  const subs = solve(rule, {});
+  let res=[];
+  for(const s of subs){
+    const xv=s.X, yv=s.Y;
+    let ok=true, bind={};
+    for(const [term,val] of [[a,xv],[b,yv]]){
+      if(isVar(term)) bind[term]=val;
+      else if(term!==val) ok=false;
+    }
+    if(ok) res.push(bind);
+  }
+  return res;
+}
+function antepasado(a,b){
+  // Cierre transitivo COMPLETO de padre, calculado a punto fijo:
+  // sin límite de profundidad (recorre cualquier número de generaciones).
+  const pairs = new Set(FATHER.map(([x,y]) => x+"|"+y));
+  let changed = true;
+  while(changed){
+    changed = false;
+    for(const p of [...pairs]){
+      const [x, m] = p.split("|");
+      for(const [fa, fb] of FATHER){
+        if(fa === m){
+          const np = x+"|"+fb;
+          if(!pairs.has(np)){ pairs.add(np); changed = true; }
+        }
+      }
+    }
+  }
+  // filtrar por la consulta (a, b), que pueden ser constantes o variables
+  let res=[];
+  for(const p of pairs){
+    const [x, y] = p.split("|");
+    pushPair(res, a, b, x, y);
+  }
+  // dedup
+  const seen=new Set(); return res.filter(o=>{const k=JSON.stringify(o); if(seen.has(k))return false; seen.add(k);return true;});
+}
+function pushPair(res, a, b, x, y){
+  let bind={}, ok=true;
+  for(const [term,val] of [[a,x],[b,y]]){
+    if(isVar(term)) bind[term]=val; else if(term!==val) ok=false;
+  }
+  if(ok) res.push(bind);
+}
+
+/* ====== TAB 2: árbol de backtracking ====== */
+// Consulta: ?- abuelo(ana, N).  padre(ana, Y) tiene DOS candidatos reales:
+//   Y = luis -> padre(luis, N) -> N = mia          (éxito)
+//   Y = sara -> padre(sara, N) -> sin hijos        (fallo -> backtrack)
+let t2state=0;
+const t2cands=[
+  {Y:"luis", ok:true,  lines:["padre(luis, N)", "→ N = mia  ✓"]},
+  {Y:"sara", ok:false, lines:["padre(sara, N)", "(sara no tiene hijos)", "✗ backtrack"]},
+];
+function t2draw(){
+  const W=680, H=320;
+  let svg=`<svg viewBox="0 0 ${W} ${H}">`;
+  // raíz
+  svg+=box(W/2-130,12,260,46,"padre(ana, Y), padre(Y, N)","#e3f2fd","#2196f3");
+  const xs=[190, 490];               // centros de las 2 ramas reales
+  const labels=["Y = luis","Y = sara"];
+  for(let i=0;i<t2cands.length;i++){
+    const active = i < t2state;
+    const col = active ? (t2cands[i].ok?"#43a047":"#fb8c00") : "#cfd8dc";
+    const fc  = active ? (t2cands[i].ok?"#e8f5e9":"#fff3e0") : "#fafafa";
+    svg+=`<line x1="${W/2}" y1="58" x2="${xs[i]}" y2="104" stroke="#bbb" stroke-width="2"/>`;
+    svg+=box(xs[i]-75,104,150,40,labels[i],fc,col);
+    if(active){
+      let yy=170;
+      for(const ln of t2cands[i].lines){
+        const c = ln.includes("✓")?"#2e7d32":(ln.includes("✗")?"#c62828":"#455a64");
+        svg+=`<text x="${xs[i]}" y="${yy}" text-anchor="middle" font-size="12.5" fill="${c}" font-family="Menlo,monospace">${esc(ln)}</text>`;
+        yy+=24;
+      }
+    }
+  }
+  svg+="</svg>";
+  document.getElementById('t2tree').innerHTML=svg;
+}
+function box(x,y,w,h,t,fc,ec){
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="${fc}" stroke="${ec}" stroke-width="2"/>`+
+         `<text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" font-size="12.5" fill="#0f1b2d" font-family="Menlo,monospace">${esc(t)}</text>`;
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+// msgs[k] describe el ESTADO k tras el k-ésimo clic (alineado, sin off-by-one)
+const t2msgs=[
+  '<span class="d">Pulsa «Paso siguiente»…</span>',
+  'Primer candidato: <span class="y">Y = luis</span>. <code>padre(ana, luis)</code> es cierto → exploramos <code>padre(luis, N)</code> → <span class="g">N = mia ✓</span> (primera solución).',
+  'Backtracking: probamos el siguiente candidato <span class="y">Y = sara</span>. <code>padre(sara, N)</code> no tiene solución (sara no tiene hijos) → <span class="r">✗ retrocede</span>.',
+  'No quedan más candidatos para Y. Fin. Única respuesta: <span class="g">N = mia</span>.'
+];
+function t2step(){
+  if(t2state < 3) t2state++;
+  t2draw();
+  document.getElementById('out2').innerHTML = t2msgs[t2state];
+}
+function t2reset(){ t2state=0; t2draw(); document.getElementById('out2').innerHTML=t2msgs[0]; }
+
+/* ====== TAB 3: deducción/inducción ====== */
+let t3mode=0;
+function t3render(){
+  const ded = `<div class="code"><span class="kw">REGLAS (B)</span> + hechos
+   ↓  motor de inferencia
+<span class="ok">HECHOS NUEVOS</span>
+<span class="cm">de lo general a lo particular</span>
+
+padre(juan,ana), padre(ana,luis)
+abuelo(X,Z) :- padre(X,Y), padre(Y,Z).
+   ⟹  <span class="ok">abuelo(juan, luis).</span></div>`;
+  const ind = `<div class="code"><span class="kw">EJEMPLOS</span> (E⁺/E⁻) + B
+   ↓  algoritmo de inducción
+<span class="ok">REGLAS NUEVAS (H)</span>
+<span class="cm">de lo particular a lo general</span>
+
+E⁺: abuelo(juan,luis), abuelo(juan,sara)
+E⁻: abuelo(juan,ana)
+   ⟹  <span class="ok">abuelo(X,Y) :- padre(X,Z), padre(Z,Y).</span></div>`;
+  document.getElementById('t3box').innerHTML = t3mode===0 ? ded : ind;
+  document.getElementById('t3btn').textContent =
+     t3mode===0 ? 'Ver: INDUCCIÓN (ILP) ▶' : 'Ver: DEDUCCIÓN (Prolog) ▶';
+}
+function t3toggle(){ t3mode=1-t3mode; t3render(); }
+
+/* ====== TAB 4: validez de hipótesis ====== */
+const RULES4=[
+  {t:"abuelo(X, Y) :- true.", r:[]},
+  {t:"abuelo(X, Y) :- padre(X, Z).", r:[["padre","X","Z"]]},
+  {t:"abuelo(X, Y) :- padre(Z, Y).", r:[["padre","Z","Y"]]},
+  {t:"abuelo(X, Y) :- padre(X, Z), padre(Z, Y).", r:[["padre","X","Z"],["padre","Z","Y"]]},
+  {t:"abuelo(X, Y) :- padre(X, Y).", r:[["padre","X","Y"]]},
+];
+const POS4=[["juan","luis"],["juan","sara"],["ana","mia"]];
+const NEG4=[["juan","ana"],["ana","luis"],["juan","mia"]];
+function t4check(i){
+  const {t,r}=RULES4[i];
+  const pc=POS4.filter(([x,y])=>covers(r,x,y));
+  const nc=NEG4.filter(([x,y])=>covers(r,x,y));
+  const valid = pc.length===POS4.length && nc.length===0;
+  let s = '<span class="y">'+t+'</span>\n';
+  s += 'Positivos cubiertos: <span class="g">'+pc.length+'/'+POS4.length+'</span>'+
+       (pc.length?'  ('+pc.map(p=>p.join('→')).join(', ')+')':'')+'\n';
+  s += 'Negativos cubiertos: '+(nc.length? '<span class="r">'+nc.length+'</span>  ('+nc.map(p=>p.join('→')).join(', ')+')':'<span class="g">0</span>')+'\n';
+  s += valid ? '<span class="g">✓ HIPÓTESIS VÁLIDA (B∧H⊨E⁺ y B∧H⊭E⁻)</span>'
+             : '<span class="r">✗ no válida</span>';
+  document.getElementById('out4').innerHTML=s;
+}
+
+/* ====== TAB 5: aprender por cubrimiento ====== */
+const ALLPOS=[["juan","luis"],["juan","sara"],["ana","mia"]];
+const ALLNEG=[["juan","ana"],["ana","luis"],["pedro","marta"],["juan","mia"],["luis","juan"]];
+let pos5=ALLPOS.map(()=>true), neg5=ALLNEG.map(()=>true);
+function t5renderChips(){
+  document.getElementById('pos5').innerHTML = ALLPOS.map((p,i)=>
+    `<span class="chip pos ${pos5[i]?'':'off'}" onclick="pos5[${i}]=!pos5[${i}];t5renderChips()">abuelo(${p[0]}, ${p[1]})</span>`).join('');
+  document.getElementById('neg5').innerHTML = ALLNEG.map((p,i)=>
+    `<span class="chip neg ${neg5[i]?'':'off'}" onclick="neg5[${i}]=!neg5[${i}];t5renderChips()">abuelo(${p[0]}, ${p[1]})</span>`).join('');
+}
+function candidateLiterals(rule){
+  const used=new Set(["X","Y"]);
+  rule.forEach(l=>l.slice(1).forEach(t=>{if(isVar(t))used.add(t);}));
+  const zc = [...used].filter(v=>v.startsWith("Z")).length;
+  const nz = "Z"+(zc+1);
+  const vocab=[...used].sort().concat([nz]);
+  let c=[];
+  for(const a of vocab) for(const b of vocab){
+    if(a===b) continue;
+    const lit=["padre",a,b];
+    if(!rule.some(l=>l.join()===lit.join())) c.push(lit);
+  }
+  return c;
+}
+function cov(rule, exs){ return exs.filter(([x,y])=>covers(rule,x,y)).length; }
+function t5learn(){
+  const pos=ALLPOS.filter((_,i)=>pos5[i]);
+  const neg=ALLNEG.filter((_,i)=>neg5[i]);
+  const out=document.getElementById('out5');
+  if(pos.length===0){ out.innerHTML='<span class="r">Necesitas al menos un ejemplo positivo.</span>'; return; }
+  let rule=[], log=[];
+  for(let step=0; step<4; step++){
+    const pc=cov(rule,pos), nc=cov(rule,neg);
+    log.push('Regla: <span class="y">'+(rule.length?rule.map(l=>l[0]+'('+l[1]+','+l[2]+')').join(', '):'true')+'</span>  +'+pc+'/'+pos.length+'  −'+nc);
+    if(nc===0 && pc>0){ break; }
+    let best=null, bestScore=null;
+    for(const lit of candidateLiterals(rule)){
+      const cand=rule.concat([lit]);
+      const p=cov(cand,pos), n=cov(cand,neg);
+      if(p===0) continue;
+      const sc=[p,-n];
+      if(!bestScore || sc[0]>bestScore[0] || (sc[0]===bestScore[0]&&sc[1]>bestScore[1])){ best=lit; bestScore=sc; }
+    }
+    if(!best) break;
+    rule.push(best);
+    log.push('   → añadimos <span class="g">'+best[0]+'('+best[1]+','+best[2]+')</span>');
+  }
+  const pc=cov(rule,pos), nc=cov(rule,neg);
+  const valid = pc===pos.length && nc===0;
+  let s=log.join('\n')+'\n\n';
+  s+='<span class="g">REGLA APRENDIDA:</span> abuelo(X, Y) :- '+
+     (rule.length?rule.map(l=>l[0]+'('+l[1]+', '+l[2]+')').join(', '):'true')+'.\n';
+  s+= valid ? '<span class="g">✓ cubre todos los positivos y ningún negativo</span>'
+            : '<span class="y">⚠ con estos ejemplos no se separa perfectamente (prueba a activar más negativos)</span>';
+  out.innerHTML=s;
+}
+function t5reset(){ pos5=ALLPOS.map(()=>true); neg5=ALLNEG.map(()=>true); t5renderChips(); document.getElementById('out5').innerHTML='<span class="d">Pulsa «Aprender regla»…</span>'; }
+
+/* ====== TAB 6: mini quiz ====== */
+const Q6=[
+  {q:"Clasificar imágenes con millones de fotos etiquetadas", a:"tabular"},
+  {q:"Descubrir una regla genética a partir de 8 casos y conocimiento biológico", a:"relacional"},
+  {q:"Predecir el precio de una casa con 50.000 registros numéricos", a:"tabular"},
+  {q:"Aprender un programa que transforma texto a partir de 2 ejemplos", a:"relacional"},
+];
+function t6render(){
+  let h='';
+  Q6.forEach((it,i)=>{
+    h+=`<p style="margin:0.4rem 0"><strong>${i+1}.</strong> ${it.q}<br>
+        <button class="ghost" onclick="t6ans(${i},'tabular')">ML tabular</button>
+        <button class="ghost" onclick="t6ans(${i},'relacional')">Relacional</button>
+        <span id="t6r${i}"></span></p>`;
+  });
+  document.getElementById('t6q').innerHTML=h;
+}
+function t6ans(i,choice){
+  const ok=Q6[i].a===choice;
+  document.getElementById('t6r'+i).innerHTML = ok
+    ? ' <span style="color:#2e7d32;font-weight:600">✓ correcto</span>'
+    : ' <span style="color:#c62828;font-weight:600">✗ mejor: '+Q6[i].a+'</span>';
+}
+
+/* init */
+t2draw(); t3render(); t5renderChips(); t6render();
+</script>
+</body>
+</html>
