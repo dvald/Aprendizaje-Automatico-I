@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tema 9: Aprendizaje en tiempo real (Big Data)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f7fa; color: #333; }
+
+  .header { background: #0f1b2d; color: white; padding: 2rem 2rem 1.5rem; position: relative; }
+  .header h1 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+  .header p { color: #90a4ae; font-size: 0.95rem; max-width: 860px; }
+  .back { color: #90a4ae; text-decoration: none; font-size: 0.85rem; display: inline-block;
+    margin-bottom: 0.8rem; }
+  .back:hover { color: #fff; }
+
+  .tabs { display: flex; gap: 0; background: #1a2940; padding: 0 2rem;
+    overflow-x: auto; border-bottom: 1px solid #0f1b2d; }
+  .tab { padding: 0.8rem 1.1rem; cursor: pointer; color: #90a4ae;
+    border-bottom: 3px solid transparent; transition: all 0.2s;
+    font-weight: 600; font-size: 0.88rem; white-space: nowrap; }
+  .tab:hover { color: #fff; }
+  .tab.active { color: #fff; border-bottom-color: #2196f3; }
+
+  .content { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .card { background: white; border-radius: 12px; padding: 1.5rem;
+    margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+  h2 { color: #0f1b2d; margin-bottom: 1rem; font-size: 1.45rem; }
+  h3 { color: #1a2940; margin-top: 1.1rem; margin-bottom: 0.7rem; font-size: 1.08rem; }
+  p { margin-bottom: 0.8rem; line-height: 1.6; }
+
+  .info-box { background: #e3f2fd; border-left: 4px solid #2196f3;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+    font-size: 0.95rem; line-height: 1.5; }
+  .info-box strong { color: #0f1b2d; }
+  .warn-box { background: #fff3e0; border-left: 4px solid #ff9800;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+    font-size: 0.95rem; line-height: 1.5; }
+  .success-box { background: #e8f5e9; border-left: 4px solid #4caf50;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+    font-size: 0.95rem; line-height: 1.5; }
+
+  pre, code { font-family: 'Menlo', 'Consolas', monospace; }
+  .code { background: #1e1e2e; color: #e8e8f0; border-radius: 8px; padding: 1rem 1.1rem;
+    font-size: 0.9rem; line-height: 1.5; overflow-x: auto; margin: 0.8rem 0; white-space: pre; }
+  .code .cm { color: #7cb342; }
+  .code .kw { color: #8ab4f8; }
+
+  button { padding: 0.6rem 1.1rem; background: #2196f3; color: white;
+    border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
+    font-size: 0.88rem; transition: all 0.2s; margin: 0.2rem; }
+  button:hover { background: #1976d2; }
+  button:active { transform: scale(0.98); }
+  button.ghost { background: #eceff1; color: #37474f; }
+  button.ghost:hover { background: #cfd8dc; }
+  button.green { background: #43a047; } button.green:hover { background: #388e3c; }
+  button.red { background: #e53935; } button.red:hover { background: #c62828; }
+  button:disabled { background: #cfd8dc; color: #90a4ae; cursor: not-allowed; transform: none; }
+
+  .out { background: #0f1b2d; color: #cfe8ff; border-radius: 8px; padding: 0.9rem 1.1rem;
+    font-family: 'Menlo', monospace; font-size: 0.88rem; line-height: 1.55; margin-top: 0.8rem;
+    min-height: 2.2rem; white-space: pre-wrap; }
+  .out .g { color: #69f0ae; } .out .r { color: #ff8a80; } .out .y { color: #ffd54f; }
+  .out .b { color: #82b1ff; } .out .d { color: #90a4ae; }
+
+  table { border-collapse: collapse; width: 100%; margin: 0.8rem 0; font-size: 0.92rem; }
+  th, td { border: 1px solid #cfd8dc; padding: 0.55rem 0.7rem; text-align: left; vertical-align: top; }
+  th { background: #0f1b2d; color: white; }
+  td.h { background: #f4f7fb; font-weight: 600; color: #0f1b2d; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: center; margin: 0.8rem 0; }
+  .controls label { font-size: 0.9rem; color: #37474f; font-weight: 600; }
+  .controls input[type=range] { vertical-align: middle; }
+  .val { display: inline-block; min-width: 2.4rem; font-family: Menlo, monospace;
+    color: #1565c0; font-weight: 700; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; }
+  .vbox { border-radius: 10px; padding: 0.9rem; color: #fff; }
+  .vbox h4 { font-size: 1rem; margin-bottom: 0.3rem; }
+  .vbox p { font-size: 0.85rem; line-height: 1.4; margin: 0; opacity: 0.95; }
+
+  svg { max-width: 100%; height: auto; display: block; margin: 0.5rem auto; }
+  .lbl { font-size: 0.82rem; color: #607d8b; }
+
+  /* HDFS nodes */
+  .nodes { display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 1rem 0; }
+  .node { border: 2px solid #90a4ae; border-radius: 10px; padding: 0.6rem; min-width: 130px;
+    background: #fafafa; transition: all 0.25s; }
+  .node.dead { border-color: #e53935; background: #ffebee; opacity: 0.65; }
+  .node .nname { font-weight: 700; color: #0f1b2d; font-size: 0.85rem; margin-bottom: 0.4rem; cursor: pointer; }
+  .node.dead .nname { color: #c62828; }
+  .blk { display: inline-block; padding: 0.3rem 0.55rem; margin: 0.15rem; border-radius: 6px;
+    font-family: Menlo, monospace; font-size: 0.8rem; font-weight: 700; }
+
+  /* heartbeat */
+  @keyframes pulse { 0%{opacity:1} 50%{opacity:0.25} 100%{opacity:1} }
+  .beat { animation: pulse 1.1s infinite; }
+
+  /* spark stack */
+  .stack-item { border-radius: 8px; padding: 0.7rem; margin: 0.3rem 0; cursor: pointer;
+    color: #fff; font-weight: 600; text-align: center; transition: transform 0.15s; }
+  .stack-item:hover { transform: scale(1.02); }
+
+  .bar { height: 26px; border-radius: 5px; color: #fff; font-size: 0.8rem; font-weight: 700;
+    display: flex; align-items: center; padding-left: 0.5rem; white-space: nowrap; transition: width 0.4s; }
+
+  @media (max-width: 820px) {
+    .header h1 { font-size: 1.35rem; }
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+    .tabs { padding: 0 1rem; } .content { padding: 0 1rem; }
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <a class="back" href="index.html">← Volver al inicio</a>
+    <h1>Tema 9: Aprendizaje en tiempo real (Big Data)</h1>
+    <p>Cuando los datos no caben ni se procesan en una sola máquina, los repartimos entre muchas.
+       Explora Hadoop, HDFS, MapReduce y Apache Spark. Cada pestaña es una demo interactiva de un
+       concepto del tema.</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('t1', event)">1. Big Data &amp; las V</div>
+    <div class="tab" onclick="showTab('t2', event)">2. HDFS: bloques &amp; réplicas</div>
+    <div class="tab" onclick="showTab('t3', event)">3. NameNode / DataNode</div>
+    <div class="tab" onclick="showTab('t4', event)">4. MapReduce (word count)</div>
+    <div class="tab" onclick="showTab('t5', event)">5. Combinador &amp; shuffle</div>
+    <div class="tab" onclick="showTab('t6', event)">6. Spark &amp; RDD</div>
+    <div class="tab" onclick="showTab('t7', event)">7. Ecosistema Spark</div>
+    <div class="tab" onclick="showTab('t8', event)">8. ¿Quién hace qué?</div>
+  </div>
+
+  <div class="content">
+
+  <!-- ============ TAB 1 ============ -->
+  <div class="section active" id="t1">
+    <div class="card">
+      <h2>1. ¿Qué es el Big Data? Las «V»</h2>
+      <p>No se define solo por el tamaño, sino por características que desbordan las herramientas
+         clásicas. Surge en los <strong>años 2000</strong> con las redes sociales, los foros, el
+         comercio electrónico y la banca en línea.</p>
+      <div class="grid3">
+        <div class="vbox" style="background:#2196f3"><h4>Volumen</h4><p>Terabytes y petabytes. No caben en una sola máquina.</p></div>
+        <div class="vbox" style="background:#43a047"><h4>Velocidad</h4><p>Llegan sin parar y en tiempo real: clics, sensores, transacciones.</p></div>
+        <div class="vbox" style="background:#fb8c00"><h4>Variedad</h4><p>Texto, imágenes, vídeo, logs... estructurados y no estructurados.</p></div>
+        <div class="vbox" style="background:#8e24aa"><h4>Veracidad</h4><p>Datos ruidosos, incompletos o contradictorios.</p></div>
+        <div class="vbox" style="background:#0097a7"><h4>Valor</h4><p>El fin último: extraer conocimiento útil del dato.</p></div>
+      </div>
+
+      <h3>Demo: ¿cabe en una sola máquina?</h3>
+      <p class="lbl">Ajusta cuántos datos genera tu aplicación al día y cuánto disco tiene una máquina.</p>
+      <div class="controls">
+        <label>Datos/día: <span class="val" id="t1rateV">50</span> GB
+          <input type="range" id="t1rate" min="1" max="2000" value="50" oninput="t1calc()"></label>
+        <label>Disco de 1 máquina: <span class="val" id="t1capV">4</span> TB
+          <input type="range" id="t1cap" min="1" max="64" value="4" oninput="t1calc()"></label>
+      </div>
+      <div class="out" id="t1out"></div>
+      <div class="info-box"><strong>Escalado horizontal.</strong> En lugar de comprar una máquina cada
+        vez más grande (escalado vertical, con techo físico), añadimos máquinas baratas al clúster.
+        Eso es exactamente lo que hacen Hadoop y HDFS.</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 2 ============ -->
+  <div class="section" id="t2">
+    <div class="card">
+      <h2>2. HDFS: división en bloques y replicación</h2>
+      <p>HDFS parte cada fichero en <strong>bloques de 128 MB</strong> y reparte cada bloque entre los
+         nodos. Para tolerar fallos, guarda <strong>varias copias</strong> de cada bloque (factor de
+         replicación por defecto = <strong>3</strong>).</p>
+      <div class="controls">
+        <label>Tamaño del fichero: <span class="val" id="t2sizeV">512</span> MB
+          <input type="range" id="t2size" min="128" max="1280" step="128" value="512" oninput="t2render()"></label>
+        <label>Factor de replicación: <span class="val" id="t2repV">3</span>
+          <input type="range" id="t2rep" min="1" max="3" value="3" oninput="t2render()"></label>
+      </div>
+      <p class="lbl">Haz clic en el nombre de un DataNode para simular su caída y ver si se pierden datos.</p>
+      <div class="nodes" id="t2nodes"></div>
+      <div class="out" id="t2out"></div>
+      <button class="ghost" onclick="t2reset()">↺ Reiniciar nodos</button>
+      <div class="info-box"><strong>Tolerancia a fallos.</strong> Con factor 3, un bloque sobrevive
+        aunque caigan dos de sus nodos. Prueba a bajar el factor a 1 y tira un nodo: ahí sí se pierden
+        bloques. El NameNode, además, <strong>re-replica los bloques subreplicados</strong> (los que
+        han quedado con menos de 3 copias) copiándolos a otros nodos para restaurar el factor. Ojo: si
+        un bloque pierde <em>todas</em> sus copias, no se puede recrear.</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 3 ============ -->
+  <div class="section" id="t3">
+    <div class="card">
+      <h2>3. Arquitectura HDFS: NameNode y DataNode</h2>
+      <p><strong>NameNode (maestro/coordinador):</strong> guarda los <em>metadatos</em> (qué bloques
+         forman cada fichero) en RAM. <strong>DataNodes (nodos trabajadores):</strong> guardan los
+         <em>bloques</em>. Cada DataNode envía un <strong>heartbeat</strong> periódico al NameNode
+         diciendo «sigo vivo».</p>
+      <div id="t3svgwrap"></div>
+      <div class="controls" id="t3btns"></div>
+      <div class="out" id="t3out"></div>
+      <div class="warn-box"><strong>Punto único de fallo (SPOF).</strong> Sin alta disponibilidad, si
+        cae el NameNode el clúster no puede atender operaciones hasta recuperar o activar otro
+        NameNode, aunque los DataNodes estén perfectos. Los metadatos están persistidos en disco, así
+        que se pueden recuperar; el problema es la indisponibilidad del servicio. La solución es la
+        <strong>alta disponibilidad</strong>: un NameNode activo y otro en espera que toma el relevo.</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 4 ============ -->
+  <div class="section" id="t4">
+    <div class="card">
+      <h2>4. MapReduce: el recuento de palabras paso a paso</h2>
+      <p>Escribe (o usa el texto por defecto) y recorre las tres fases:
+         <strong>map()</strong> emite pares <code>(palabra, 1)</code>,
+         <strong>shuffle&nbsp;&amp;&nbsp;sort</strong> agrupa por clave, y
+         <strong>reduce()</strong> suma cada grupo.</p>
+      <textarea id="t4text" rows="3" style="width:100%;font-family:Menlo,monospace;font-size:0.9rem;
+        padding:0.6rem;border:1px solid #cfd8dc;border-radius:8px;">Map aplica una funcion a cada elemento de datos de entrada produciendo pares clave valor</textarea>
+      <div style="margin-top:0.6rem">
+        <button onclick="t4step(1)">1 · map()</button>
+        <button onclick="t4step(2)">2 · shuffle &amp; sort</button>
+        <button class="green" onclick="t4step(3)">3 · reduce()</button>
+        <button class="ghost" onclick="t4reset()">↺ Reiniciar</button>
+      </div>
+      <div class="out" id="t4out"><span class="d">Pulsa «1 · map()» para empezar…</span></div>
+      <div class="info-box"><strong>La fase intermedia importa.</strong> Es fácil olvidar el shuffle:
+        <code>reduce</code> nunca ve pares sueltos, siempre recibe una clave con la <em>lista</em>
+        de todos sus valores.</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 5 ============ -->
+  <div class="section" id="t5">
+    <div class="card">
+      <h2>5. El combinador: menos tráfico de red</h2>
+      <p>El cuello de botella de un clúster suele ser <strong>mover datos por la red</strong>. El
+         <strong>combinador</strong> es un «reductor local» que suma en cada nodo <em>antes</em> de
+         enviar. En el word count podemos reutilizar el propio <code>reduce</code> como combinador.</p>
+      <textarea id="t5text" rows="2" style="width:100%;font-family:Menlo,monospace;font-size:0.9rem;
+        padding:0.6rem;border:1px solid #cfd8dc;border-radius:8px;">el sol el mar el cielo el sol el</textarea>
+      <div style="margin-top:0.6rem">
+        <button onclick="t5run()">Comparar con / sin combinador</button>
+      </div>
+      <div id="t5bars" style="margin-top:1rem"></div>
+      <div class="out" id="t5out"></div>
+      <div class="warn-box"><strong>Ojo:</strong> no todo <code>reduce</code> sirve como combinador.
+        Funciona con operaciones <em>asociativas y conmutativas</em> (suma, máximo), pero no con la
+        media directamente (la media de medias no es la media).</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 6 ============ -->
+  <div class="section" id="t6">
+    <div class="card">
+      <h2>6. Apache Spark: RAM vs disco, y los RDD</h2>
+      <p><strong>Spark no sustituye a HDFS</strong>: se integra con Hadoop y procesa datos de HDFS.
+         Su ventaja es trabajar <strong>en memoria</strong> en lugar de leer y escribir disco en cada
+         paso, lo que lo hace mucho más rápido en algoritmos <em>iterativos</em> (como los de ML).</p>
+      <h3>Demo: tiempo de un algoritmo iterativo</h3>
+      <div class="controls">
+        <label>Nº de iteraciones: <span class="val" id="t6itV">10</span>
+          <input type="range" id="t6it" min="1" max="50" value="10" oninput="t6calc()"></label>
+      </div>
+      <div id="t6bars"></div>
+      <div class="out" id="t6out"></div>
+
+      <h3>Los RDD: transformaciones (perezosas) vs acciones</h3>
+      <p class="lbl">Pulsa cada operación en orden. Las <strong>transformaciones</strong> no calculan
+        nada; solo la <strong>acción</strong> dispara la ejecución.</p>
+      <div id="t6rdd">
+        <button class="ghost" onclick="t6op('map')">.map()</button>
+        <button class="ghost" onclick="t6op('filter')">.filter()</button>
+        <button class="ghost" onclick="t6op('map2')">.map()</button>
+        <button class="green" onclick="t6op('count')">.count() ▶ acción</button>
+        <button class="ghost" onclick="t6rddReset()">↺</button>
+      </div>
+      <div class="out" id="t6rddout"><span class="d">Encadena transformaciones y termina con una acción…</span></div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 7 ============ -->
+  <div class="section" id="t7">
+    <div class="card">
+      <h2>7. Un ecosistema completo sobre Spark Core</h2>
+      <p>Spark trae varios componentes construidos sobre un núcleo común. Haz clic en cada uno para
+         ver qué hace.</p>
+      <div class="grid2">
+        <div>
+          <div class="grid2" style="gap:0.5rem">
+            <div class="stack-item" style="background:#2196f3" onclick="t7show('streaming')">Structured Streaming</div>
+            <div class="stack-item" style="background:#43a047" onclick="t7show('sql')">Spark SQL</div>
+            <div class="stack-item" style="background:#fb8c00" onclick="t7show('graphx')">GraphX</div>
+            <div class="stack-item" style="background:#8e24aa" onclick="t7show('mllib')">MLlib</div>
+          </div>
+          <div class="stack-item" style="background:#0097a7;margin-top:0.5rem" onclick="t7show('core')">Spark Core (motor + RDD)</div>
+          <div class="stack-item" style="background:#607d8b;margin-top:0.5rem" onclick="t7show('hdfs')">Almacenamiento: HDFS</div>
+        </div>
+        <div class="out" id="t7out" style="min-height:9rem"><span class="d">Haz clic en un componente…</span></div>
+      </div>
+      <div class="success-box"><strong>La conexión con la asignatura.</strong> <code>MLlib</code> trae
+        los algoritmos de clasificación, regresión y agrupamiento que ya conoces, pero distribuidos.
+        Hoy la API recomendada es <code>spark.ml</code> (sobre DataFrames) y, para flujos,
+        <code>Structured Streaming</code>: permite <strong>inferencia/predicción sobre flujos</strong>
+        en tiempo real; el <em>entrenamiento</em> continuo depende del caso. (El antiguo
+        <code>Spark Streaming</code> basado en DStreams se considera legacy.)</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 8 ============ -->
+  <div class="section" id="t8">
+    <div class="card">
+      <h2>8. ¿Quién hace qué? Hadoop · HDFS · MapReduce · Spark</h2>
+      <table>
+        <tr><th>Pieza</th><th>Qué es</th><th>Su papel</th></tr>
+        <tr><td class="h">Hadoop</td><td>La plataforma / ecosistema completo</td><td>Almacenar + procesar Big Data</td></tr>
+        <tr><td class="h">HDFS</td><td>Sistema de archivos distribuido</td><td><strong>Almacenar</strong> (bloques + réplicas)</td></tr>
+        <tr><td class="h">MapReduce</td><td>Modelo de procesamiento por lotes</td><td><strong>Procesar</strong> en paralelo (disco)</td></tr>
+        <tr><td class="h">Apache Spark</td><td>Motor de procesamiento (lotes y tiempo real)</td><td><strong>Procesar</strong> en RAM, sobre HDFS</td></tr>
+      </table>
+      <div class="warn-box"><strong>El error más común:</strong> «Spark sustituye a HDFS». No.
+        Almacenamiento y procesamiento son funciones distintas: HDFS almacena, Spark/MapReduce procesan.
+        La única competencia real es <em>MapReduce vs Spark</em> como motores.</div>
+
+      <h3>Mini-test: ¿qué herramienta encaja?</h3>
+      <div id="t8quiz"></div>
+    </div>
+  </div>
+
+  </div><!-- /content -->
+
+<script>
+function showTab(id, ev){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  ev.currentTarget.classList.add('active');
+}
+
+/* ====== TAB 1: ¿cabe en una máquina? ====== */
+function t1calc(){
+  const rate = +document.getElementById('t1rate').value;   // GB/día
+  const capTB = +document.getElementById('t1cap').value;   // TB
+  document.getElementById('t1rateV').textContent = rate;
+  document.getElementById('t1capV').textContent = capTB;
+  const REP = 3;
+  const capGB = capTB * 1000;
+  const dias = capGB / rate;                       // días en llenar 1 máquina con datos en bruto
+  const anios = dias / 365;
+  const brutoAnioGB = rate * 365 * REP;            // capacidad BRUTA para 1 año (con replicación ×3)
+  const nodosAnio = Math.ceil(brutoAnioGB / capGB);
+  let s = `Generas <span class="b">${rate} GB/día</span>  ·  máquina de <span class="b">${capTB} TB</span> (${capGB} GB)\n`;
+  s += `Datos en bruto: una máquina se llenaría en <span class="y">${dias.toFixed(0)} días</span> (${anios.toFixed(1)} años).\n`;
+  s += `HDFS replica ×${REP}: 1 año de datos ocupa <span class="b">${(brutoAnioGB/1000).toFixed(1)} TB</span> brutos → ~<span class="g">${nodosAnio} nodo(s)</span> de ${capTB} TB.\n\n`;
+  if (nodosAnio > 3) {
+    s += `<span class="r">⚠ Necesitas un clúster Hadoop/HDFS:</span> ni los datos ni sus réplicas caben en una sola máquina.`;
+  } else if (nodosAnio > 1) {
+    s += `<span class="y">Empieza a no caber en una máquina.</span> Con la replicación ×${REP} ya conviene repartir en varios nodos (escalado horizontal).`;
+  } else {
+    s += `<span class="g">Cabría en una máquina aun con replicación ×${REP}.</span> Pero recuerda planificar la capacidad bruta; si el ritmo sube, añadir nodos resuelve sin migrar.`;
+  }
+  document.getElementById('t1out').innerHTML = s;
+}
+
+/* ====== TAB 2: HDFS bloques + replicación ====== */
+let t2dead = {};
+const T2_NODES = 5;
+const BLK_COLORS = ['#2196f3','#43a047','#fb8c00','#8e24aa','#0097a7','#e53935','#00897b','#5e35b1','#f4511e','#3949ab'];
+function t2render(){
+  const size = +document.getElementById('t2size').value;
+  const rep  = +document.getElementById('t2rep').value;
+  document.getElementById('t2sizeV').textContent = size;
+  document.getElementById('t2repV').textContent = rep;
+  const nblocks = Math.ceil(size / 128);
+  // colocación determinista: bloque b, réplica r -> nodo (b + r) % N
+  const nodes = Array.from({length:T2_NODES}, ()=>[]);
+  for (let b=0;b<nblocks;b++){
+    for (let r=0;r<rep;r++){
+      const n = (b + r) % T2_NODES;
+      nodes[n].push(b);
+    }
+  }
+  const wrap = document.getElementById('t2nodes');
+  wrap.innerHTML = '';
+  nodes.forEach((blks,i)=>{
+    const dead = !!t2dead[i];
+    const div = document.createElement('div');
+    div.className = 'node' + (dead?' dead':'');
+    let html = `<div class="nname" onclick="t2toggle(${i})">DataNode ${i+1} ${dead?'✗':''}</div>`;
+    blks.forEach(b=>{
+      html += `<span class="blk" style="background:${BLK_COLORS[b%BLK_COLORS.length]}22;color:${BLK_COLORS[b%BLK_COLORS.length]};border:1px solid ${BLK_COLORS[b%BLK_COLORS.length]}">B${b+1}</span>`;
+    });
+    if(!blks.length) html += '<span class="lbl">—</span>';
+    div.innerHTML = html;
+    wrap.appendChild(div);
+  });
+  // comprobar supervivencia de bloques
+  const alive = new Set();
+  nodes.forEach((blks,i)=>{ if(!t2dead[i]) blks.forEach(b=>alive.add(b)); });
+  const perdidos = [];
+  for(let b=0;b<nblocks;b++){ if(!alive.has(b)) perdidos.push('B'+(b+1)); }
+  const deadCount = Object.values(t2dead).filter(Boolean).length;
+  let s = `Fichero de <span class="b">${size} MB</span> → <span class="b">${nblocks} bloques</span> · factor de replicación <span class="b">${rep}</span>\n`;
+  s += `Nodos caídos: ${deadCount}\n\n`;
+  if(perdidos.length===0){
+    s += `<span class="g">✓ Todos los bloques siguen disponibles.</span> Ningún dato se ha perdido.`;
+    if(deadCount>0) s += `\nEl NameNode re-replicaría los bloques afectados para volver al factor ${rep}.`;
+  } else {
+    s += `<span class="r">✗ Bloques PERDIDOS: ${perdidos.join(', ')}</span>\nCon factor ${rep}, ${deadCount} caída(s) deja(n) bloques sin ninguna copia.`;
+  }
+  document.getElementById('t2out').innerHTML = s;
+}
+function t2toggle(i){ t2dead[i] = !t2dead[i]; t2render(); }
+function t2reset(){ t2dead = {}; t2render(); }
+
+/* ====== TAB 3: NameNode / DataNode + heartbeat ====== */
+let t3dead = [false,false,false];
+function t3draw(){
+  const W=620, H=300;
+  const dn = [[80,210],[260,210],[440,210]];
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}">`;
+  // NameNode
+  svg += `<rect x="200" y="30" width="220" height="70" rx="10" fill="#fff8e1" stroke="#f9a825" stroke-width="2"/>`;
+  svg += `<text x="310" y="58" text-anchor="middle" font-size="15" font-weight="bold" fill="#b26a00">NameNode (maestro)</text>`;
+  svg += `<text x="310" y="80" text-anchor="middle" font-size="11" fill="#555">metadatos en RAM: fichero → bloques</text>`;
+  // DataNodes + heartbeats
+  dn.forEach((p,i)=>{
+    const dead = t3dead[i];
+    const fill = dead? '#ffebee':'#e8f5e9', stroke = dead? '#e53935':'#43a047';
+    svg += `<rect x="${p[0]}" y="${p[1]}" width="120" height="60" rx="9" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+    svg += `<text x="${p[0]+60}" y="${p[1]+26}" text-anchor="middle" font-size="13" font-weight="bold" fill="${dead?'#c62828':'#2e7d32'}">DataNode ${i+1}</text>`;
+    svg += `<text x="${p[0]+60}" y="${p[1]+45}" text-anchor="middle" font-size="10" fill="#555">${dead?'sin latido':'guarda bloques'}</text>`;
+    // heartbeat line
+    const x1=p[0]+60, y1=p[1], x2=310, y2=100;
+    if(!dead){
+      svg += `<line class="beat" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#2196f3" stroke-width="2"/>`;
+      svg += `<circle class="beat" cx="${(x1+x2)/2}" cy="${(y1+y2)/2}" r="4" fill="#2196f3"/>`;
+    } else {
+      svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#e0e0e0" stroke-width="2" stroke-dasharray="5 5"/>`;
+      svg += `<text x="${(x1+x2)/2-6}" y="${(y1+y2)/2}" font-size="16" fill="#e53935">✗</text>`;
+    }
+  });
+  svg += `<text x="310" y="125" text-anchor="middle" font-size="11" fill="#2196f3" font-weight="bold">↑ heartbeat (latido periódico)</text>`;
+  svg += `</svg>`;
+  document.getElementById('t3svgwrap').innerHTML = svg;
+  // botones
+  let b = '';
+  for(let i=0;i<3;i++){
+    b += `<button class="${t3dead[i]?'green':'red'}" onclick="t3toggle(${i})">${t3dead[i]?'Recuperar':'Tirar'} DataNode ${i+1}</button>`;
+  }
+  document.getElementById('t3btns').innerHTML = b;
+  // mensaje
+  const caidos = t3dead.map((d,i)=>d?i+1:0).filter(Boolean);
+  let s;
+  if(!caidos.length){ s = `<span class="g">Todos los DataNodes envían su heartbeat.</span> El NameNode sabe que están vivos.`; }
+  else { s = `<span class="y">El NameNode deja de recibir el heartbeat de: DataNode ${caidos.join(', ')}.</span>\n→ Los da por caídos y ordena <span class="g">re-replicar</span> sus bloques en otros nodos para mantener la tolerancia a fallos.`; }
+  document.getElementById('t3out').innerHTML = s;
+}
+function t3toggle(i){ t3dead[i]=!t3dead[i]; t3draw(); }
+
+/* ====== TAB 4: MapReduce word count ====== */
+function t4words(){
+  const raw = document.getElementById('t4text').value.toLowerCase();
+  return raw.replace(/[^\wáéíóúñü\s]/gi,' ').split(/\s+/).filter(Boolean);
+}
+function t4step(stage){
+  const words = t4words();
+  let s = '';
+  // 1) MAP
+  const pairs = words.map(w=>`(${w}, 1)`);
+  s += `<span class="b">1 · map()</span> → un par (palabra, 1) por palabra:\n` + pairs.join('  ') + '\n';
+  if(stage>=2){
+    const groups = {};
+    words.forEach(w=>{ (groups[w]=groups[w]||[]).push(1); });
+    const keys = Object.keys(groups).sort();
+    s += `\n<span class="y">2 · shuffle &amp; sort</span> → agrupado por clave:\n`;
+    s += keys.map(k=>`${k}: [${groups[k].join(',')}]`).join('\n') + '\n';
+    if(stage>=3){
+      s += `\n<span class="g">3 · reduce()</span> → suma de cada grupo:\n`;
+      const res = keys.map(k=>[k, groups[k].length]).sort((a,b)=> b[1]-a[1] || (a[0]<b[0]?-1:1));
+      s += res.map(([k,v])=>`<span class="g">${k}</span> → ${v}`).join('\n');
+    }
+  }
+  document.getElementById('t4out').innerHTML = s;
+}
+function t4reset(){ document.getElementById('t4out').innerHTML = '<span class="d">Pulsa «1 · map()» para empezar…</span>'; }
+
+/* ====== TAB 5: combinador ====== */
+function t5run(){
+  const words = document.getElementById('t5text').value.toLowerCase().replace(/[^\wáéíóúñü\s]/gi,' ').split(/\s+/).filter(Boolean);
+  const sinC = words.length;                 // un par por palabra
+  const groups = {};
+  words.forEach(w=>{ groups[w]=(groups[w]||0)+1; });
+  const conC = Object.keys(groups).length;   // un par por palabra distinta (asumiendo un único mapper/nodo)
+  const max = Math.max(sinC, conC, 1);
+  const barsHTML = `
+    <div style="margin-bottom:0.5rem"><span class="lbl">Pares enviados por la red SIN combinador</span>
+      <div class="bar red" style="width:${(sinC/max*100).toFixed(0)}%;background:#e53935">${sinC} pares</div></div>
+    <div><span class="lbl">Pares enviados por la red CON combinador</span>
+      <div class="bar" style="width:${(conC/max*100).toFixed(0)}%;background:#43a047">${conC} pares</div></div>`;
+  document.getElementById('t5bars').innerHTML = barsHTML;
+  const detalle = Object.entries(groups).map(([k,v])=>`(${k},${v})`).join(' ');
+  const ahorro = sinC>0 ? (100*(sinC-conC)/sinC).toFixed(0) : 0;
+  document.getElementById('t5out').innerHTML =
+    `Sin combinador, el mapper envía <span class="r">${sinC}</span> pares (uno por palabra).\n`+
+    `Con combinador, suma localmente y envía solo <span class="g">${conC}</span>: ${detalle}\n\n`+
+    `<span class="y">Ahorro de tráfico de red: ${ahorro}%</span>\n`+
+    `<span class="d">Simplificación: tratamos el texto como un único mapper/nodo. Con varios nodos, cada `+
+    `uno combina solo SU partición y el ahorro real depende de cómo se repartan las palabras.</span>`;
+}
+
+/* ====== TAB 6: Spark RAM vs disco + RDD ====== */
+function t6calc(){
+  const it = +document.getElementById('t6it').value;
+  document.getElementById('t6itV').textContent = it;
+  // modelo simple (unidades arbitrarias): disco lee+escribe en cada iter; RAM carga 1 vez
+  const READ=10, WRITE=10, COMPUTE=2, LOAD=10;
+  const mr  = it*(READ+COMPUTE+WRITE);
+  const spk = LOAD + it*COMPUTE;
+  const max = Math.max(mr, spk);
+  document.getElementById('t6bars').innerHTML = `
+    <div style="margin-bottom:0.5rem"><span class="lbl">MapReduce (disco en cada iteración)</span>
+      <div class="bar" style="width:${(mr/max*100).toFixed(0)}%;background:#fb8c00">${mr} u.</div></div>
+    <div><span class="lbl">Spark (datos en RAM)</span>
+      <div class="bar" style="width:${(spk/max*100).toFixed(0)}%;background:#43a047">${spk} u.</div></div>`;
+  const factor = (mr/spk).toFixed(1);
+  document.getElementById('t6out').innerHTML =
+    `Con <span class="b">${it}</span> iteraciones: MapReduce ≈ <span class="y">${mr}</span> u., Spark ≈ <span class="g">${spk}</span> u.\n`+
+    `En este modelo simplificado, Spark sería ~<span class="g">${factor}×</span> más rápido. Cuantas más iteraciones, mayor la ventaja de la RAM.\n`+
+    `<span class="d">En la práctica el factor varía: Spark no siempre mantiene todo en RAM y puede hacer spill a disco si los datos no caben.</span>`;
+}
+let t6chain = [];
+function t6op(op){
+  if(op==='count'){
+    if(!t6chain.length){ document.getElementById('t6rddout').innerHTML='<span class="y">Añade alguna transformación antes de la acción.</span>'; return; }
+    let s = t6chain.map(o=>`<span class="d">· ${o} (perezosa, no ejecuta)</span>`).join('\n');
+    s += `\n<span class="g">· count() → ACCIÓN: ahora Spark ejecuta toda la cadena de una vez y devuelve el resultado.</span>`;
+    document.getElementById('t6rddout').innerHTML = s;
+    t6chain = [];
+  } else {
+    const name = op==='filter' ? 'filter()' : 'map()';
+    t6chain.push(name);
+    document.getElementById('t6rddout').innerHTML =
+      t6chain.map(o=>`<span class="b">· ${o}</span> <span class="d">→ transformación perezosa: se anota, no se ejecuta</span>`).join('\n') +
+      `\n<span class="y">…nada se ha calculado todavía. Falta una acción (count, collect…).</span>`;
+  }
+}
+function t6rddReset(){ t6chain=[]; document.getElementById('t6rddout').innerHTML='<span class="d">Encadena transformaciones y termina con una acción…</span>'; }
+
+/* ====== TAB 7: ecosistema Spark ====== */
+const T7 = {
+  streaming:['Spark Streaming / Structured Streaming','Procesamiento en TIEMPO REAL de flujos continuos de datos. La API actual y recomendada es Structured Streaming (sobre DataFrames); el Spark Streaming clásico (DStreams sobre RDD), que troceaba el flujo en micro-lotes, hoy es legacy.'],
+  sql:['Spark SQL','Consultas analíticas con un lenguaje tipo SQL sobre datos estructurados. Acerca el Big Data a quien ya sabe consultar bases de datos.'],
+  graphx:['GraphX','Análisis de GRAFOS: redes sociales, rutas, recomendaciones y cualquier problema de relaciones entre entidades.'],
+  mllib:['MLlib','APRENDIZAJE AUTOMÁTICO distribuido: clasificación, regresión, agrupamiento y recomendación, a escala de Big Data. La conexión con esta asignatura.'],
+  core:['Spark Core','El motor de ejecución. Implementa los RDD y el procesamiento por lotes. Todo lo demás se construye encima.'],
+  hdfs:['HDFS','El almacenamiento. Spark NO lo sustituye: lee y escribe los datos que residen en HDFS. Almacenamiento y procesamiento son cosas distintas.'],
+};
+function t7show(k){
+  const [t,d] = T7[k];
+  document.getElementById('t7out').innerHTML = `<span class="g">${t}</span>\n\n${d}`;
+}
+
+/* ====== TAB 8: mini-test ====== */
+const Q8 = [
+  {q:'Guardar de forma fiable 500 TB de logs repartidos en muchas máquinas', a:'HDFS'},
+  {q:'Entrenar un modelo iterativo de ML lo más rápido posible sobre datos de HDFS', a:'Spark'},
+  {q:'Procesar un único recorrido por lotes de un fichero gigantesco', a:'MapReduce'},
+  {q:'Detectar fraude sobre un flujo de transacciones en tiempo real', a:'Spark'},
+  {q:'La plataforma/ecosistema completo bajo el que vive todo lo demás', a:'Hadoop'},
+];
+const OPTS8 = ['Hadoop','HDFS','MapReduce','Spark'];
+function t8render(){
+  let h='';
+  Q8.forEach((it,i)=>{
+    h += `<p style="margin:0.5rem 0"><strong>${i+1}.</strong> ${it.q}<br>`;
+    OPTS8.forEach(o=>{ h += `<button class="ghost" onclick="t8ans(${i},'${o}')">${o}</button>`; });
+    h += ` <span id="t8r${i}"></span></p>`;
+  });
+  document.getElementById('t8quiz').innerHTML = h;
+}
+function t8ans(i,choice){
+  const ok = Q8[i].a===choice;
+  document.getElementById('t8r'+i).innerHTML = ok
+    ? ' <span style="color:#2e7d32;font-weight:700">✓ correcto</span>'
+    : ` <span style="color:#c62828;font-weight:700">✗ mejor: ${Q8[i].a}</span>`;
+}
+
+/* init */
+t1calc(); t2render(); t3draw(); t4reset(); t5run(); t6calc(); t6rddReset(); t8render();
+</script>
+</body>
+</html>
