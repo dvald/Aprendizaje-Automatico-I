@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tema 10: Series temporales</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f7fa; color: #333; }
+
+  .header { background: #0f1b2d; color: white; padding: 2rem 2rem 1.5rem; position: relative; }
+  .header h1 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+  .header p { color: #90a4ae; font-size: 0.95rem; max-width: 880px; }
+  .back { color: #90a4ae; text-decoration: none; font-size: 0.85rem; display: inline-block;
+    margin-bottom: 0.8rem; }
+  .back:hover { color: #fff; }
+
+  .tabs { display: flex; gap: 0; background: #1a2940; padding: 0 2rem;
+    overflow-x: auto; border-bottom: 1px solid #0f1b2d; }
+  .tab { padding: 0.8rem 1.1rem; cursor: pointer; color: #90a4ae;
+    border-bottom: 3px solid transparent; transition: all 0.2s;
+    font-weight: 600; font-size: 0.88rem; white-space: nowrap; }
+  .tab:hover { color: #fff; }
+  .tab.active { color: #fff; border-bottom-color: #2196f3; }
+
+  .content { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .card { background: white; border-radius: 12px; padding: 1.5rem;
+    margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+  h2 { color: #0f1b2d; margin-bottom: 1rem; font-size: 1.45rem; }
+  h3 { color: #1a2940; margin-top: 1.1rem; margin-bottom: 0.7rem; font-size: 1.08rem; }
+  p { margin-bottom: 0.8rem; line-height: 1.6; }
+
+  .info-box { background: #e3f2fd; border-left: 4px solid #2196f3;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+    font-size: 0.95rem; line-height: 1.5; }
+  .info-box strong { color: #0f1b2d; }
+  .warn-box { background: #fff3e0; border-left: 4px solid #ff9800;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+    font-size: 0.95rem; line-height: 1.5; }
+  .success-box { background: #e8f5e9; border-left: 4px solid #4caf50;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+    font-size: 0.95rem; line-height: 1.5; }
+
+  pre, code { font-family: 'Menlo', 'Consolas', monospace; }
+  .formula { background: #0f1b2d; color: #e8e8f0; border-radius: 8px; padding: 0.7rem 1rem;
+    font-family: 'Menlo', monospace; font-size: 1.0rem; text-align: center; margin: 0.7rem 0;
+    letter-spacing: 0.5px; }
+  .formula .b { color: #82b1ff; } .formula .g { color: #69f0ae; } .formula .o { color: #ffb74d; }
+
+  button { padding: 0.6rem 1.1rem; background: #2196f3; color: white;
+    border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
+    font-size: 0.88rem; transition: all 0.2s; margin: 0.2rem; }
+  button:hover { background: #1976d2; }
+  button:active { transform: scale(0.98); }
+  button.ghost { background: #eceff1; color: #37474f; }
+  button.ghost:hover { background: #cfd8dc; }
+  button.green { background: #43a047; } button.green:hover { background: #388e3c; }
+  button.purple { background: #8e24aa; } button.purple:hover { background: #6a1b9a; }
+  button.sel { outline: 3px solid #ffca28; }
+
+  .out { background: #0f1b2d; color: #cfe8ff; border-radius: 8px; padding: 0.9rem 1.1rem;
+    font-family: 'Menlo', monospace; font-size: 0.88rem; line-height: 1.55; margin-top: 0.8rem;
+    min-height: 2.2rem; white-space: pre-wrap; }
+  .out .g { color: #69f0ae; } .out .r { color: #ff8a80; } .out .y { color: #ffd54f; }
+  .out .b { color: #82b1ff; } .out .d { color: #90a4ae; }
+
+  table { border-collapse: collapse; width: 100%; margin: 0.8rem 0; font-size: 0.92rem; }
+  th, td { border: 1px solid #cfd8dc; padding: 0.55rem 0.7rem; text-align: left; vertical-align: top; }
+  th { background: #0f1b2d; color: white; }
+  td.h { background: #f4f7fb; font-weight: 600; color: #0f1b2d; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: center; margin: 0.8rem 0; }
+  .controls label { font-size: 0.9rem; color: #37474f; font-weight: 600; }
+  .controls input[type=range] { vertical-align: middle; width: 170px; }
+  .val { display: inline-block; min-width: 2.4rem; font-family: Menlo, monospace;
+    color: #1565c0; font-weight: 700; }
+
+  canvas { max-width: 100%; background: #fff; border-radius: 8px; display: block; margin: 0.3rem 0; }
+  .lbl { font-size: 0.82rem; color: #607d8b; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; }
+  .vbox { border-radius: 10px; padding: 0.9rem; color: #fff; }
+  .vbox h4 { font-size: 1rem; margin-bottom: 0.3rem; }
+  .vbox p { font-size: 0.85rem; line-height: 1.4; margin: 0; opacity: 0.95; }
+
+  .pill { display: inline-block; padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.8rem;
+    font-weight: 700; margin: 0.15rem; }
+
+  @media (max-width: 820px) {
+    .header h1 { font-size: 1.35rem; }
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+    .tabs { padding: 0 1rem; } .content { padding: 0 1rem; }
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <a class="back" href="index.html">← Volver al inicio</a>
+    <h1>Tema 10: Series temporales</h1>
+    <p>Una serie temporal es una secuencia de observaciones ordenadas en el tiempo. Aquí aprendemos a
+       reconocer sus componentes, a descomponerla y a predecirla. Cada pestaña es una demo interactiva
+       de un concepto del tema.</p>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Conceptos del Tema 10: series temporales">
+    <div class="tab active" onclick="showTab('t1', event)">1. Tipos: stock vs flujo</div>
+    <div class="tab" onclick="showTab('t2', event)">2. Componentes (O=T+S+I)</div>
+    <div class="tab" onclick="showTab('t3', event)">3. Tendencia</div>
+    <div class="tab" onclick="showTab('t4', event)">4. Estacionalidad &amp; ajuste</div>
+    <div class="tab" onclick="showTab('t5', event)">5. Ciclo vs estacionalidad</div>
+    <div class="tab" onclick="showTab('t6', event)">6. Aditivo vs multiplicativo</div>
+    <div class="tab" onclick="showTab('t7', event)">7. Pseudoaditivo</div>
+    <div class="tab" onclick="showTab('t8', event)">8. STL &amp; predicción</div>
+  </div>
+
+  <div class="content">
+
+  <!-- ============ TAB 1 ============ -->
+  <div class="section active" id="t1">
+    <div class="card">
+      <h2>1. Tipos de series: stock y flujo</h2>
+      <p>Las series temporales se dividen en dos clases según lo que miden:</p>
+      <div class="grid2">
+        <div class="vbox" style="background:#2196f3"><h4>STOCK · «existencia»</h4>
+          <p>Mide una característica en un <b>instante</b> concreto (una foto). Ej.: la encuesta
+             mensual de población activa.</p></div>
+        <div class="vbox" style="background:#43a047"><h4>FLUJO · «actividad»</h4>
+          <p>Mide la actividad <b>acumulada</b> durante un <b>intervalo</b> (una película). Ej.: la
+             producción diaria. Puede arrastrar efectos de calendario.</p></div>
+      </div>
+
+      <h3>Clasifica tú: ¿stock o flujo?</h3>
+      <p class="lbl">Lee cada caso y pulsa el botón que creas correcto.</p>
+      <div id="t1quiz"></div>
+      <div class="out" id="t1score">Aciertos: 0 / 0</div>
+      <div class="info-box"><strong>La clave.</strong> Pregúntate: ¿es una <em>foto en un instante</em>
+        (stock) o algo que se <em>acumula a lo largo de un periodo</em> (flujo)? Solo las series de
+        flujo dependen de cuántos días tiene el periodo (efectos de calendario).</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 2 ============ -->
+  <div class="section" id="t2">
+    <div class="card">
+      <h2>2. Los componentes: O = T + S + I</h2>
+      <p>Una serie observada (O) es la <strong>superposición</strong> de tres señales más simples: la
+        <strong>tendencia</strong> (T), la <strong>estacionalidad</strong> (S) y el componente
+        <strong>irregular</strong> o ruido (I). Mueve los controles y observa cómo se construye la
+        serie de arriba sumando las tres de abajo.</p>
+      <div class="controls">
+        <label>Pendiente de la tendencia: <span class="val" id="t2trV">1.0</span>
+          <input type="range" id="t2tr" min="0" max="3" step="0.1" value="1" oninput="t2draw()"></label>
+        <label>Amplitud estacional: <span class="val" id="t2seV">20</span>
+          <input type="range" id="t2se" min="0" max="40" step="1" value="20" oninput="t2draw()"></label>
+        <label>Ruido: <span class="val" id="t2noV">6</span>
+          <input type="range" id="t2no" min="0" max="25" step="1" value="6" oninput="t2draw()"></label>
+      </div>
+      <canvas id="t2canvas" width="1040" height="520"></canvas>
+      <div class="info-box"><strong>Descomponer</strong> es la operación inversa: a partir de la serie
+        observada de arriba, estimar por separado cada una de las tres señales de abajo. Si la
+        tendencia y la estacionalidad se pueden proyectar al futuro, podremos <em>predecir</em>.</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 3 ============ -->
+  <div class="section" id="t3">
+    <div class="card">
+      <h2>3. La tendencia: lineal vs no lineal</h2>
+      <p>La <strong>tendencia</strong> es el movimiento de fondo a largo plazo. Si los datos se agrupan
+        en torno a una <strong>recta</strong>, es <strong>lineal</strong>; si se agrupan en torno a una
+        <strong>curva</strong>, es <strong>no lineal</strong> (curvilínea). El tipo de tendencia decide
+        la herramienta que usamos para estimarla.</p>
+      <div class="controls">
+        <button id="t3bLin" class="sel" onclick="t3set('lin')">Tendencia lineal</button>
+        <button id="t3bNo" class="ghost" onclick="t3set('no')">Tendencia no lineal</button>
+        <label>Ruido: <span class="val" id="t3noV">8</span>
+          <input type="range" id="t3no" min="0" max="25" step="1" value="8" oninput="t3draw()"></label>
+      </div>
+      <canvas id="t3canvas" width="1040" height="380"></canvas>
+      <div class="out" id="t3out"></div>
+      <div class="info-box"><strong>Cómo se lee.</strong> Los puntos azules son los datos; la línea roja
+        es la tendencia ajustada (una recta o una curva). Sube el ruido y verás que la tendencia sigue
+        capturando la dirección de fondo aunque los datos se dispersen.</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 4 ============ -->
+  <div class="section" id="t4">
+    <div class="card">
+      <h2>4. Estacionalidad y ajuste estacional</h2>
+      <p>La <strong>estacionalidad</strong> son picos y valles que se repiten a intervalos fijos.
+        <strong>Desestacionalizar</strong> (ajuste estacional) consiste en quitar ese componente para
+        ver el movimiento de fondo:</p>
+      <div class="formula">SA = O − S &nbsp;=&nbsp; <span class="g">Tendencia</span> + <span class="o">Irregular</span></div>
+      <div class="controls">
+        <label>Amplitud estacional: <span class="val" id="t4seV">22</span>
+          <input type="range" id="t4se" min="0" max="45" step="1" value="22" oninput="t4draw()"></label>
+        <button id="t4btn" class="green" onclick="t4toggle()">Desestacionalizar (quitar S)</button>
+      </div>
+      <canvas id="t4canvas" width="1040" height="380"></canvas>
+      <div class="info-box"><strong>¿Por qué importa?</strong> Los picos estacionales pueden
+        <em>ocultar</em> la tendencia real. Ojo además con las fiestas móviles (Semana Santa, Año Nuevo
+        chino): caen en fechas distintas según el año y distorsionan la comparación directa entre el
+        mismo mes de dos años.</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 5 ============ -->
+  <div class="section" id="t5">
+    <div class="card">
+      <h2>5. Ciclo vs estacionalidad: la duración manda</h2>
+      <p>Ambos son oscilaciones, pero se distinguen por su <strong>duración</strong>. Mueve el periodo
+        y observa cómo cambia la clasificación:</p>
+      <div class="controls">
+        <label>Periodo de la oscilación: <span class="val" id="t5pV">12</span> meses
+          <input type="range" id="t5p" min="2" max="60" step="1" value="12" oninput="t5draw()"></label>
+      </div>
+      <div id="t5tag" style="margin:0.4rem 0"></div>
+      <canvas id="t5canvas" width="1040" height="340"></canvas>
+      <div class="grid2">
+        <div class="info-box" style="margin-top:0.4rem"><strong>Estacionalidad</strong> · periodo
+          <b>≤ 12 meses</b>, fijo y muy regular → <em>predecible</em> (vacaciones, cosechas).</div>
+        <div class="warn-box" style="margin-top:0.4rem"><strong>Ciclo</strong> · duración
+          <b>&gt; 1 año</b>, no constante → <em>difícil de anticipar</em> (auges y crisis económicas).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 6 ============ -->
+  <div class="section" id="t6">
+    <div class="card">
+      <h2>6. Aditivo vs multiplicativo</h2>
+      <p>El criterio para elegir el modelo es cómo se comporta la <strong>amplitud estacional</strong>
+        cuando sube la tendencia. Elige un modelo y míralo:</p>
+      <div class="formula" id="t6f"><span class="b">O = T + S + I</span></div>
+      <div class="controls">
+        <button id="t6bAdd" class="sel" onclick="t6set('add')">Aditivo (O = T + S + I)</button>
+        <button id="t6bMul" class="ghost" onclick="t6set('mul')">Multiplicativo (O = T × S × I)</button>
+        <label>Crecimiento de la tendencia: <span class="val" id="t6trV">1.0</span>
+          <input type="range" id="t6tr" min="0.2" max="3" step="0.1" value="1" oninput="t6draw()"></label>
+      </div>
+      <canvas id="t6canvas" width="1040" height="380"></canvas>
+      <div class="out" id="t6out"></div>
+      <div class="info-box"><strong>La prueba visual.</strong> Si las oscilaciones conservan su tamaño
+        al subir la serie → <span class="pill" style="background:#e3f2fd;color:#1565c0">aditivo</span>.
+        Si se agrandan con la tendencia (como en los pasajeros aéreos) →
+        <span class="pill" style="background:#e8f5e9;color:#2e7d32">multiplicativo</span>. Truco:
+        tomando logaritmos, un modelo multiplicativo se convierte en aditivo.</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 7 ============ -->
+  <div class="section" id="t7">
+    <div class="card">
+      <h2>7. Descomposición pseudoaditiva</h2>
+      <p>¿Qué pasa cuando la serie tiene <strong>valores próximos o iguales a cero</strong>? El modelo
+        multiplicativo supone que cada valor es un <strong>producto</strong> de factores (O = T·S·I) y
+        en la práctica se ajusta <strong>tomando logaritmos</strong>. Pero <code>log(0)</code> no está
+        definido, y con valores muy pequeños la hipótesis de proporcionalidad se vuelve inestable. Para
+        esos casos existe el modelo <strong>pseudoaditivo</strong>.</p>
+      <div class="formula">O = <span class="o">T</span> · (<span class="g">S</span> + <span class="b">I</span> − 1)</div>
+      <div class="controls">
+        <label>Meses con valor cero: <span class="val" id="t7zV">3</span>
+          <input type="range" id="t7z" min="0" max="8" step="1" value="3" oninput="t7draw()"></label>
+        <button class="purple" onclick="t7try()">Intentar ajustar el multiplicativo (tomar log)</button>
+      </div>
+      <canvas id="t7canvas" width="1040" height="320"></canvas>
+      <div class="out" id="t7out"></div>
+      <div class="info-box"><strong>Por qué falla el multiplicativo.</strong> Un valor cero obligaría a
+        que algún factor del producto T·S·I fuese cero, y al ajustar por logaritmos
+        <code>log(0) = −∞</code> no está definido (con valores muy pequeños, el componente relativo se
+        dispara). El modelo pseudoaditivo combina lo aditivo y lo multiplicativo (factores estacional e
+        irregular centrados en 1) para evitar ese problema.</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 8 ============ -->
+  <div class="section" id="t8">
+    <div class="card">
+      <h2>8. STL (robusto) y predicción</h2>
+      <p>El enfoque clásico estima la tendencia con una <strong>media móvil</strong>, que se deja
+        arrastrar por los valores atípicos. La idea de <strong>STL</strong> (Seasonal-Trend con Loess)
+        es usar un suavizado <strong>robusto</strong>: aquí lo aproximamos con una <strong>mediana
+        móvil</strong> (la mediana ignora el valor anómalo). Añade un atípico y compara las dos
+        estimaciones, ambas calculadas a partir de los datos.</p>
+      <div class="controls">
+        <label>Tamaño del valor atípico: <span class="val" id="t8oV">40</span>
+          <input type="range" id="t8o" min="0" max="80" step="2" value="40" oninput="t8draw()"></label>
+      </div>
+      <canvas id="t8canvas" width="1040" height="340"></canvas>
+      <div class="out" id="t8out"></div>
+
+      <h3>Predicción: descomponer para proyectar el futuro</h3>
+      <p class="lbl">Entrenamos con la parte azul y predecimos la zona sombreada proyectando tendencia
+        + estacionalidad. La partición respeta el orden cronológico.</p>
+      <div class="controls">
+        <label>Meses a predecir: <span class="val" id="t8hV">24</span>
+          <input type="range" id="t8h" min="6" max="36" step="6" value="24" oninput="t8fore()"></label>
+      </div>
+      <canvas id="t8fcanvas" width="1040" height="320"></canvas>
+      <div class="success-box"><strong>Idea final.</strong> Sobre una serie con estructura estable, la
+        descomposición es una base excelente para predecir. Lo que ningún modelo puede anticipar es el
+        componente <em>irregular</em>: por eso la previsión es más fiable a corto que a largo plazo.</div>
+    </div>
+  </div>
+
+  </div>
+
+<script>
+function showTab(id, ev){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.classList.remove('active');
+    t.setAttribute('aria-selected','false');
+    t.setAttribute('tabindex','-1');
+  });
+  document.getElementById(id).classList.add('active');
+  const tgt = ev.currentTarget;
+  tgt.classList.add('active');
+  tgt.setAttribute('aria-selected','true');
+  tgt.setAttribute('tabindex','0');
+}
+
+/* ===== accesibilidad de las pestañas (patrón ARIA tablist) ===== */
+function setupTabsA11y(){
+  const tabs = Array.from(document.querySelectorAll('.tab'));
+  tabs.forEach((t,i)=>{
+    const active = t.classList.contains('active');
+    t.setAttribute('role','tab');
+    t.setAttribute('aria-selected', active ? 'true' : 'false');
+    t.setAttribute('tabindex', active ? '0' : '-1');
+    // vincula la pestaña con su panel (t1..t8)
+    t.setAttribute('aria-controls', 't'+(i+1));
+    t.id = 'tab-'+(i+1);
+    t.addEventListener('keydown', e=>{
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); t.click(); }
+      else if(e.key==='ArrowRight' || e.key==='ArrowLeft' || e.key==='Home' || e.key==='End'){
+        e.preventDefault();
+        let n = e.key==='Home' ? 0
+              : e.key==='End'  ? tabs.length-1
+              : (i + (e.key==='ArrowRight'?1:-1) + tabs.length) % tabs.length;
+        tabs[n].focus();
+        tabs[n].click();   // activación automática al navegar (patrón tablist)
+      }
+    });
+  });
+  document.querySelectorAll('.section').forEach((s,i)=>{
+    s.setAttribute('role','tabpanel');
+    s.setAttribute('aria-labelledby','tab-'+(i+1));
+  });
+}
+
+/* ===== utilidades de dibujo en canvas ===== */
+function clear(ctx, w, h){ ctx.clearRect(0,0,w,h); ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); }
+function axes(ctx, x0, y0, x1, y1){
+  ctx.strokeStyle='#cfd8dc'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(x0,y1); ctx.lineTo(x1,y1); ctx.stroke();
+}
+// dibuja una serie ys (array) dentro del rect [x0,y0,x1,y1] con escala dada
+function plot(ctx, ys, x0, y0, x1, y1, color, lw, ymin, ymax, fill){
+  const n=ys.length, dx=(x1-x0)/(n-1), rng=(ymax-ymin)||1;
+  const yp=(v)=> y1 - (v-ymin)/rng*(y1-y0);
+  ctx.strokeStyle=color; ctx.lineWidth=lw||2; ctx.beginPath();
+  for(let i=0;i<n;i++){ const X=x0+i*dx, Y=yp(ys[i]); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);} ctx.stroke();
+  if(fill){ ctx.lineTo(x1,y1); ctx.lineTo(x0,y1); ctx.closePath();
+    ctx.fillStyle=fill; ctx.globalAlpha=0.10; ctx.fill(); ctx.globalAlpha=1; }
+}
+function label(ctx, txt, x, y, color, size, bold, align){
+  ctx.fillStyle=color||'#333'; ctx.font=(bold?'bold ':'')+(size||13)+"px -apple-system, Segoe UI, sans-serif";
+  ctx.textAlign=align||'left'; ctx.fillText(txt, x, y); ctx.textAlign='left';
+}
+function rngOf(a){ return [Math.min.apply(null,a), Math.max.apply(null,a)]; }
+// PRNG determinista para que los gráficos no "tiemblen" al mover sliders
+function rnd(seed){ let s=seed%2147483647; if(s<=0)s+=2147483646;
+  return ()=>{ s=s*16807%2147483647; return (s-1)/2147483646; }; }
+
+/* ====== TAB 1: stock vs flujo ====== */
+const Q1=[
+  {q:'El saldo de tu cuenta bancaria a fin de mes', a:'stock'},
+  {q:'Los ingresos y gastos registrados durante el mes', a:'flujo'},
+  {q:'El nivel de agua de un embalse hoy a las 12:00', a:'stock'},
+  {q:'Los litros de agua que entran al embalse cada día', a:'flujo'},
+  {q:'La producción diaria de una fábrica', a:'flujo'},
+  {q:'La encuesta mensual de población activa (¿trabajaste esta semana?)', a:'stock'},
+  {q:'La lluvia total acumulada durante el mes', a:'flujo'},
+  {q:'La temperatura que marca el termómetro en este instante', a:'stock'},
+];
+let t1ok=0, t1tot=0, t1done={};
+function t1render(){
+  let h='';
+  Q1.forEach((it,i)=>{
+    h+=`<p style="margin:0.5rem 0"><strong>${i+1}.</strong> ${it.q}<br>`;
+    h+=`<button class="ghost" onclick="t1ans(${i},'stock')">STOCK</button>`;
+    h+=`<button class="ghost" onclick="t1ans(${i},'flujo')">FLUJO</button>`;
+    h+=` <span id="t1r${i}"></span></p>`;
+  });
+  document.getElementById('t1quiz').innerHTML=h;
+}
+function t1ans(i,c){
+  const ok=Q1[i].a===c;
+  if(!t1done[i]){ t1tot++; if(ok)t1ok++; t1done[i]=true; }
+  document.getElementById('t1r'+i).innerHTML = ok
+    ? '<span style="color:#2e7d32;font-weight:700">✓ correcto</span>'
+    : `<span style="color:#c62828;font-weight:700">✗ es ${Q1[i].a.toUpperCase()}</span>`;
+  document.getElementById('t1score').innerHTML=`Aciertos: <span class="g">${t1ok}</span> / ${t1tot}`;
+}
+
+/* ====== TAB 2: componentes O = T + S + I ====== */
+function t2draw(){
+  const tr=+t2tr.value, se=+t2se.value, no=+t2no.value;
+  t2trV.textContent=tr.toFixed(1); t2seV.textContent=se; t2noV.textContent=no;
+  const n=120, rng=rnd(7), T=[],S=[],I=[],O=[];
+  for(let i=0;i<n;i++){
+    T.push(20+tr*i*0.6);
+    S.push(se*Math.sin(2*Math.PI*i/12));
+    I.push(no*(rng()-0.5)*2);
+    O.push(T[i]+S[i]+I[i]);
+  }
+  const c=document.getElementById('t2canvas'), ctx=c.getContext('2d'); clear(ctx,c.width,c.height);
+  const rows=[['Observada (O)',O,'#0f1b2d'],['Tendencia (T)',T,'#e53935'],
+              ['Estacionalidad (S)',S,'#43a047'],['Irregular (I)',I,'#fb8c00']];
+  const padL=150, padR=20, top=14, gap=10, hRow=(c.height-top-gap*3)/4;
+  rows.forEach((r,k)=>{
+    const y0=top+k*(hRow+gap), y1=y0+hRow;
+    const [mn,mx]=rngOf(r[1]); const m=(mx-mn)*0.12||1;
+    axes(ctx,padL,y0,c.width-padR,y1);
+    if(k>=2){ // línea cero para S e I
+      const yz=y1-(0-(mn-m))/((mx+m)-(mn-m))*(y1-y0);
+      ctx.strokeStyle='#e0e0e0'; ctx.setLineDash([4,4]); ctx.beginPath();
+      ctx.moveTo(padL,yz); ctx.lineTo(c.width-padR,yz); ctx.stroke(); ctx.setLineDash([]);
+    }
+    plot(ctx,r[1],padL,y0,c.width-padR,y1,r[2],2,mn-m,mx+m, k===0?r[2]:null);
+    label(ctx,r[0],padL-12,(y0+y1)/2,r[2],13,true,'right');
+  });
+  label(ctx,'O  =  T  +  S  +  I',c.width/2,11,'#0f1b2d',13,true,'center');
+}
+
+/* ====== TAB 3: tendencia lineal vs no lineal ====== */
+let t3mode='lin';
+function t3set(m){ t3mode=m;
+  t3bLin.className=m==='lin'?'':'ghost'; t3bNo.className=m==='no'?'green':'ghost';
+  if(m==='lin'){t3bLin.className='sel';} else {t3bNo.className='sel';}
+  t3bLin.classList.toggle('sel',m==='lin'); t3bNo.classList.toggle('sel',m==='no');
+  t3draw(); }
+function t3draw(){
+  const no=+t3no.value; t3noV.textContent=no;
+  const n=60, rng=rnd(3), xs=[],ys=[],fit=[];
+  for(let i=0;i<n;i++){
+    const base = t3mode==='lin' ? 8+0.8*i : 8+0.022*(i-12)*(i-12);
+    xs.push(i); ys.push(base + no*(rng()-0.5)*2);
+  }
+  // ajuste
+  if(t3mode==='lin'){
+    const mx=xs.reduce((a,b)=>a+b)/n, my=ys.reduce((a,b)=>a+b)/n;
+    let num=0,den=0; for(let i=0;i<n;i++){num+=(xs[i]-mx)*(ys[i]-my);den+=(xs[i]-mx)**2;}
+    const b=num/den, a=my-b*mx; for(let i=0;i<n;i++)fit.push(a+b*i);
+  } else { for(let i=0;i<n;i++)fit.push(8+0.022*(i-12)*(i-12)); }
+  const c=document.getElementById('t3canvas'), ctx=c.getContext('2d'); clear(ctx,c.width,c.height);
+  const x0=40,x1=c.width-20,y0=20,y1=c.height-30;
+  const all=ys.concat(fit); const [mn,mx]=rngOf(all); const m=(mx-mn)*0.1||1;
+  axes(ctx,x0,y0,x1,y1);
+  const dx=(x1-x0)/(n-1), yp=v=>y1-(v-(mn-m))/((mx+m)-(mn-m))*(y1-y0);
+  ctx.fillStyle='#2196f3';
+  for(let i=0;i<n;i++){ctx.beginPath();ctx.arc(x0+i*dx,yp(ys[i]),3,0,7);ctx.fill();}
+  plot(ctx,fit,x0,y0,x1,y1,'#e53935',2.5,mn-m,mx+m);
+  label(ctx, t3mode==='lin'?'Tendencia lineal (recta)':'Tendencia no lineal (curva)',
+        x1, y0+4, '#e53935',13,true,'right');
+  document.getElementById('t3out').innerHTML = t3mode==='lin'
+    ? '<span class="b">Lineal:</span> los datos se agrupan en torno a una <span class="g">recta</span>. Basta una regresión lineal para estimar la tendencia.'
+    : '<span class="b">No lineal:</span> los datos se agrupan en torno a una <span class="y">curva</span>. Hace falta un ajuste polinómico o un suavizado.';
+}
+
+/* ====== TAB 4: estacionalidad y ajuste ====== */
+let t4off=false;
+function t4toggle(){ t4off=!t4off;
+  t4btn.textContent = t4off ? 'Volver a la serie observada (O)' : 'Desestacionalizar (quitar S)';
+  t4btn.className = t4off ? 'ghost' : 'green'; t4draw(); }
+function t4draw(){
+  const se=+t4se.value; t4seV.textContent=se;
+  const n=72, rng=rnd(5), O=[],SA=[],S=[];
+  for(let i=0;i<n;i++){
+    const T=30+0.5*i, s=se*Math.sin(2*Math.PI*i/12), I=2.0*(rng()-0.5)*2;
+    S.push(s); SA.push(T+I); O.push(T+s+I);
+  }
+  const c=document.getElementById('t4canvas'), ctx=c.getContext('2d'); clear(ctx,c.width,c.height);
+  const x0=40,x1=c.width-20,y0=20,y1=c.height-28;
+  const all=O.concat(SA); const [mn,mx]=rngOf(all); const m=(mx-mn)*0.1||1;
+  axes(ctx,x0,y0,x1,y1);
+  plot(ctx,O,x0,y0,x1,y1,'#2196f3',2,mn-m,mx+m);
+  if(t4off) plot(ctx,SA,x0,y0,x1,y1,'#e53935',2.6,mn-m,mx+m);
+  label(ctx,'Serie observada  O',x0+8,y0+6,'#2196f3',13,true);
+  if(t4off) label(ctx,'Desestacionalizada  SA = O − S',x0+8,y0+26,'#e53935',13,true);
+}
+
+/* ====== TAB 5: ciclo vs estacionalidad ====== */
+function t5draw(){
+  const p=+t5p.value; t5pV.textContent=p;
+  const meses=72, ys=[];
+  for(let i=0;i<meses;i++) ys.push(50+14*Math.sin(2*Math.PI*i/p));
+  const c=document.getElementById('t5canvas'), ctx=c.getContext('2d'); clear(ctx,c.width,c.height);
+  const x0=40,x1=c.width-20,y0=20,y1=c.height-34;
+  axes(ctx,x0,y0,x1,y1);
+  const est = p<=12;
+  plot(ctx,ys,x0,y0,x1,y1, est?'#43a047':'#8e24aa', 2.4, 30,70);
+  // marcar años
+  const dx=(x1-x0)/(meses-1);
+  for(let yr=0;yr<=meses;yr+=12){ const X=x0+yr*dx;
+    ctx.strokeStyle='#eceff1'; ctx.beginPath(); ctx.moveTo(X,y0); ctx.lineTo(X,y1); ctx.stroke();
+    label(ctx,'año '+(yr/12),X,y1+16,'#90a4ae',11,false,'center'); }
+  const tag=document.getElementById('t5tag');
+  tag.innerHTML = est
+    ? `<span class="pill" style="background:#e8f5e9;color:#2e7d32">ESTACIONALIDAD · periodo ${p} meses (≤ 1 año) → regular y predecible</span>`
+    : `<span class="pill" style="background:#f3e5f5;color:#6a1b9a">CICLO · periodo ${p} meses (> 1 año) → difícil de anticipar</span>`;
+}
+
+/* ====== TAB 6: aditivo vs multiplicativo ====== */
+let t6mode='add';
+function t6set(m){ t6mode=m;
+  t6bAdd.classList.toggle('sel',m==='add'); t6bAdd.className=m==='add'?'sel':'ghost';
+  t6bMul.classList.toggle('sel',m==='mul'); t6bMul.className=m==='mul'?'sel':'ghost';
+  document.getElementById('t6f').innerHTML = m==='add'
+    ? '<span class="b">O = T + S + I</span>' : '<span class="g">O = T × S × I</span>';
+  t6draw(); }
+function t6draw(){
+  const tr=+t6tr.value; t6trV.textContent=tr.toFixed(1);
+  const n=72, rng=rnd(9), O=[],T=[];
+  for(let i=0;i<n;i++){
+    const t=20+tr*i*0.7, s=Math.sin(2*Math.PI*i/12), I=(rng()-0.5)*0.6;
+    T.push(t);
+    O.push( t6mode==='add' ? t+8*s+I*4 : t*(1+0.35*s)*(1+0.04*I) );
+  }
+  const c=document.getElementById('t6canvas'), ctx=c.getContext('2d'); clear(ctx,c.width,c.height);
+  const x0=40,x1=c.width-20,y0=20,y1=c.height-28;
+  const [mn,mx]=rngOf(O); const m=(mx-mn)*0.1||1;
+  axes(ctx,x0,y0,x1,y1);
+  plot(ctx,T,x0,y0,x1,y1,'#e53935',1.6,mn-m,mx+m);
+  plot(ctx,O,x0,y0,x1,y1, t6mode==='add'?'#2196f3':'#43a047',2.2,mn-m,mx+m);
+  document.getElementById('t6out').innerHTML = t6mode==='add'
+    ? '<span class="b">Aditivo:</span> la amplitud estacional se mantiene <span class="g">CONSTANTE</span> aunque suba la tendencia. La estacionalidad suma/resta una cantidad fija.'
+    : '<span class="g">Multiplicativo:</span> la amplitud estacional <span class="y">CRECE</span> con el nivel de la tendencia. La estacionalidad es un factor (×). Es el caso de los pasajeros aéreos.';
+}
+
+/* ====== TAB 7: pseudoaditivo ====== */
+let t7S=[],t7O=[];
+function t7draw(){
+  const z=+t7z.value; t7zV.textContent=z;
+  const n=72; t7O=[]; t7S=[];
+  const zeros={}; for(let k=0;k<z;k++) zeros[5+k*Math.floor(60/Math.max(1,z))]=true;
+  for(let i=0;i<n;i++){
+    const T=18+0.5*i, s=1+0.55*Math.sin(2*Math.PI*i/12);
+    t7S.push(s);
+    t7O.push( zeros[i] ? 0 : T*s );
+  }
+  const c=document.getElementById('t7canvas'), ctx=c.getContext('2d'); clear(ctx,c.width,c.height);
+  const x0=40,x1=c.width-20,y0=20,y1=c.height-28;
+  axes(ctx,x0,y0,x1,y1);
+  const [mn,mx]=rngOf(t7O); const m=(mx-mn)*0.1||1;
+  plot(ctx,t7O,x0,y0,x1,y1,'#8e24aa',2,Math.min(0,mn)-m,mx+m);
+  // marcar ceros
+  const dx=(x1-x0)/(n-1), yp=v=>y1-(v-(Math.min(0,mn)-m))/((mx+m)-(Math.min(0,mn)-m))*(y1-y0);
+  ctx.fillStyle='#e53935';
+  t7O.forEach((v,i)=>{ if(v===0){ctx.beginPath();ctx.arc(x0+i*dx,yp(0),5,0,7);ctx.fill();}});
+  document.getElementById('t7out').textContent = z===0
+    ? 'Sin ceros: el modelo multiplicativo funcionaría sin problemas.'
+    : `${z} mes(es) con valor 0 marcados en rojo. Pulsa el botón para intentar ajustar el multiplicativo tomando logaritmos.`;
+}
+function t7try(){
+  // El modelo multiplicativo O = T·S·I se ajusta tomando logaritmos:
+  //   log(O) = log(T) + log(S) + log(I)   (un producto se convierte en suma).
+  // Pero log(0) = −∞ no está definido: por eso los ceros rompen el modelo.
+  const out=document.getElementById('t7out'); let bad=0, lines=[];
+  t7O.forEach((v,i)=>{ if(v===0){ bad++; if(lines.length<3) lines.push(`mes ${i}:  log(O) = log(0) = −∞  (no definido)`);}});
+  if(bad===0){ out.innerHTML='<span class="g">No hay ceros:</span> log(O) está bien definido, así que el multiplicativo se puede ajustar. ✓'; return; }
+  out.innerHTML = `El multiplicativo se ajusta tomando logaritmos (log O = log T + log S + log I),\n`+
+    `<span class="r">pero con ${bad} valor(es) cero eso es imposible:</span>\n`+
+    lines.join('\n') +
+    `\n<span class="y">→ Se usa el modelo PSEUDOADITIVO:  O = T · (S + I − 1), que evita el logaritmo.</span>`;
+}
+
+/* ====== TAB 8: STL robusto + predicción ====== */
+// mediana de la ventana [idx-hw, idx+hw] de arr (robusta a los atípicos)
+function medianWin(arr, idx, hw){
+  const win=[];
+  for(let k=-hw;k<=hw;k++){ const j=idx+k; if(j>=0&&j<arr.length) win.push(arr[j]); }
+  win.sort((a,b)=>a-b);
+  const L=win.length;
+  return L%2 ? win[(L-1)/2] : (win[L/2-1]+win[L/2])/2;
+}
+function t8draw(){
+  const o=+t8o.value; t8oV.textContent=o;
+  const n=96, rng=rnd(11), O=[];
+  for(let i=0;i<n;i++){ const T=30+0.4*i, s=7*Math.sin(2*Math.PI*i/12);
+    O.push(T+s+ (rng()-0.5)*2); }
+  O[55]+=o; // atípico
+  const half=6;
+  // tendencia clásica = media móvil 13: la media SÍ se deja arrastrar por el atípico
+  const Tcl=[];
+  for(let i=0;i<n;i++){ let s=0,cnt=0; for(let k=-half;k<=half;k++){const j=i+k; if(j>=0&&j<n){s+=O[j];cnt++;}} Tcl.push(s/cnt); }
+  // tendencia robusta (idea de STL): mediana móvil 13 (ignora el atípico) + suavizado ligero.
+  // Todo se calcula a partir de O, no de la tendencia "real" oculta.
+  const Tmed=[]; for(let i=0;i<n;i++) Tmed.push(medianWin(O,i,half));
+  const Trob=[]; for(let i=0;i<n;i++){ let s=0,cnt=0; for(let k=-1;k<=1;k++){const j=i+k; if(j>=0&&j<n){s+=Tmed[j];cnt++;}} Trob.push(s/cnt); }
+  const c=document.getElementById('t8canvas'), ctx=c.getContext('2d'); clear(ctx,c.width,c.height);
+  const x0=40,x1=c.width-20,y0=20,y1=c.height-28;
+  const all=O.concat(Tcl).concat(Trob); const [mn,mx]=rngOf(all); const m=(mx-mn)*0.08||1;
+  axes(ctx,x0,y0,x1,y1);
+  plot(ctx,O,x0,y0,x1,y1,'#b0bec5',1.3,mn-m,mx+m);
+  plot(ctx,Tcl,x0,y0,x1,y1,'#e53935',2.4,mn-m,mx+m);   // clásico (media móvil)
+  plot(ctx,Trob,x0,y0,x1,y1,'#43a047',2.4,mn-m,mx+m);  // robusto (mediana móvil)
+  const dx=(x1-x0)/(n-1), yp=v=>y1-(v-(mn-m))/((mx+m)-(mn-m))*(y1-y0);
+  ctx.fillStyle='#e53935'; ctx.beginPath(); ctx.arc(x0+55*dx,yp(O[55]),4,0,7); ctx.fill();
+  label(ctx,'tendencia clásica (media móvil, se desvía)',x0+8,y0+6,'#e53935',12,true);
+  label(ctx,'tendencia robusta (mediana móvil ≈ STL)',x0+8,y0+24,'#43a047',12,true);
+  const desvC = Math.abs(Tcl[55]-Tcl[54]).toFixed(1);     // salto de la media en el atípico
+  const desvCR = Math.abs(Tcl[55]-Trob[55]).toFixed(1);   // diferencia clásica vs robusta
+  document.getElementById('t8out').innerHTML = o===0
+    ? 'Sin atípico, la media móvil y la mediana móvil casi coinciden.'
+    : `En el punto del atípico, la media móvil clásica se separa <span class="r">${desvCR}</span> unidades de la mediana móvil robusta. La mediana, al no sumar los valores, descarta el dato anómalo.`;
+}
+function t8fore(){
+  const h=+t8h.value; t8hV.textContent=h;
+  const ntr=96, rng=rnd(21), tr=[];
+  for(let i=0;i<ntr;i++){ tr.push(30+0.45*i + 9*Math.sin(2*Math.PI*i/12) + (rng()-0.5)*2); }
+  // forecast: tendencia lineal proyectada + estacional repetido
+  const mx=(ntr-1)/2; let num=0,den=0,my=tr.reduce((a,b)=>a+b)/ntr;
+  for(let i=0;i<ntr;i++){num+=(i-mx)*(tr[i]-my);den+=(i-mx)**2;}
+  const b=num/den, a=my-b*mx;
+  const seas=[]; for(let mo=0;mo<12;mo++){ let s=0,cnt=0;
+    for(let i=mo;i<ntr;i+=12){ s+=tr[i]-(a+b*i); cnt++; } seas.push(s/cnt); }
+  const fc=[]; for(let k=0;k<h;k++){ const i=ntr+k; fc.push(a+b*i+seas[i%12]); }
+  const c=document.getElementById('t8fcanvas'), ctx=c.getContext('2d'); clear(ctx,c.width,c.height);
+  const x0=40,x1=c.width-20,y0=20,y1=c.height-28;
+  const all=tr.concat(fc); const [mn,mxx]=rngOf(all); const m=(mxx-mn)*0.08||1;
+  const N=ntr+h, dx=(x1-x0)/(N-1), yp=v=>y1-(v-(mn-m))/((mxx+m)-(mn-m))*(y1-y0);
+  // sombrear zona de predicción
+  ctx.fillStyle='#fff3e0'; ctx.fillRect(x0+ntr*dx,y0,x1-(x0+ntr*dx),y1-y0);
+  axes(ctx,x0,y0,x1,y1);
+  ctx.strokeStyle='#2196f3'; ctx.lineWidth=2; ctx.beginPath();
+  for(let i=0;i<ntr;i++){const X=x0+i*dx,Y=yp(tr[i]); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);} ctx.stroke();
+  ctx.strokeStyle='#e53935'; ctx.lineWidth=2.4; ctx.setLineDash([6,4]); ctx.beginPath();
+  ctx.moveTo(x0+(ntr-1)*dx,yp(tr[ntr-1]));
+  for(let k=0;k<h;k++){const X=x0+(ntr+k)*dx,Y=yp(fc[k]); ctx.lineTo(X,Y);} ctx.stroke(); ctx.setLineDash([]);
+  label(ctx,'entrenamiento',x0+8,y0+6,'#2196f3',12,true);
+  label(ctx,'predicción (T + S proyectados)',x1,y0+6,'#e53935',12,true,'right');
+}
+
+/* init */
+setupTabsA11y();
+t1render(); t2draw(); t3set('lin'); t4draw(); t5draw(); t6set('add'); t7draw(); t8draw(); t8fore();
+</script>
+</body>
+</html>
